@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinanzaSimple V7.8</title>
+<style>
+body{font-family:Arial;margin:0;background:#eef2f5;}
+header{background:#34495e;color:white;padding:12px;text-align:center;}
+.container{padding:10px;}
+.top{display:flex;gap:10px;margin:10px 0;}
+.card{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}
+.value{font-weight:bold}
+button{padding:8px 10px;border-radius:8px;border:none;background:#3498db;color:white;margin:5px;cursor:pointer}
+.tableWrap{overflow-x:auto;}
+table{min-width:800px;width:100%;background:white;border-collapse:collapse;}
+th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;}
+th.monto,td.monto{text-align:right}
+th.accion,td.accion{text-align:center}
+
+.modalBg{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  display:none;
+  pointer-events:none;
+}
+.modal{
+  position:absolute;top:120px;left:50%;transform:translateX(-50%);
+  width:320px;background:white;border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+  pointer-events:auto;
+  overflow:hidden;
+}
+.content{
+  padding:10px;
+  max-height:calc(100vh - 190px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.drag{
+  background:#34495e;color:white;padding:12px 14px;cursor:move;
+  border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;font-weight:bold
+}
+.modalTitle{font-size:16px}
+.modal.nuevo .drag{background:#2980b9;}
+.modal.config .drag{background:#27ae60;}
+.modal.analisis .drag{background:#8e44ad;}
+input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
+.closeBtn{
+  cursor:pointer;font-weight:bold;border:none;border-radius:10px;
+  padding:8px 12px;background:rgba(255,255,255,.18);color:white
+}
+.helper{font-size:12px;color:#666;margin-top:4px}
+@media (max-width: 600px){
+  .top{gap:6px}
+  .card{padding:8px}
+  .modal{
+    width:92vw;
+    max-width:none;
+    left:4vw;
+    right:4vw;
+    top:110px;
+    transform:none;
+  }
+  .content{
+    max-height:calc(100vh - 170px);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>FinanzaSimple V7.8</header>
+
+<div class="container">
+
+<div class="top">
+<div class="card">Balance<div id="bal" class="value"></div></div>
+<div class="card">Ingresos<div id="ing" class="value"></div></div>
+<div class="card">Gastos<div id="gas" class="value"></div></div>
+</div>
+
+<div style="text-align:center">
+<button onclick="cambiarMes(-1)">◀</button>
+<span id="mes"></span>
+<button onclick="cambiarMes(1)">▶</button>
+</div>
+
+<button onclick="openNuevo()">+ Nuevo</button>
+<button onclick="openConfig()">⚙ Config</button>
+<button onclick="openAnalisis()">📊 Análisis</button>
+
+<div class="tableWrap">
+<table>
+<thead>
+<tr>
+<th>Fecha</th><th>Tipo</th><th>Cuenta</th><th>Categoría</th><th>Detalle</th><th class="monto">Monto</th><th class="accion">Acción</th>
+</tr>
+</thead>
+<tbody id="tabla"></tbody>
+</table>
+</div>
+
+</div>
+
+<div id="bg" class="modalBg">
+  <div id="modal" class="modal">
+    <div id="drag" class="drag"><span id="modalTitle" class="modalTitle">Ventana</span><button class="closeBtn" onclick="closeModal()">✖ Cerrar</button></div>
+    <div id="content" class="content"></div>
+  </div>
+</div>
+
+<script>
+let fecha=new Date();
+let movs=JSON.parse(localStorage.movs||"[]");
+let cuentas=JSON.parse(localStorage.cuentas||'["Efectivo","Visa"]');
+let categorias=JSON.parse(localStorage.categorias||'["Alimentos","Transporte"]');
+
+function fmt(n){return "$ "+Number(n).toLocaleString("es-AR");}
+
+function guardarStorage(){
+  localStorage.movs=JSON.stringify(movs);
+  localStorage.cuentas=JSON.stringify(cuentas);
+  localStorage.categorias=JSON.stringify(categorias);
+}
+
+function parseLocalDate(str){
+  if(!str) return null;
+  const p = str.split("-");
+  if(p.length !== 3) return null;
+  return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+}
+
+function mesTexto(d){
+  return d.toLocaleString("es-AR",{month:"long",year:"numeric"});
+}
+
+function setModal(tipo, titulo){
+  modal.className = "modal " + tipo;
+  document.getElementById("modalTitle").innerText = titulo;
+}
+
+function fechaSugeridaNuevo(){
+  const hoy = new Date();
+  const base = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
+
+  if(hoy.getFullYear() === fecha.getFullYear() && hoy.getMonth() === fecha.getMonth()){
+    base.setDate(hoy.getDate());
+  }
+
+  const yyyy = base.getFullYear();
+  const mm = String(base.getMonth()+1).padStart(2,"0");
+  const dd = String(base.getDate()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function cambiarMes(v){
+  fecha.setMonth(fecha.getMonth()+v);
+  render();
+}
+
+function openNuevo(m=null){
+  bg.style.display="block";
+  setModal("nuevo","Nuevo movimiento");
+  content.innerHTML=`
+    <input id="f_fecha" type="date" value="${m?.fecha||fechaSugeridaNuevo()}">
+    <select id="f_tipo">
+      <option ${m?.tipo=="Ingreso"?"selected":""}>Ingreso</option>
+      <option ${m?.tipo=="Gasto"?"selected":""}>Gasto</option>
+    </select>
+    <select id="f_cuenta">
+      <option value="" ${!m?.cuenta?"selected":""}>-- Cuenta --</option>
+      ${cuentas.map(c=>"<option value='"+c+"' "+(m?.cuenta==c?"selected":"")+">"+c+"</option>").join("")}
+    </select>
+    <select id="f_categoria">
+      <option value="" ${!m?.categoria?"selected":""}>-- Categoría --</option>
+      ${categorias.map(c=>"<option value='"+c+"' "+(m?.categoria==c?"selected":"")+">"+c+"</option>").join("")}
+    </select>
+    <input id="f_detalle" placeholder="Detalle" value="${m?.detalle||""}">
+    <input id="f_monto" placeholder="Monto" value="${m?.monto||""}">
+    <button onclick="guardar(${m?.id||0})">Guardar</button>
+    <div class="helper">Cuenta y categoría se cargan desde Config.</div>`;
+}
+
+function guardar(id){
+  let m={
+    id:id||Date.now(),
+    fecha:f_fecha.value,
+    tipo:f_tipo.value,
+    cuenta:f_cuenta.value,
+    categoria:f_categoria.value,
+    detalle:f_detalle.value||"",
+    monto:parseFloat(f_monto.value)
+  };
+
+  if(!m.fecha||isNaN(m.monto)) return alert("Completar fecha y monto");
+
+  let i=movs.findIndex(x=>x.id==id);
+  if(i>=0){
+    movs[i]=m;
+  }else{
+    movs.push(m);
+  }
+
+  guardarStorage();
+  closeModal();
+  render();
+}
+
+function borrar(id){
+  if(!confirm("Eliminar?")) return;
+  movs=movs.filter(x=>x.id!=id);
+  guardarStorage();
+  render();
+}
+
+function openConfig(){
+  bg.style.display="block";
+  setModal("config","Configuración");
+  content.innerHTML=`
+    <b>Cuentas</b><br>
+    ${cuentas.map(c=>c).join("<br>")}
+    <input id="nc"><button onclick="addCuenta()">Agregar</button>
+    <hr>
+    <b>Categorías</b><br>
+    ${categorias.map(c=>c).join("<br>")}
+    <input id="ncat"><button onclick="addCategoria()">Agregar</button>`;
+}
+
+function addCuenta(){
+  let v=nc.value.trim();
+  if(v && !cuentas.includes(v)) cuentas.push(v);
+  guardarStorage();
+  openConfig();
+}
+
+function addCategoria(){
+  let v=ncat.value.trim();
+  if(v && !categorias.includes(v)) categorias.push(v);
+  guardarStorage();
+  openConfig();
+}
+
+
+function openAnalisis(){
+  bg.style.display="block";
+  setModal("analisis","Análisis");
+
+  let totalIng=0,totalGas=0;
+  let porCategoria={};
+
+  movs.forEach(m=>{
+    let f=parseLocalDate(m.fecha);
+    if(!f) return;
+    if(f.getMonth()!=fecha.getMonth()||f.getFullYear()!=fecha.getFullYear()) return;
+
+    if(m.tipo=="Ingreso"){
+      totalIng+=Number(m.monto)||0;
+    }else{
+      totalGas+=Number(m.monto)||0;
+      const cat = (m.categoria && String(m.categoria).trim()) ? m.categoria : "Sin categoría";
+      porCategoria[cat]=(porCategoria[cat]||0)+(Number(m.monto)||0);
+    }
+  });
+
+  const entradas = Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
+  const colores = ["#5b8def","#f39c12","#27ae60","#e74c3c","#8e44ad","#16a085","#d35400","#7f8c8d"];
+  let grafica = "";
+  let leyenda = "";
+
+  if(entradas.length){
+    let acumulado = 0;
+    const partes = entradas.map(([cat,monto],i)=>{
+      const porcentaje = totalGas>0 ? (monto/totalGas)*100 : 0;
+      const inicio = acumulado;
+      acumulado += porcentaje;
+      const color = colores[i % colores.length];
+      leyenda += `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span style="width:12px;height:12px;border-radius:50%;background:${color};display:inline-block;flex:none;"></span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat}</span>
+          </div>
+          <div style="text-align:right;white-space:nowrap;">${fmt(monto)} (${porcentaje.toFixed(1)}%)</div>
+        </div>`;
+      return `${color} ${inicio.toFixed(2)}% ${acumulado.toFixed(2)}%`;
+    }).join(", ");
+
+    grafica = `
+      <div style="display:flex;justify-content:center;margin:14px 0 10px;">
+        <div style="
+          width:190px;height:190px;border-radius:50%;
+          background:conic-gradient(${partes});
+          box-shadow:inset 0 0 0 18px rgba(255,255,255,0.95), 0 2px 8px rgba(0,0,0,.08);
+        "></div>
+      </div>
+      <div style="font-size:13px;color:#555;text-align:center;margin-bottom:12px;">
+        Distribución de gastos del mes
+      </div>
+      <div>${leyenda}</div>
+    `;
+  } else {
+    grafica = `<div style="margin-top:10px;color:#666;">No hay gastos cargados en este mes para mostrar la gráfica.</div>`;
+  }
+
+  let detalle = "";
+  if(entradas.length){
+    detalle = entradas.map(([cat,monto])=> `${cat}: ${fmt(monto)}`).join("<br>");
+  } else {
+    detalle = "Sin datos";
+  }
+
+  content.innerHTML = `
+    <b>Resumen del mes</b><br><br>
+    Ingresos: ${fmt(totalIng)}<br>
+    Gastos: ${fmt(totalGas)}<br>
+    Balance: ${fmt(totalIng-totalGas)}
+    <hr>
+    <b>Gastos por categoría</b><br>
+    ${detalle}
+    <hr>
+    <b>Gráfica</b><br>
+    ${grafica}
+  `;
+}
+
+function render(){
+  tabla.innerHTML="";
+  let totalBal=0,totalIng=0,totalGas=0;
+
+  mes.innerText=mesTexto(fecha);
+
+  movs.forEach(m=>{
+    let f=parseLocalDate(m.fecha);
+    if(!f) return;
+    if(f.getMonth()!=fecha.getMonth()||f.getFullYear()!=fecha.getFullYear()) return;
+
+    if(m.tipo=="Ingreso"){
+      totalIng += Number(m.monto)||0;
+      totalBal += Number(m.monto)||0;
+    }else{
+      totalGas += Number(m.monto)||0;
+      totalBal -= Number(m.monto)||0;
+    }
+
+    tabla.innerHTML += `<tr>
+      <td>${m.fecha}</td>
+      <td>${m.tipo}</td>
+      <td>${m.cuenta||""}</td>
+      <td>${m.categoria||""}</td>
+      <td>${m.detalle||""}</td>
+      <td class="monto">${fmt(m.tipo=="Ingreso" ? (Number(m.monto)||0) : -(Number(m.monto)||0))}</td>
+      <td class="accion">
+        <button onclick='openNuevo(${JSON.stringify(m)})'>✏️</button>
+        <button onclick='borrar(${m.id})'>❌</button>
+      </td>
+    </tr>`;
+  });
+
+  bal.innerText=fmt(totalBal);
+  ing.innerText=fmt(totalIng);
+  gas.innerText=fmt(totalGas);
+}
+
+let modal=document.getElementById("modal");
+let drag=document.getElementById("drag");
+let dragging=false,dx=0,dy=0;
+
+function esMovil(){
+  return window.innerWidth <= 600;
+}
+
+drag.onmousedown=e=>{
+  if(esMovil()) return;
+  dragging=true;
+  dx=e.clientX-modal.offsetLeft;
+  dy=e.clientY-modal.offsetTop;
+};
+
+document.onmousemove=e=>{
+  if(dragging && !esMovil()){
+    modal.style.left=(e.clientX-dx)+"px";
+    modal.style.top=(e.clientY-dy)+"px";
+    modal.style.transform="none";
+  }
+};
+
+document.onmouseup=()=>dragging=false;
+
+drag.ontouchstart=()=>{};
+drag.ontouchmove=()=>{};
+drag.ontouchend=()=>{};
+
+function closeModal(){
+  bg.style.display="none";
+  modal.className = "modal";
+  modal.style.left = "";
+  modal.style.right = "";
+  modal.style.top = "";
+  modal.style.transform = "";
+  document.getElementById("modalTitle").innerText = "Ventana";
+}
+
+render();
+</script>
+
+</body>
+</html>
