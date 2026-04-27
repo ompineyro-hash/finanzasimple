@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanzaSimple V9 estable - base V8.4.1</title>
+<title>FinanzaSimple V9.1</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -131,18 +131,18 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 
 <div id="loginScreen" class="loginWrap">
   <div class="loginCard">
-    <div class="loginTitle">FinanzaSimple V9 estable</div>
+    <div class="loginTitle">FinanzaSimple V9.1</div>
     <div class="loginSub">Ingreso por usuario</div>
-    <input id="login_user" placeholder="Usuario" autocomplete="username" value="admin">
-    <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password" value="1234">
+    <input id="login_user" placeholder="Usuario" autocomplete="username">
+    <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password">
     <button onclick="login()" style="width:100%;margin:8px 0 0 0;">Entrar</button>
     <div id="loginError" class="errorBox"></div>
-    <div class="helper">Inicio inicial: admin / 1234</div>
+    <div class="helper">Si es tu primera vez, pedí tu usuario y clave.</div>
   </div>
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span>FinanzaSimple V9 estable - Usuarios + Backup + Búsqueda</span><span id="userBadge" class="userBadge"></span><button class="logoutBtn" onclick="logout()">Salir</button></header>
+<header><span>FinanzaSimple V9.1</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
 
 <div class="container">
 
@@ -743,6 +743,53 @@ function initApp(){
   setTimeout(()=>login_user.focus(),100);
 }
 
+
+
+function openAyuda(){
+  bg.style.display="block";
+  setModal("analisis","Ayuda rápida");
+  content.innerHTML=`
+    <b>FinanzaSimple en 3 pasos</b><br><br>
+
+    <b>1) Config</b><br>
+    Primero cargá tus <b>cuentas</b> y <b>categorías</b>.<br>
+    Ejemplos de cuenta: Banco, Efectivo, Mercado Pago.<br>
+    Ejemplos de categoría: Sueldo, Alimentos, Servicios.<br><br>
+
+    <b>2) + Nuevo</b><br>
+    Cargá cada ingreso o gasto. Cuenta, categoría y monto son obligatorios.<br><br>
+
+    <b>3) Análisis</b><br>
+    Mirá el resumen del mes y los gastos por categoría.<br><br>
+
+    <hr>
+    <b>Importante</b><br>
+    Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.<br><br>
+
+    <button onclick="cargarEjemplo()">Cargar ejemplo para probar</button>
+    <div class="helper">El ejemplo solo se carga si este usuario no tiene movimientos cargados.</div>
+  `;
+}
+
+function cargarEjemplo(){
+  if(movs.length){
+    return alert("Este usuario ya tiene movimientos. Para no mezclar datos, el ejemplo solo se carga cuando no hay movimientos.");
+  }
+  const hoy = new Date();
+  const yyyy = hoy.getFullYear();
+  const mm = String(hoy.getMonth()+1).padStart(2,"0");
+  cuentas = ["Efectivo", "Banco"];
+  categorias = ["Sueldo", "Alimentos", "Servicios"];
+  movs = [
+    {id:Date.now()+1, fecha:`${yyyy}-${mm}-01`, tipo:"Ingreso", cuenta:"Banco", categoria:"Sueldo", detalle:"Ingreso de ejemplo", monto:250000},
+    {id:Date.now()+2, fecha:`${yyyy}-${mm}-03`, tipo:"Gasto", cuenta:"Efectivo", categoria:"Alimentos", detalle:"Compra de ejemplo", monto:35000},
+    {id:Date.now()+3, fecha:`${yyyy}-${mm}-05`, tipo:"Gasto", cuenta:"Banco", categoria:"Servicios", detalle:"Servicio de ejemplo", monto:18000}
+  ];
+  guardarStorage();
+  closeModal();
+  render();
+  alert("Ejemplo cargado. Ahora podés mirar Movimientos y Análisis.");
+}
 
 function openAnalisis(){
   bg.style.display="block";
