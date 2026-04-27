@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanzaSimple V9.1</title>
+<title>FinanzaSimple V9.3</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -131,7 +131,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 
 <div id="loginScreen" class="loginWrap">
   <div class="loginCard">
-    <div class="loginTitle">FinanzaSimple V9.1</div>
+    <div class="loginTitle">FinanzaSimple V9.3</div>
     <div class="loginSub">Ingreso por usuario</div>
     <input id="login_user" placeholder="Usuario" autocomplete="username">
     <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password">
@@ -142,9 +142,15 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span>FinanzaSimple V9.1</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
+<header><span>FinanzaSimple V9.3</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
 
 <div class="container">
+
+<div id="bannerEjemplo" style="display:none;background:#fff3cd;color:#856404;padding:10px;border-radius:8px;margin:10px 0;">
+⚠️ Estás viendo datos de ejemplo. Podés borrarlos y cargar los tuyos.
+<button onclick="limpiarEjemplo()" style="margin-left:10px;background:#d9534f;color:white;border:none;padding:5px 10px;border-radius:5px;">🗑 Limpiar ejemplo</button>
+</div>
+
 
 <div class="top">
 <div class="card">Balance<div id="bal" class="value"></div></div>
@@ -161,6 +167,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 <button onclick="openNuevo()">+ Nuevo</button>
 <button onclick="openConfig()">⚙ Config</button>
 <button onclick="openAnalisis()">📊 Análisis</button>
+<button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none;background:#f39c12">🧪 Ejemplo</button>
 
 <div class="searchBox">
   <label>Buscar</label>
@@ -767,13 +774,21 @@ function openAyuda(){
     Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.<br><br>
 
     <button onclick="cargarEjemplo()">Cargar ejemplo para probar</button>
-    <div class="helper">El ejemplo solo se carga si este usuario no tiene movimientos cargados.</div>
+    <div class="helper">El ejemplo aparece solo cuando este usuario no tiene movimientos cargados.</div>
   `;
+}
+
+
+function limpiarEjemplo(){
+  if(!confirm("¿Querés borrar los datos de ejemplo?")) return;
+  movs = [];
+  guardarStorage();
+  render();
 }
 
 function cargarEjemplo(){
   if(movs.length){
-    return alert("Este usuario ya tiene movimientos. Para no mezclar datos, el ejemplo solo se carga cuando no hay movimientos.");
+    return alert("Este usuario ya tiene movimientos. Para no mezclar datos, el ejemplo solo aparece y se carga cuando no hay movimientos.");
   }
   const hoy = new Date();
   const yyyy = hoy.getFullYear();
@@ -919,12 +934,29 @@ function limpiarBusqueda(){
   render();
 }
 
+
+
+function actualizarBannerEjemplo(){
+  const b = document.getElementById("bannerEjemplo");
+  if(!b) return;
+  const hayEjemplo = movs.some(m => (m.detalle||"").includes("ejemplo"));
+  b.style.display = hayEjemplo ? "block" : "none";
+}
+
+function actualizarBotonEjemplo(){
+  const btn = document.getElementById("btnEjemplo");
+  if(!btn) return;
+  btn.style.display = (Array.isArray(movs) && movs.length === 0) ? "inline-block" : "none";
+}
+
 function render(){
   tabla.innerHTML="";
   let totalBal=0,totalIng=0,totalGas=0;
   let totalMes=0, visibles=0;
 
   mes.innerText=mesTexto(fecha);
+  actualizarBotonEjemplo();
+  actualizarBannerEjemplo();
 
   movs.forEach(m=>{
     let f=parseLocalDate(m.fecha);
