@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinanzaSimple V9 estable - base V8.4.1</title>
+<style>
+body{font-family:Arial;margin:0;background:#eef2f5;}
+header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+.container{padding:10px;}
+.top{display:flex;gap:10px;margin:10px 0;}
+.card{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}
+.value{font-weight:bold;font-size:1.15em}
+.value.balance-pos{color:#1f8b4c}
+.value.balance-neg{color:#c0392b}
+.value.balance-zero{color:#666}
+.value.ingresos{color:#1f8b4c}
+.value.gastos{color:#c0392b}
+button{padding:8px 10px;border-radius:8px;border:none;background:#3498db;color:white;margin:5px;cursor:pointer}
+.listItem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #eee}
+.listItemName{flex:1;min-width:0;word-break:break-word}
+.smallBtn{padding:4px 8px;font-size:12px;margin:0 0 0 4px}
+.dangerBtn{background:#e74c3c}
+.muted{font-size:12px;color:#666}
+.tableWrap{overflow-x:auto;}
+table{min-width:800px;width:100%;background:white;border-collapse:collapse;}
+th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;}
+th.monto,td.monto{text-align:right}
+th.accion,td.accion{text-align:center}
+
+.modalBg{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  display:none;
+  pointer-events:none;
+}
+.modal{
+  position:absolute;top:70px;left:50%;transform:translateX(-50%);
+  width:90%;max-width:700px;min-width:320px;min-height:220px;max-height:calc(100vh - 90px);
+  background:white;border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+  pointer-events:auto;
+  overflow:auto;
+  resize:both;
+}
+.modal.nuevo{max-width:380px}
+.modal.config{max-width:470px}
+.modal.analisis{max-width:620px}
+.content{
+  padding:10px;
+  max-height:calc(100vh - 170px);
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.drag{
+  background:#34495e;color:white;padding:12px 14px;cursor:move;user-select:none;
+  border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;font-weight:bold;position:sticky;top:0;z-index:2
+}
+.modal::after{
+  content:"⇲";
+  position:absolute;
+  right:8px;
+  bottom:4px;
+  font-size:16px;
+  color:#777;
+  pointer-events:none;
+}
+.modalTitle{font-size:16px}
+.modal.nuevo .drag{background:#2980b9;}
+.modal.config .drag{background:#27ae60;}
+.modal.analisis .drag{background:#8e44ad;}
+input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
+.closeBtn{
+  cursor:pointer;font-weight:bold;border:none;border-radius:10px;
+  padding:8px 12px;background:rgba(255,255,255,.18);color:white
+}
+.helper{font-size:12px;color:#666;margin-top:4px}
+.adminBox{background:#f7fbff;border:1px solid #d8e9f8;border-radius:10px;padding:10px;margin-top:10px}
+.userRole{font-size:12px;color:#555;margin-top:2px}
+.warnText{font-size:12px;color:#a94442;margin-top:4px}
+.loginWrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;}
+.loginCard{background:white;border-radius:14px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.16);width:100%;max-width:360px;}
+.loginTitle{text-align:center;font-weight:bold;font-size:22px;margin-bottom:6px;color:#34495e;}
+.loginSub{text-align:center;color:#666;font-size:13px;margin-bottom:14px;}
+.errorBox{display:none;background:#fdecea;color:#b03a2e;border-radius:8px;padding:8px;margin:8px 0;font-size:13px;}
+.userBadge{font-size:13px;background:rgba(255,255,255,.16);padding:6px 10px;border-radius:999px;}
+.logoutBtn{background:#e67e22;margin:0;padding:6px 10px;}
+
+.searchBox{background:white;border-radius:10px;padding:10px;margin:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.searchBox label{font-size:13px;color:#555;font-weight:bold;}
+.searchBox select{width:auto;min-width:130px;margin:0;}
+.searchBox input{width:220px;max-width:100%;margin:0;}
+.searchBox button{margin:0;}
+.searchNote{font-size:12px;color:#666;}
+.resultCount{font-size:12px;color:#34495e;font-weight:bold;background:#eef6ff;border-radius:999px;padding:5px 8px;}
+.emptyRow td{text-align:center;color:#666;padding:20px;background:#fafafa;}
+@media (max-width: 600px){
+  .searchBox{align-items:stretch;}
+  .searchBox select,.searchBox input,.searchBox button{width:100%;}
+}
+
+@media (max-width: 600px){
+  .top{gap:6px}
+  .card{padding:8px}
+  .modal{
+    width:94vw;
+    max-width:none;
+    min-width:auto;
+    min-height:auto;
+    left:3vw;
+    right:3vw;
+    top:70px;
+    max-height:calc(100vh - 85px);
+    transform:none;
+    resize:none;
+  }
+  .modal.config{
+    width:88vw;
+    left:6vw;
+    right:6vw;
+  }
+  .content{
+    max-height:calc(100vh - 170px);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="loginWrap">
+  <div class="loginCard">
+    <div class="loginTitle">FinanzaSimple V9 estable</div>
+    <div class="loginSub">Ingreso por usuario</div>
+    <input id="login_user" placeholder="Usuario" autocomplete="username" value="admin">
+    <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password" value="1234">
+    <button onclick="login()" style="width:100%;margin:8px 0 0 0;">Entrar</button>
+    <div id="loginError" class="errorBox"></div>
+    <div class="helper">Inicio inicial: admin / 1234</div>
+  </div>
+</div>
+
+<div id="appScreen" style="display:none;">
+<header><span>FinanzaSimple V9 estable - Usuarios + Backup + Búsqueda</span><span id="userBadge" class="userBadge"></span><button class="logoutBtn" onclick="logout()">Salir</button></header>
+
+<div class="container">
+
+<div class="top">
+<div class="card">Balance<div id="bal" class="value"></div></div>
+<div class="card">Ingresos<div id="ing" class="value"></div></div>
+<div class="card">Gastos<div id="gas" class="value"></div></div>
+</div>
+
+<div style="text-align:center">
+<button onclick="cambiarMes(-1)">◀</button>
+<span id="mes"></span>
+<button onclick="cambiarMes(1)">▶</button>
+</div>
+
+<button onclick="openNuevo()">+ Nuevo</button>
+<button onclick="openConfig()">⚙ Config</button>
+<button onclick="openAnalisis()">📊 Análisis</button>
+
+<div class="searchBox">
+  <label>Buscar</label>
+  <select id="filtroColumna" onchange="render()">
+    <option value="todo">Todo</option>
+    <option value="fecha">Fecha</option>
+    <option value="tipo">Tipo</option>
+    <option value="cuenta">Cuenta</option>
+    <option value="categoria">Categoría</option>
+    <option value="detalle">Detalle</option>
+    <option value="monto">Monto</option>
+  </select>
+  <input id="textoBusqueda" placeholder="Escribir búsqueda..." oninput="render()">
+  <button onclick="limpiarBusqueda()">Limpiar</button>
+  <span id="resultadoBusqueda" class="resultCount">0 resultados</span>
+  <span class="searchNote">La búsqueda solo filtra la lista visible, no borra datos.</span>
+</div>
+
+<div class="tableWrap">
+<table>
+<thead>
+<tr>
+<th>Fecha</th><th>Tipo</th><th>Cuenta</th><th>Categoría</th><th>Detalle</th><th class="monto">Monto</th><th class="accion">Acción</th>
+</tr>
+</thead>
+<tbody id="tabla"></tbody>
+</table>
+</div>
+
+</div>
+</div>
+
+<div id="bg" class="modalBg">
+  <div id="modal" class="modal">
+    <div id="drag" class="drag"><span id="modalTitle" class="modalTitle">Ventana</span><button class="closeBtn" onclick="closeModal()">✖ Cerrar</button></div>
+    <div id="content" class="content"></div>
+  </div>
+</div>
+
+<script>
+let fecha=new Date();
+let currentUser=null;
+let movs=[];
+let cuentas=[];
+let categorias=[];
+
+function leerJSONSeguro(clave, valorDefault){
+  try{
+    const raw = localStorage.getItem(clave);
+    if(!raw) return valorDefault;
+    const data = JSON.parse(raw);
+    return data || valorDefault;
+  }catch(e){
+    console.warn("Dato dañado en memoria:", clave, e);
+    localStorage.removeItem(clave);
+    return valorDefault;
+  }
+}
+
+function leerArraySeguro(clave, valorDefault){
+  const data = leerJSONSeguro(clave, valorDefault);
+  return Array.isArray(data) ? data : valorDefault;
+}
+
+function claveUsuario(parte){
+  return claveUsuarioPorNombre(currentUser, parte);
+}
+
+function initUsuarios(){
+  let usuarios = leerJSONSeguro("fs_v8_usuarios", null);
+  if(!Array.isArray(usuarios) || !usuarios.length){
+    usuarios=[{usuario:"admin", clave:"1234", admin:true}];
+    localStorage.setItem("fs_v8_usuarios", JSON.stringify(usuarios));
+  }
+  return usuarios;
+}
+
+function guardarUsuarios(usuarios){
+  localStorage.setItem("fs_v8_usuarios", JSON.stringify(usuarios));
+}
+
+function cargarDatosUsuario(){
+  movs=leerArraySeguro(claveUsuario("movs"),[]);
+  cuentas=leerArraySeguro(claveUsuario("cuentas"),[]);
+  categorias=leerArraySeguro(claveUsuario("categorias"),[]);
+
+  if(!localStorage.getItem(claveUsuario("cuentas")) && currentUser==="admin"){
+    const cuentasViejas=leerArraySeguro("cuentas",[]);
+    const categoriasViejas=leerArraySeguro("categorias",[]);
+    const movsViejos=leerArraySeguro("movs",[]);
+    if(cuentasViejas.length || categoriasViejas.length || movsViejos.length){
+      cuentas=cuentasViejas; categorias=categoriasViejas; movs=movsViejos; guardarStorage();
+    }
+  }
+}
+
+function guardarStorage(){
+  if(!currentUser) return;
+  localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
+  localStorage.setItem(claveUsuario("cuentas"), JSON.stringify(cuentas));
+  localStorage.setItem(claveUsuario("categorias"), JSON.stringify(categorias));
+}
+
+function fmt(n){return "$ "+Number(n).toLocaleString("es-AR");}
+
+function parseLocalDate(str){
+  if(!str) return null;
+  const p = str.split("-");
+  if(p.length !== 3) return null;
+  return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+}
+
+function mesTexto(d){
+  return d.toLocaleString("es-AR",{month:"long",year:"numeric"});
+}
+
+function setModal(tipo, titulo){
+  modal.className = "modal " + tipo;
+  document.getElementById("modalTitle").innerText = titulo;
+}
+
+function fechaSugeridaNuevo(){
+  const hoy = new Date();
+  const base = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
+
+  if(hoy.getFullYear() === fecha.getFullYear() && hoy.getMonth() === fecha.getMonth()){
+    base.setDate(hoy.getDate());
+  }
+
+  const yyyy = base.getFullYear();
+  const mm = String(base.getMonth()+1).padStart(2,"0");
+  const dd = String(base.getDate()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function cambiarMes(v){
+  fecha.setMonth(fecha.getMonth()+v);
+  render();
+}
+
+function openNuevo(m=null){
+  bg.style.display="block";
+  setModal("nuevo","Nuevo movimiento");
+  content.innerHTML=`
+    <input id="f_fecha" type="date" value="${m?.fecha||fechaSugeridaNuevo()}">
+    <select id="f_tipo">
+      <option ${m?.tipo=="Ingreso"?"selected":""}>Ingreso</option>
+      <option ${m?.tipo=="Gasto"?"selected":""}>Gasto</option>
+    </select>
+    <select id="f_cuenta">
+      <option value="" ${!m?.cuenta?"selected":""}>-- Cuenta --</option>
+      ${cuentas.map(c=>"<option value='"+c+"' "+(m?.cuenta==c?"selected":"")+">"+c+"</option>").join("")}
+    </select>
+    <select id="f_categoria">
+      <option value="" ${!m?.categoria?"selected":""}>-- Categoría --</option>
+      ${categorias.map(c=>"<option value='"+c+"' "+(m?.categoria==c?"selected":"")+">"+c+"</option>").join("")}
+    </select>
+    <input id="f_detalle" placeholder="Detalle" value="${m?.detalle||""}">
+    <input id="f_monto" placeholder="Monto" value="${m?.monto||""}">
+    <button onclick="guardar(${m?.id||0})">Guardar</button>
+    <div class="helper">Cuenta y categoría se cargan desde Config.</div>`;
+}
+
+function guardar(id){
+  let m={
+    id:id||Date.now(),
+    fecha:f_fecha.value,
+    tipo:f_tipo.value,
+    cuenta:f_cuenta.value,
+    categoria:f_categoria.value,
+    detalle:f_detalle.value||"",
+    monto:parseFloat(f_monto.value)
+  };
+
+  if(!m.fecha) return alert("Completar fecha");
+  if(!m.tipo) return alert("Seleccionar tipo");
+  if(!m.cuenta) return alert("Seleccionar cuenta");
+  if(!m.categoria) return alert("Seleccionar categoría");
+  if(isNaN(m.monto)) return alert("Completar monto");
+  if(m.monto === 0) return alert("El monto no puede ser 0");
+
+  let i=movs.findIndex(x=>x.id==id);
+  if(i>=0){
+    movs[i]=m;
+  }else{
+    movs.push(m);
+  }
+
+  guardarStorage();
+  closeModal();
+  render();
+}
+
+function borrar(id){
+  const m = movs.find(x=>x.id==id);
+  const detalle = m ? "\n\nFecha: " + (m.fecha||"") + "\nTipo: " + (m.tipo||"") + "\nMonto: " + fmt(montoMovimiento(m)) : "";
+  if(!confirm("Vas a borrar este movimiento." + detalle + "\n\nEsta acción no se puede deshacer. ¿Continuar?")) return;
+  movs=movs.filter(x=>x.id!=id);
+  guardarStorage();
+  render();
+}
+
+
+function estaUsado(tipo, valor){
+  if(tipo === "cuenta"){
+    return movs.some(m => (m.cuenta || "") === valor);
+  }
+  return movs.some(m => (m.categoria || "") === valor);
+}
+
+function renombrarEnMovimientos(tipo, viejo, nuevo){
+  movs = movs.map(m => {
+    if(tipo === "cuenta" && (m.cuenta || "") === viejo){
+      return {...m, cuenta: nuevo};
+    }
+    if(tipo === "categoria" && (m.categoria || "") === viejo){
+      return {...m, categoria: nuevo};
+    }
+    return m;
+  });
+}
+
+function editarCuenta(i){
+  const actual = cuentas[i];
+  const nuevo = prompt("Nuevo nombre de cuenta:", actual);
+  if(nuevo === null) return;
+  const limpio = nuevo.trim();
+  if(!limpio) return alert("El nombre no puede quedar vacío");
+  if(limpio === actual) return;
+  if(cuentas.includes(limpio)) return alert("Esa cuenta ya existe");
+  cuentas[i] = limpio;
+  renombrarEnMovimientos("cuenta", actual, limpio);
+  guardarStorage();
+  openConfig();
+  render();
+}
+
+function borrarCuenta(i){
+  const actual = cuentas[i];
+  if(estaUsado("cuenta", actual)){
+    return alert("No se puede borrar porque tiene movimientos asociados");
+  }
+  if(!confirm("¿Seguro que querés borrar la cuenta '" + actual + "'?")) return;
+  cuentas.splice(i,1);
+  guardarStorage();
+  openConfig();
+  render();
+}
+
+function editarCategoria(i){
+  const actual = categorias[i];
+  const nuevo = prompt("Nuevo nombre de categoría:", actual);
+  if(nuevo === null) return;
+  const limpio = nuevo.trim();
+  if(!limpio) return alert("El nombre no puede quedar vacío");
+  if(limpio === actual) return;
+  if(categorias.includes(limpio)) return alert("Esa categoría ya existe");
+  categorias[i] = limpio;
+  renombrarEnMovimientos("categoria", actual, limpio);
+  guardarStorage();
+  openConfig();
+  render();
+}
+
+function borrarCategoria(i){
+  const actual = categorias[i];
+  if(estaUsado("categoria", actual)){
+    return alert("No se puede borrar porque tiene movimientos asociados");
+  }
+  if(!confirm("¿Seguro que querés borrar la categoría '" + actual + "'?")) return;
+  categorias.splice(i,1);
+  guardarStorage();
+  openConfig();
+  render();
+}
+
+function openConfig(){
+  bg.style.display="block";
+  setModal("config","Configuración");
+  content.innerHTML=`
+    <b>Cuentas</b><br>
+    <div class="muted">Podés editar. Solo se puede borrar si no tiene movimientos.</div>
+    <div style="margin-top:8px">
+      ${cuentas.map((c,i)=>`
+        <div class="listItem">
+          <span class="listItemName">${c}</span>
+          <div>
+            <button class="smallBtn" onclick="editarCuenta(${i})">Editar</button>
+            <button class="smallBtn dangerBtn" onclick="borrarCuenta(${i})">Borrar</button>
+          </div>
+        </div>`).join("")}
+    </div>
+    <input id="nc" placeholder="Nueva cuenta">
+    <button onclick="addCuenta()">Agregar</button>
+    <hr>
+    <b>Categorías</b><br>
+    <div class="muted">Podés editar. Solo se puede borrar si no tiene movimientos.</div>
+    <div style="margin-top:8px">
+      ${categorias.map((c,i)=>`
+        <div class="listItem">
+          <span class="listItemName">${c}</span>
+          <div>
+            <button class="smallBtn" onclick="editarCategoria(${i})">Editar</button>
+            <button class="smallBtn dangerBtn" onclick="borrarCategoria(${i})">Borrar</button>
+          </div>
+        </div>`).join("")}
+    </div>
+    <input id="ncat" placeholder="Nueva categoría">
+    <button onclick="addCategoria()">Agregar</button>
+    <hr>
+    <div class="adminBox">
+      <b>Backup</b><br>
+      <div class="muted">Guardá una copia de seguridad y recuperala cuando la necesites.</div>
+      <button onclick="guardarCopia()">💾 Guardar copia</button>
+      <button onclick="cargarCopia()">📂 Cargar copia</button>
+      <div class="helper">Si entrás como admin, la copia guarda todos los usuarios. Si entrás como usuario común, guarda solo tus datos.</div>
+    </div>
+    <hr>
+    <div id="usuariosAdminSection" class="adminBox">
+      <b>Usuarios</b><br>
+      <div class="muted">Solo admin puede crear usuarios, cambiar claves y borrar usuarios comunes. El usuario admin no se borra.</div>
+      <div id="usuariosBox" style="margin-top:8px"></div>
+      <input id="nu" placeholder="Nuevo usuario">
+      <input id="np" type="password" placeholder="Clave inicial">
+      <input id="npc" type="password" placeholder="Repetir clave">
+      <button id="btnAddUser" onclick="addUsuario()">Agregar usuario</button>
+      <div class="helper">Cada usuario trabaja con sus propios movimientos, cuentas y categorías.</div>
+    </div>`;
+  renderUsuariosConfig();
+}
+
+function addCuenta(){
+  let v=nc.value.trim();
+  if(v && !cuentas.includes(v)) cuentas.push(v);
+  guardarStorage();
+  openConfig();
+}
+
+function addCategoria(){
+  let v=ncat.value.trim();
+  if(v && !categorias.includes(v)) categorias.push(v);
+  guardarStorage();
+  openConfig();
+}
+
+
+
+
+function datosDeUsuario(nombre){
+  return {
+    movs: leerArraySeguro(claveUsuarioPorNombre(nombre,"movs"), []),
+    cuentas: leerArraySeguro(claveUsuarioPorNombre(nombre,"cuentas"), []),
+    categorias: leerArraySeguro(claveUsuarioPorNombre(nombre,"categorias"), [])
+  };
+}
+
+function guardarDatosDeUsuario(nombre, datos){
+  localStorage.setItem(claveUsuarioPorNombre(nombre,"movs"), JSON.stringify(Array.isArray(datos?.movs) ? datos.movs : []));
+  localStorage.setItem(claveUsuarioPorNombre(nombre,"cuentas"), JSON.stringify(Array.isArray(datos?.cuentas) ? datos.cuentas : []));
+  localStorage.setItem(claveUsuarioPorNombre(nombre,"categorias"), JSON.stringify(Array.isArray(datos?.categorias) ? datos.categorias : []));
+}
+
+function fechaArchivo(){
+  const d=new Date();
+  const yyyy=d.getFullYear();
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  const hh=String(d.getHours()).padStart(2,"0");
+  const mi=String(d.getMinutes()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd}_${hh}-${mi}`;
+}
+
+function guardarCopia(){
+  if(!currentUser) return alert("Primero tenés que entrar con un usuario");
+  guardarStorage();
+  const admin=usuarioActualEsAdmin();
+  const usuarios=initUsuarios();
+  const datos={};
+  if(admin){
+    usuarios.forEach(u=>{ datos[u.usuario]=datosDeUsuario(u.usuario); });
+  }else{
+    datos[currentUser]=datosDeUsuario(currentUser);
+  }
+  const backup={
+    app:"FinanzaSimple",
+    version:"V8.2",
+    creado:new Date().toISOString(),
+    tipo:admin ? "completo" : "usuario",
+    usuarioActual:currentUser,
+    usuarios:admin ? usuarios : [{usuario:currentUser, admin:false}],
+    datos
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`FinanzaSimple_backup_${admin ? "completo" : currentUser}_${fechaArchivo()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  const href=a.href;
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(href),1000);
+}
+
+function cargarCopia(){
+  if(!currentUser) return alert("Primero tenés que entrar con un usuario");
+  const input=document.createElement("input");
+  input.type="file";
+  input.accept="application/json,.json";
+  input.onchange=()=>{
+    const file=input.files && input.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const backup=JSON.parse(reader.result);
+        if(!backup || backup.app!=="FinanzaSimple" || !backup.datos){
+          return alert("Ese archivo no parece ser una copia válida de FinanzaSimple");
+        }
+        const admin=usuarioActualEsAdmin();
+        if(backup.tipo==="completo"){
+          if(!admin) return alert("Solo admin puede cargar una copia completa");
+          if(!Array.isArray(backup.usuarios)) return alert("La copia completa no tiene usuarios válidos");
+          if(!confirm("Esto reemplaza usuarios y datos actuales por la copia. ¿Continuar?")) return;
+          guardarUsuarios(backup.usuarios);
+          backup.usuarios.forEach(u=>guardarDatosDeUsuario(u.usuario, backup.datos[u.usuario] || {}));
+          if(!backup.usuarios.some(u=>u.usuario===currentUser)){
+            alert("La copia fue cargada. Tenés que volver a entrar.");
+            logout();
+            return;
+          }
+        }else{
+          if(!confirm("Esto reemplaza los datos del usuario actual por la copia. ¿Continuar?")) return;
+          const origen=backup.datos[currentUser] || backup.datos[backup.usuarioActual] || Object.values(backup.datos)[0];
+          guardarDatosDeUsuario(currentUser, origen || {});
+        }
+        cargarDatosUsuario();
+        closeModal();
+        render();
+        alert("Copia cargada correctamente");
+      }catch(e){
+        alert("No se pudo leer la copia. Revisá que sea el archivo correcto.");
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function usuarioActualEsAdmin(){
+  const usuarios=initUsuarios();
+  const u=usuarios.find(x=>x.usuario===currentUser);
+  return !!(u && u.admin);
+}
+
+function escapeHTML(txt){
+  return String(txt).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function nombreSeguroStorage(nombre){
+  return String(nombre).trim().toLowerCase().replace(/[^a-z0-9_-]/g,"_");
+}
+
+function claveUsuarioPorNombre(usuario, parte){
+  return "fs_v8_" + nombreSeguroStorage(usuario) + "_" + parte;
+}
+
+function renderUsuariosConfig(){
+  const section=document.getElementById("usuariosAdminSection");
+  const box=document.getElementById("usuariosBox");
+  if(!section || !box) return;
+  const admin=usuarioActualEsAdmin();
+  if(!admin){
+    section.style.display="none";
+    return;
+  }
+  section.style.display="block";
+  const usuarios=initUsuarios();
+  box.innerHTML=usuarios.map((u,i)=>`
+    <div class="listItem">
+      <span class="listItemName">${escapeHTML(u.usuario)}${u.admin?" (admin)":""}<div class="userRole">${u.admin?"Administrador":"Usuario común"}</div></span>
+      <div>
+        <button class="smallBtn" onclick="cambiarClaveUsuario(${i})">Clave</button>
+        ${u.usuario==="admin"?"":`<button class="smallBtn dangerBtn" onclick="borrarUsuario(${i})">Borrar</button>`}
+      </div>
+    </div>`).join("");
+}
+
+function addUsuario(){
+  if(!usuarioActualEsAdmin()) return alert("Solo admin puede agregar usuarios");
+  const usuario=(nu.value||"").trim();
+  const clave=(np.value||"").trim();
+  const confirma=(npc.value||"").trim();
+  if(!usuario||!clave||!confirma) return alert("Completar usuario, clave y repetir clave");
+  if(clave!==confirma) return alert("Las claves no coinciden");
+  if(usuario.length < 3) return alert("El usuario debe tener al menos 3 caracteres");
+  if(clave.length < 4) return alert("La clave debe tener al menos 4 caracteres");
+  if(usuario.includes(" ")) return alert("El usuario no puede tener espacios");
+  if(usuario.toLowerCase()==="admin") return alert("El usuario admin ya existe y no se puede duplicar");
+  const usuarios=initUsuarios();
+  if(usuarios.some(u=>u.usuario.toLowerCase()===usuario.toLowerCase())) return alert("Ese usuario ya existe");
+  usuarios.push({usuario, clave, admin:false});
+  guardarUsuarios(usuarios);
+  localStorage.setItem(claveUsuarioPorNombre(usuario,"movs"), JSON.stringify([]));
+  localStorage.setItem(claveUsuarioPorNombre(usuario,"cuentas"), JSON.stringify([]));
+  localStorage.setItem(claveUsuarioPorNombre(usuario,"categorias"), JSON.stringify([]));
+  alert("Usuario creado correctamente");
+  openConfig();
+}
+
+function cambiarClaveUsuario(i){
+  if(!usuarioActualEsAdmin()) return alert("Solo admin puede cambiar claves");
+  const usuarios=initUsuarios();
+  const u=usuarios[i];
+  if(!u) return alert("Usuario no encontrado");
+  const nueva=prompt("Nueva clave para " + u.usuario + ":");
+  if(nueva===null) return;
+  const limpia=nueva.trim();
+  if(!limpia) return alert("La clave no puede quedar vacía");
+  if(limpia.length < 4) return alert("La clave debe tener al menos 4 caracteres");
+  const repetir=prompt("Repetir nueva clave para " + u.usuario + ":");
+  if(repetir===null) return;
+  if(limpia !== repetir.trim()) return alert("Las claves no coinciden");
+  u.clave=limpia;
+  guardarUsuarios(usuarios);
+  alert("Clave actualizada");
+}
+
+function borrarUsuario(i){
+  if(!usuarioActualEsAdmin()) return alert("Solo admin puede borrar usuarios");
+  const usuarios=initUsuarios();
+  const u=usuarios[i];
+  if(!u) return alert("Usuario no encontrado");
+  if(u.usuario==="admin") return alert("Admin no se puede borrar");
+  if(!confirm("¿Seguro que querés borrar el usuario '"+u.usuario+"' y todos sus datos?")) return;
+  const usuario=u.usuario;
+  usuarios.splice(i,1);
+  guardarUsuarios(usuarios);
+  ["movs","cuentas","categorias"].forEach(parte=>localStorage.removeItem(claveUsuarioPorNombre(usuario,parte)));
+  openConfig();
+}
+
+function login(){
+  const usuario=(login_user.value||"").trim();
+  const clave=(login_pass.value||"").trim();
+  const usuarios=initUsuarios();
+  const encontrado=usuarios.find(u=>u.usuario===usuario && u.clave===clave);
+  if(!encontrado){
+    loginError.style.display="block";
+    loginError.innerText="Usuario o clave incorrectos";
+    return;
+  }
+  currentUser=encontrado.usuario;
+  cargarDatosUsuario();
+  loginScreen.style.display="none";
+  appScreen.style.display="block";
+  userBadge.innerText="Usuario: " + currentUser + (encontrado.admin ? " (admin)" : " (usuario)");
+  login_pass.value="";
+  closeModal();
+  render();
+}
+
+function logout(){
+  guardarStorage();
+  currentUser=null;
+  movs=[]; cuentas=[]; categorias=[];
+  appScreen.style.display="none";
+  loginScreen.style.display="flex";
+  login_user.value="";
+  login_pass.value="";
+  loginError.style.display="none";
+  closeModal();
+}
+
+function initApp(){
+  initUsuarios();
+  loginScreen.style.display="flex";
+  appScreen.style.display="none";
+  login_user.addEventListener("keydown", e=>{if(e.key==="Enter") login_pass.focus();});
+  login_pass.addEventListener("keydown", e=>{if(e.key==="Enter") login();});
+  setTimeout(()=>login_user.focus(),100);
+}
+
+
+function openAnalisis(){
+  bg.style.display="block";
+  setModal("analisis","Análisis");
+
+  let totalIng=0,totalGas=0;
+  let porCategoria={};
+
+  movs.forEach(m=>{
+    let f=parseLocalDate(m.fecha);
+    if(!f) return;
+    if(f.getMonth()!=fecha.getMonth()||f.getFullYear()!=fecha.getFullYear()) return;
+
+    if(m.tipo=="Ingreso"){
+      totalIng+=Number(m.monto)||0;
+    }else{
+      totalGas+=Number(m.monto)||0;
+      const cat = (m.categoria && String(m.categoria).trim()) ? m.categoria : "Sin categoría";
+      porCategoria[cat]=(porCategoria[cat]||0)+(Number(m.monto)||0);
+    }
+  });
+
+  const entradas = Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
+  const colores = ["#5b8def","#f39c12","#27ae60","#e74c3c","#8e44ad","#16a085","#d35400","#7f8c8d"];
+  let grafica = "";
+  let leyenda = "";
+
+  if(entradas.length){
+    let acumulado = 0;
+    const partes = entradas.map(([cat,monto],i)=>{
+      const porcentaje = totalGas>0 ? (monto/totalGas)*100 : 0;
+      const inicio = acumulado;
+      acumulado += porcentaje;
+      const color = colores[i % colores.length];
+      leyenda += `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span style="width:12px;height:12px;border-radius:50%;background:${color};display:inline-block;flex:none;"></span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat}</span>
+          </div>
+          <div style="text-align:right;white-space:nowrap;">${fmt(monto)} (${porcentaje.toFixed(1)}%)</div>
+        </div>`;
+      return `${color} ${inicio.toFixed(2)}% ${acumulado.toFixed(2)}%`;
+    }).join(", ");
+
+    grafica = `
+      <div style="display:flex;justify-content:center;margin:14px 0 10px;">
+        <div style="
+          width:190px;height:190px;border-radius:50%;
+          background:conic-gradient(${partes});
+          box-shadow:inset 0 0 0 18px rgba(255,255,255,0.95), 0 2px 8px rgba(0,0,0,.08);
+        "></div>
+      </div>
+      <div style="font-size:13px;color:#555;text-align:center;margin-bottom:12px;">
+        Distribución de gastos del mes
+      </div>
+      <div>${leyenda}</div>
+    `;
+  } else {
+    grafica = `<div style="margin-top:10px;color:#666;">No hay gastos cargados en este mes para mostrar la gráfica.</div>`;
+  }
+
+  let detalle = "";
+  if(entradas.length){
+    detalle = entradas.map(([cat,monto])=> `${cat}: ${fmt(monto)}`).join("<br>");
+  } else {
+    detalle = "Sin datos";
+  }
+
+  content.innerHTML = `
+    <b>Resumen del mes</b><br><br>
+    Ingresos: ${fmt(totalIng)}<br>
+    Gastos: ${fmt(totalGas)}<br>
+    Balance: ${fmt(totalIng-totalGas)}
+    <hr>
+    <b>Gastos por categoría</b><br>
+    ${detalle}
+    <hr>
+    <b>Gráfica</b><br>
+    ${grafica}
+  `;
+}
+
+
+function openNuevoPorId(id){
+  const m = movs.find(x => String(x.id) === String(id));
+  if(!m) return alert("No encontré el movimiento para editar");
+  openNuevo(m);
+}
+
+
+function textoNormalizado(v){
+  return String(v ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function montoMovimiento(m){
+  const monto = Number(m.monto)||0;
+  return m.tipo=="Ingreso" ? monto : -monto;
+}
+
+function pasaBusqueda(m){
+  const input = document.getElementById("textoBusqueda");
+  const selector = document.getElementById("filtroColumna");
+  if(!input || !selector) return true;
+  const buscado = textoNormalizado(input.value).trim();
+  if(!buscado) return true;
+  const columna = selector.value;
+  const campos = {
+    fecha: m.fecha || "",
+    tipo: m.tipo || "",
+    cuenta: m.cuenta || "",
+    categoria: m.categoria || "",
+    detalle: m.detalle || "",
+    monto: String(montoMovimiento(m)).replace("-", "")
+  };
+  if(columna === "todo"){
+    return Object.values(campos).some(v => textoNormalizado(v).includes(buscado));
+  }
+  return textoNormalizado(campos[columna] || "").includes(buscado);
+}
+
+function limpiarBusqueda(){
+  const input = document.getElementById("textoBusqueda");
+  const selector = document.getElementById("filtroColumna");
+  if(input) input.value="";
+  if(selector) selector.value="todo";
+  render();
+}
+
+function render(){
+  tabla.innerHTML="";
+  let totalBal=0,totalIng=0,totalGas=0;
+  let totalMes=0, visibles=0;
+
+  mes.innerText=mesTexto(fecha);
+
+  movs.forEach(m=>{
+    let f=parseLocalDate(m.fecha);
+    if(!f) return;
+    if(f.getMonth()!=fecha.getMonth()||f.getFullYear()!=fecha.getFullYear()) return;
+
+    totalMes++;
+
+    if(m.tipo=="Ingreso"){
+      totalIng += Number(m.monto)||0;
+      totalBal += Number(m.monto)||0;
+    }else{
+      totalGas += Number(m.monto)||0;
+      totalBal -= Number(m.monto)||0;
+    }
+
+    if(pasaBusqueda(m)){
+      visibles++;
+      tabla.innerHTML += `<tr>
+        <td>${escapeHTML(m.fecha||"")}</td>
+        <td>${escapeHTML(m.tipo||"")}</td>
+        <td>${escapeHTML(m.cuenta||"")}</td>
+        <td>${escapeHTML(m.categoria||"")}</td>
+        <td>${escapeHTML(m.detalle||"")}</td>
+        <td class="monto">${fmt(montoMovimiento(m))}</td>
+        <td class="accion">
+          <button onclick="openNuevoPorId(${m.id})" title="Editar movimiento">✏️</button>
+          <button onclick='borrar(${m.id})' title="Borrar movimiento">❌</button>
+        </td>
+      </tr>`;
+    }
+  });
+
+  if(totalMes === 0){
+    tabla.innerHTML = `<tr class="emptyRow"><td colspan="7">No hay movimientos cargados en este mes. Usá <b>+ Nuevo</b> para cargar el primero.</td></tr>`;
+  }else if(visibles === 0){
+    tabla.innerHTML = `<tr class="emptyRow"><td colspan="7">No hay resultados para esa búsqueda. Probá limpiar o cambiar el filtro.</td></tr>`;
+  }
+
+  const contador=document.getElementById("resultadoBusqueda");
+  if(contador){
+    contador.innerText = totalMes === 0 ? "0 movimientos" : visibles + " de " + totalMes + " visibles";
+  }
+
+  bal.innerText=fmt(totalBal);
+  ing.innerText=fmt(totalIng);
+  gas.innerText=fmt(totalGas);
+
+  bal.className = "value " + (totalBal > 0 ? "balance-pos" : totalBal < 0 ? "balance-neg" : "balance-zero");
+  ing.className = "value ingresos";
+  gas.className = "value gastos";
+}
+
+let modal=document.getElementById("modal");
+let drag=document.getElementById("drag");
+let dragging=false,dx=0,dy=0;
+
+function esMovil(){
+  return window.innerWidth <= 600;
+}
+
+drag.onmousedown=e=>{
+  if(esMovil()) return;
+  dragging=true;
+  dx=e.clientX-modal.offsetLeft;
+  dy=e.clientY-modal.offsetTop;
+};
+
+document.onmousemove=e=>{
+  if(dragging && !esMovil()){
+    modal.style.left=(e.clientX-dx)+"px";
+    modal.style.top=(e.clientY-dy)+"px";
+    modal.style.transform="none";
+  }
+};
+
+document.onmouseup=()=>dragging=false;
+
+drag.ontouchstart=()=>{};
+drag.ontouchmove=()=>{};
+drag.ontouchend=()=>{};
+
+function closeModal(){
+  bg.style.display="none";
+  modal.className = "modal";
+  modal.style.left = "";
+  modal.style.right = "";
+  modal.style.top = "";
+  modal.style.transform = "";
+  document.getElementById("modalTitle").innerText = "Ventana";
+}
+
+initApp();
+</script>
+
+</body>
+</html>
