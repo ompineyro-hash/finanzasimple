@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanzaSimple V9.8.3</title>
+<title>FinanzaSimple V9.9.4.1</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -106,6 +106,9 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 .analysisCard b.balance-pos{color:#1f8b4c}
 .analysisCard b.balance-neg{color:#c0392b}
 .analysisCard b.balance-zero{color:#666}
+.trialBanner{background:#fff3cd;color:#856404;padding:10px;border-radius:8px;margin:10px 0;font-size:13px;font-weight:bold;display:none}
+.trialBanner button{background:#e67e22;margin-left:8px}
+.trialBlocked{background:#fdecea;color:#b03a2e;padding:12px;border-radius:10px;margin:10px 0;font-weight:bold}
 @media (max-width: 600px){
   .searchBox{align-items:stretch;}
   .searchBox select,.searchBox input,.searchBox button{width:100%;}
@@ -143,7 +146,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 
 <div id="loginScreen" class="loginWrap">
   <div class="loginCard">
-    <div class="loginTitle">FinanzaSimple V9.8.3</div>
+    <div class="loginTitle">FinanzaSimple V9.9.4.1</div>
     <div class="loginSub">Ingreso por usuario</div>
     <input id="login_user" placeholder="Usuario" autocomplete="username">
     <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password">
@@ -154,15 +157,16 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span>FinanzaSimple V9.8.3</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
+<header><span>FinanzaSimple V9.9.4.1</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
 
 <div class="container">
 
 <div id="bannerEjemplo" style="display:none;background:#fff3cd;color:#856404;padding:10px;border-radius:8px;margin:10px 0;">
-⚠️ Estás viendo datos de ejemplo. Podés borrarlos y cargar los tuyos.
+⚠️ Estás viendo un ejemplo de cómo funciona la app. Iniciá la prueba para usarla con tus datos.
 <button onclick="limpiarEjemplo()" style="margin-left:10px;background:#d9534f;color:white;border:none;padding:5px 10px;border-radius:5px;">🗑 Limpiar ejemplo</button>
 </div>
 
+<div id="trialBanner" class="trialBanner"></div>
 
 <div class="top">
 <div class="card">Balance<div id="bal" class="value"></div></div>
@@ -178,11 +182,11 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 
 <div id="notice" style="display:none;background:#eaf7ee;color:#1f6b3a;padding:9px;border-radius:8px;margin:8px 0;font-size:13px;font-weight:bold;"></div>
 
-<button onclick="openNuevo()">+ Nuevo</button>
-<button onclick="openConfig()">⚙ Config</button>
-<button onclick="openAnalisis()">📊 Análisis</button>
-<button onclick="guardarCopia()" style="background:#27ae60">💾 Exportar</button>
-<button onclick="cargarCopia()" style="background:#7f8c8d">📂 Importar</button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para cargar movimientos');return;} openNuevo()">+ Nuevo</button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para usar configuración');return;} openConfig()">⚙ Config</button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para ver análisis');return;} openAnalisis()">📊 Análisis</button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para exportar');return;} guardarCopia()" style="background:#27ae60">💾 Exportar</button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para importar');return;} cargarCopia()" style="background:#7f8c8d">📂 Importar</button>
 <button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none;background:#f39c12">🧪 Ejemplo</button>
 
 <div class="searchBox">
@@ -250,6 +254,132 @@ function leerArraySeguro(clave, valorDefault){
 
 function claveUsuario(parte){
   return claveUsuarioPorNombre(currentUser, parte);
+}
+
+const TRIAL_DAYS = 15;
+const ACTIVATION_CODE = "FS-2026-ACTIVA";
+
+function trialKey(parte){
+  const usuario = currentUser ? nombreSeguroStorage(currentUser) : "sin_usuario";
+  return "fs_trial_" + usuario + "_" + parte;
+}
+
+function trialInfo(){
+  const hoy = new Date();
+  let inicio = localStorage.getItem(trialKey("inicio"));
+  let activado = localStorage.getItem(trialKey("activado")) === "SI";
+
+  if(activado){
+    return {activado:true, pendiente:false, usados:0, restantes:TRIAL_DAYS, vencido:false};
+  }
+
+  if(!inicio){
+    return {activado:false, pendiente:true, usados:0, restantes:TRIAL_DAYS, vencido:false};
+  }
+
+  const ini = new Date(inicio);
+  const usados = Math.floor((hoy - ini) / (1000*60*60*24));
+  const restantes = Math.max(0, TRIAL_DAYS - usados);
+  return {activado:false, pendiente:false, usados, restantes, vencido: usados >= TRIAL_DAYS};
+}
+
+function renderTrial(){
+  const b = document.getElementById("trialBanner");
+  if(!b) return;
+  const t = trialInfo();
+
+  if(t.activado){
+    b.style.display="block";
+    b.style.background="#eaf7ee";
+    b.style.color="#1f6b3a";
+    b.innerHTML="✅ Licencia activada para este usuario.";
+    return;
+  }
+
+  b.style.display="block";
+
+  if(t.pendiente){
+    b.style.background="#fff3cd";
+    b.style.color="#856404";
+    b.innerHTML=`🧪 Para usar FinanzaSimple, iniciá la prueba o activá licencia. <button onclick="iniciarPrueba()">Iniciar prueba</button> <button onclick="comprarLicencia()">Comprar</button> <button onclick="activarLicencia()">Activar</button>`;
+    return;
+  }
+
+  b.style.background = t.vencido ? "#fdecea" : "#fff3cd";
+  b.style.color = t.vencido ? "#b03a2e" : "#856404";
+  b.innerHTML = t.vencido
+    ? `⛔ Prueba finalizada. Para continuar, comprá la licencia. <button onclick="comprarLicencia()">Comprar</button> <button onclick="activarLicencia()">Activar</button>`
+    : `🧪 Prueba iniciada: quedan ${t.restantes} días. <button onclick="comprarLicencia()">Comprar</button> <button onclick="activarLicencia()">Activar</button>`;
+}
+
+function bloquearSiTrialVencido(){
+  const t = trialInfo();
+
+  if(t.activado) return false;
+  if(!t.pendiente && !t.vencido) return false;
+
+  bg.style.display="block";
+  setModal("analisis", t.pendiente ? "Prueba no iniciada" : "Prueba finalizada");
+
+  content.innerHTML = t.pendiente ? `
+    <div class="trialBlocked" style="background:#fff3cd;color:#856404;">
+      Estás viendo un ejemplo de FinanzaSimple. Iniciá la prueba para usar la app con tus datos.
+      <br><br>
+      La prueba dura ${TRIAL_DAYS} días desde el momento en que la iniciás.
+    </div>
+    <button onclick="iniciarPrueba()" style="background:#27ae60">Iniciar prueba</button>
+    <button onclick="comprarLicencia()" style="background:#e67e22">Comprar</button>
+    <button onclick="activarLicencia()">Activar licencia</button>
+  ` : `
+    <div class="trialBlocked">
+      La prueba de ${TRIAL_DAYS} días finalizó.
+      <br><br>
+      Para continuar usando FinanzaSimple, comprá la licencia o ingresá tu código de activación.
+    </div>
+    <button onclick="comprarLicencia()" style="background:#e67e22">Comprar</button>
+    <button onclick="activarLicencia()">Activar licencia</button>
+  `;
+
+  return true;
+}
+
+function puedeOperar(){
+  const t = trialInfo();
+  return !t.pendiente && !t.vencido || t.activado;
+}
+
+function accionBloqueada(msg){
+  showNotice(msg || "Función disponible al iniciar la prueba.");
+}
+
+function iniciarPrueba(){
+  if(localStorage.getItem(trialKey("inicio"))){
+    renderTrial();
+    closeModal();
+    return;
+  }
+  if(!confirm("¿Querés iniciar la prueba de " + TRIAL_DAYS + " días para este usuario?")) return;
+  localStorage.setItem(trialKey("inicio"), new Date().toISOString());
+  renderTrial();
+  closeModal();
+  alert("Prueba iniciada. Ya podés usar FinanzaSimple.");
+}
+
+function comprarLicencia(){
+  alert("Para comprar, contactame por WhatsApp o email. En la próxima versión podemos dejar este botón conectado a tu medio de cobro.");
+}
+
+function activarLicencia(){
+  const codigo = prompt("Ingresá el código de activación:");
+  if(codigo === null) return;
+  if(codigo.trim() === ACTIVATION_CODE){
+    localStorage.setItem(trialKey("activado"), "SI");
+    renderTrial();
+    closeModal();
+    alert("Licencia activada correctamente.");
+  }else{
+    alert("Código incorrecto.");
+  }
 }
 
 function initUsuarios(){
@@ -325,6 +455,7 @@ function cambiarMes(v){
 }
 
 function openNuevo(m=null){
+  if(bloquearSiTrialVencido()) return;
   bg.style.display="block";
   setModal("nuevo","Nuevo movimiento");
   content.innerHTML=`
@@ -347,7 +478,7 @@ function openNuevo(m=null){
     <div class="helper">Cuenta y categoría se cargan desde Config.</div>`;
 }
 
-function guardar(id){
+function guardar(id){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para guardar movimientos"); return; }
   let montoIngresado = parseFloat(f_monto.value);
 
   let m={
@@ -390,7 +521,8 @@ function guardar(id){
   }
 }
 
-function borrar(id){
+function borrar(id){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para modificar datos"); return; }
+//id){
   const m = movs.find(x=>x.id==id);
   const detalle = m ? "\n\nFecha: " + (m.fecha||"") + "\nTipo: " + (m.tipo||"") + "\nMonto: " + fmt(montoMovimiento(m)) : "";
   if(!confirm("Vas a borrar este movimiento." + detalle + "\n\nEsta acción no se puede deshacer. ¿Continuar?")) return;
@@ -474,6 +606,7 @@ function borrarCategoria(i){
 }
 
 function openConfig(){
+  if(bloquearSiTrialVencido()) return;
   bg.style.display="block";
   setModal("config","Configuración");
   content.innerHTML=`
@@ -578,7 +711,8 @@ function showNotice(msg){
   window.fsNoticeTimer=setTimeout(()=>{n.style.display="none";},5000);
 }
 
-function guardarCopia(){
+function guardarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para exportar datos"); return; }
+  if(bloquearSiTrialVencido()) return;
   if(!currentUser) return alert("Primero tenés que entrar con un usuario");
   guardarStorage();
   const admin=usuarioActualEsAdmin();
@@ -591,7 +725,7 @@ function guardarCopia(){
   }
   const backup={
     app:"FinanzaSimple",
-    version:"V9.8.3",
+    version:"V9.9.4",
     creado:new Date().toISOString(),
     tipo:admin ? "completo" : "usuario",
     usuarioActual:currentUser,
@@ -610,7 +744,8 @@ function guardarCopia(){
   showNotice("✔ Backup guardado. Si no elegiste carpeta, revisá Descargas.");
 }
 
-function cargarCopia(){
+function cargarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para importar datos"); return; }
+  if(bloquearSiTrialVencido()) return;
   if(!currentUser) return alert("Primero tenés que entrar con un usuario");
   showNotice("Seleccioná el archivo de backup. Normalmente está en Descargas.");
   const input=document.createElement("input");
@@ -767,6 +902,8 @@ function login(){
   login_pass.value="";
   closeModal();
   render();
+  renderTrial();
+  bloquearSiTrialVencido();
 }
 
 function logout(){
@@ -813,7 +950,13 @@ function openAyuda(){
     <b>Importante</b><br>
     Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.<br>
     El monto se carga siempre positivo: el Tipo define si suma o resta.<br>
-    Usá Exportar para guardar backup e Importar para recuperarlo.<br><br>
+    Usá Exportar para guardar backup e Importar para recuperarlo.<br>
+    Esta versión incluye:
+- prueba por días
+- activación por usuario
+
+Antes de iniciar la prueba, estás viendo un ejemplo para entender cómo funciona la app.
+Iniciá la prueba para usarla con tus propios datos.<br><br>
 
     <button onclick="cargarEjemplo()">Cargar ejemplo para probar</button>
     <div class="helper">El ejemplo aparece solo cuando este usuario no tiene movimientos cargados.</div>
@@ -829,6 +972,7 @@ function limpiarEjemplo(){
 }
 
 function cargarEjemplo(){
+  if(bloquearSiTrialVencido()) return;
   if(movs.length){
     return alert("Este usuario ya tiene movimientos. Para no mezclar datos, el ejemplo solo aparece y se carga cuando no hay movimientos.");
   }
@@ -849,6 +993,7 @@ function cargarEjemplo(){
 }
 
 function openAnalisis(){
+  if(bloquearSiTrialVencido()) return;
   bg.style.display="block";
   setModal("analisis","Análisis");
 
@@ -1020,6 +1165,7 @@ function render(){
   let totalMes=0, visibles=0;
 
   mes.innerText=mesTexto(fecha);
+  renderTrial();
   actualizarBotonEjemplo();
   actualizarBannerEjemplo();
 
