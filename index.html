@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanzaSimple V9.3</title>
+<title>FinanzaSimple V9.8.3</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -94,6 +94,18 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 .searchNote{font-size:12px;color:#666;}
 .resultCount{font-size:12px;color:#34495e;font-weight:bold;background:#eef6ff;border-radius:999px;padding:5px 8px;}
 .emptyRow td{text-align:center;color:#666;padding:20px;background:#fafafa;}
+.tipoIngreso{color:#1f6fd1;font-weight:bold}
+.tipoGasto{color:#c0392b;font-weight:bold}
+.montoIngreso{color:#1f6fd1;font-weight:bold}
+.montoGasto{color:#c0392b;font-weight:bold}
+.analysisCards{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.analysisCard{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;min-width:130px;background:#f7fbff;border:1px solid #d8e9f8;border-radius:10px;padding:10px;text-align:center}
+.analysisCard b{font-size:17px}
+.analysisCard b.ingresos{color:#1f8b4c}
+.analysisCard b.gastos{color:#c0392b}
+.analysisCard b.balance-pos{color:#1f8b4c}
+.analysisCard b.balance-neg{color:#c0392b}
+.analysisCard b.balance-zero{color:#666}
 @media (max-width: 600px){
   .searchBox{align-items:stretch;}
   .searchBox select,.searchBox input,.searchBox button{width:100%;}
@@ -131,7 +143,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 
 <div id="loginScreen" class="loginWrap">
   <div class="loginCard">
-    <div class="loginTitle">FinanzaSimple V9.3</div>
+    <div class="loginTitle">FinanzaSimple V9.8.3</div>
     <div class="loginSub">Ingreso por usuario</div>
     <input id="login_user" placeholder="Usuario" autocomplete="username">
     <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password">
@@ -142,7 +154,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span>FinanzaSimple V9.3</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
+<header><span>FinanzaSimple V9.8.3</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
 
 <div class="container">
 
@@ -164,9 +176,13 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 <button onclick="cambiarMes(1)">▶</button>
 </div>
 
+<div id="notice" style="display:none;background:#eaf7ee;color:#1f6b3a;padding:9px;border-radius:8px;margin:8px 0;font-size:13px;font-weight:bold;"></div>
+
 <button onclick="openNuevo()">+ Nuevo</button>
 <button onclick="openConfig()">⚙ Config</button>
 <button onclick="openAnalisis()">📊 Análisis</button>
+<button onclick="guardarCopia()" style="background:#27ae60">💾 Exportar</button>
+<button onclick="cargarCopia()" style="background:#7f8c8d">📂 Importar</button>
 <button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none;background:#f39c12">🧪 Ejemplo</button>
 
 <div class="searchBox">
@@ -332,6 +348,8 @@ function openNuevo(m=null){
 }
 
 function guardar(id){
+  let montoIngresado = parseFloat(f_monto.value);
+
   let m={
     id:id||Date.now(),
     fecha:f_fecha.value,
@@ -339,26 +357,37 @@ function guardar(id){
     cuenta:f_cuenta.value,
     categoria:f_categoria.value,
     detalle:f_detalle.value||"",
-    monto:parseFloat(f_monto.value)
+    monto:montoIngresado
   };
 
-  if(!m.fecha) return alert("Completar fecha");
-  if(!m.tipo) return alert("Seleccionar tipo");
-  if(!m.cuenta) return alert("Seleccionar cuenta");
-  if(!m.categoria) return alert("Seleccionar categoría");
-  if(isNaN(m.monto)) return alert("Completar monto");
-  if(m.monto === 0) return alert("El monto no puede ser 0");
+  if(!m.fecha){ showNotice("Falta completar fecha"); return; }
+  if(!m.tipo){ showNotice("Seleccioná tipo"); return; }
+  if(!m.cuenta){ showNotice("Seleccioná cuenta"); return; }
+  if(!m.categoria){ showNotice("Seleccioná categoría"); return; }
+  if(isNaN(m.monto)){ showNotice("Completá monto"); return; }
+  if(m.monto === 0){ showNotice("El monto no puede ser 0"); return; }
+  if(m.monto < 0){ showNotice("El monto debe cargarse positivo. El Tipo define si suma o resta."); return; }
 
   let i=movs.findIndex(x=>x.id==id);
   if(i>=0){
+    const anterior = movs[i];
+    if(anterior.tipo !== m.tipo){
+      if(!confirm("Estás cambiando el Tipo de " + anterior.tipo + " a " + m.tipo + ". Esto cambia el balance. ¿Confirmar?")) return;
+    }
     movs[i]=m;
+    guardarStorage();
+    closeModal();
+    render();
   }else{
     movs.push(m);
+    guardarStorage();
+    render();
+    const fechaMantener = f_fecha.value;
+    const tipoMantener = f_tipo.value;
+    openNuevo();
+    f_fecha.value = fechaMantener;
+    f_tipo.value = tipoMantener;
   }
-
-  guardarStorage();
-  closeModal();
-  render();
 }
 
 function borrar(id){
@@ -540,6 +569,15 @@ function fechaArchivo(){
   return `${yyyy}-${mm}-${dd}_${hh}-${mi}`;
 }
 
+function showNotice(msg){
+  const n=document.getElementById("notice");
+  if(!n) return alert(msg);
+  n.innerHTML=msg;
+  n.style.display="block";
+  clearTimeout(window.fsNoticeTimer);
+  window.fsNoticeTimer=setTimeout(()=>{n.style.display="none";},5000);
+}
+
 function guardarCopia(){
   if(!currentUser) return alert("Primero tenés que entrar con un usuario");
   guardarStorage();
@@ -553,7 +591,7 @@ function guardarCopia(){
   }
   const backup={
     app:"FinanzaSimple",
-    version:"V8.2",
+    version:"V9.8.3",
     creado:new Date().toISOString(),
     tipo:admin ? "completo" : "usuario",
     usuarioActual:currentUser,
@@ -569,10 +607,12 @@ function guardarCopia(){
   const href=a.href;
   a.remove();
   setTimeout(()=>URL.revokeObjectURL(href),1000);
+  showNotice("✔ Backup guardado. Si no elegiste carpeta, revisá Descargas.");
 }
 
 function cargarCopia(){
   if(!currentUser) return alert("Primero tenés que entrar con un usuario");
+  showNotice("Seleccioná el archivo de backup. Normalmente está en Descargas.");
   const input=document.createElement("input");
   input.type="file";
   input.accept="application/json,.json";
@@ -606,7 +646,7 @@ function cargarCopia(){
         cargarDatosUsuario();
         closeModal();
         render();
-        alert("Copia cargada correctamente");
+        showNotice("✔ Copia cargada correctamente");
       }catch(e){
         alert("No se pudo leer la copia. Revisá que sea el archivo correcto.");
       }
@@ -771,7 +811,9 @@ function openAyuda(){
 
     <hr>
     <b>Importante</b><br>
-    Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.<br><br>
+    Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.<br>
+    El monto se carga siempre positivo: el Tipo define si suma o resta.<br>
+    Usá Exportar para guardar backup e Importar para recuperarlo.<br><br>
 
     <button onclick="cargarEjemplo()">Cargar ejemplo para probar</button>
     <div class="helper">El ejemplo aparece solo cuando este usuario no tiene movimientos cargados.</div>
@@ -831,6 +873,7 @@ function openAnalisis(){
   const colores = ["#5b8def","#f39c12","#27ae60","#e74c3c","#8e44ad","#16a085","#d35400","#7f8c8d"];
   let grafica = "";
   let leyenda = "";
+  let detalle = "";
 
   if(entradas.length){
     let acumulado = 0;
@@ -850,6 +893,18 @@ function openAnalisis(){
       return `${color} ${inicio.toFixed(2)}% ${acumulado.toFixed(2)}%`;
     }).join(", ");
 
+    detalle = entradas.map(([cat,monto])=>{
+      const porcentaje = totalGas>0 ? (monto/totalGas)*100 : 0;
+      return `
+        <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;border-bottom:1px solid #eee;padding-bottom:5px;">
+          <span>${cat}</span>
+          <span style="white-space:nowrap;text-align:right;"><b>${fmt(monto)}</b> (${porcentaje.toFixed(1)}%)</span>
+        </div>`;
+    }).join("");
+
+    const mayor = entradas[0];
+    const mayorPct = totalGas>0 ? (mayor[1]/totalGas)*100 : 0;
+
     grafica = `
       <div style="display:flex;justify-content:center;margin:14px 0 10px;">
         <div style="
@@ -861,24 +916,25 @@ function openAnalisis(){
       <div style="font-size:13px;color:#555;text-align:center;margin-bottom:12px;">
         Distribución de gastos del mes
       </div>
+      <div style="background:#fff3cd;color:#856404;padding:8px;border-radius:8px;margin-bottom:8px;">
+        Mayor gasto: <b>${mayor[0]}</b> — ${fmt(mayor[1])} (${mayorPct.toFixed(1)}%)
+      </div>
       <div>${leyenda}</div>
     `;
   } else {
+    detalle = "Sin datos";
     grafica = `<div style="margin-top:10px;color:#666;">No hay gastos cargados en este mes para mostrar la gráfica.</div>`;
   }
 
-  let detalle = "";
-  if(entradas.length){
-    detalle = entradas.map(([cat,monto])=> `${cat}: ${fmt(monto)}`).join("<br>");
-  } else {
-    detalle = "Sin datos";
-  }
-
+  const balanceMes = totalIng-totalGas;
+  const balanceClase = balanceMes > 0 ? "balance-pos" : balanceMes < 0 ? "balance-neg" : "balance-zero";
   content.innerHTML = `
-    <b>Resumen del mes</b><br><br>
-    Ingresos: ${fmt(totalIng)}<br>
-    Gastos: ${fmt(totalGas)}<br>
-    Balance: ${fmt(totalIng-totalGas)}
+    <b>Resumen del mes</b>
+    <div class="analysisCards">
+      <div class="analysisCard">Ingresos<br><b class="ingresos">${fmt(totalIng)}</b></div>
+      <div class="analysisCard">Gastos<br><b class="gastos">${fmt(totalGas)}</b></div>
+      <div class="analysisCard">Balance<br><b class="${balanceClase}">${fmt(balanceMes)}</b></div>
+    </div>
     <hr>
     <b>Gastos por categoría</b><br>
     ${detalle}
@@ -943,6 +999,15 @@ function actualizarBannerEjemplo(){
   b.style.display = hayEjemplo ? "block" : "none";
 }
 
+function formatoFechaVista(str){
+  const d=parseLocalDate(str);
+  if(!d) return str || "";
+  const dd=String(d.getDate()).padStart(2,"0");
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const yy=d.getFullYear();
+  return `${dd}/${mm}/${yy}`;
+}
+
 function actualizarBotonEjemplo(){
   const btn = document.getElementById("btnEjemplo");
   if(!btn) return;
@@ -975,13 +1040,16 @@ function render(){
 
     if(pasaBusqueda(m)){
       visibles++;
+      const claseTipo = m.tipo=="Ingreso" ? "tipoIngreso" : "tipoGasto";
+      const claseMonto = m.tipo=="Ingreso" ? "montoIngreso" : "montoGasto";
+      const signo = m.tipo=="Ingreso" ? "+ " : "- ";
       tabla.innerHTML += `<tr>
-        <td>${escapeHTML(m.fecha||"")}</td>
-        <td>${escapeHTML(m.tipo||"")}</td>
+        <td>${escapeHTML(formatoFechaVista(m.fecha||""))}</td>
+        <td class="${claseTipo}">${escapeHTML(m.tipo||"")}</td>
         <td>${escapeHTML(m.cuenta||"")}</td>
         <td>${escapeHTML(m.categoria||"")}</td>
         <td>${escapeHTML(m.detalle||"")}</td>
-        <td class="monto">${fmt(montoMovimiento(m))}</td>
+        <td class="monto ${claseMonto}">${signo}${fmt(Math.abs(Number(m.monto)||0))}</td>
         <td class="accion">
           <button onclick="openNuevoPorId(${m.id})" title="Editar movimiento">✏️</button>
           <button onclick='borrar(${m.id})' title="Borrar movimiento">❌</button>
