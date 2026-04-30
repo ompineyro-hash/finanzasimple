@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanzaSimple V9.9.4.1</title>
+<title>FinanzaSimple V9.9.5 RESET SEGURO</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -146,7 +146,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 
 <div id="loginScreen" class="loginWrap">
   <div class="loginCard">
-    <div class="loginTitle">FinanzaSimple V9.9.4.1</div>
+    <div class="loginTitle">FinanzaSimple V9.9.5 RESET SEGURO</div>
     <div class="loginSub">Ingreso por usuario</div>
     <input id="login_user" placeholder="Usuario" autocomplete="username">
     <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password">
@@ -157,7 +157,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span>FinanzaSimple V9.9.4.1</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
+<header><span>FinanzaSimple V9.9.5 RESET SEGURO</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button class="logoutBtn" onclick="logout()">Salir</button></header>
 
 <div class="container">
 
@@ -640,6 +640,13 @@ function openConfig(){
     <input id="ncat" placeholder="Nueva categoría">
     <button onclick="addCategoria()">Agregar</button>
     <hr>
+    <div class="adminBox" style="border-color:#f1c6c1;background:#fff8f7;">
+      <b>Reiniciar datos</b><br>
+      <div class="muted">Borra movimientos, cuentas y categorías del usuario actual. No borra usuarios, admin, prueba ni licencia.</div>
+      <button class="dangerBtn" onclick="reiniciarDatosApp()">🧹 Reiniciar datos de la app</button>
+      <div class="helper">Útil para limpiar pruebas o empezar de cero sin reiniciar los días de uso.</div>
+    </div>
+    <hr>
     <div class="adminBox">
       <b>Backup</b><br>
       <div class="muted">Guardá una copia de seguridad y recuperala cuando la necesites.</div>
@@ -659,6 +666,23 @@ function openConfig(){
       <div class="helper">Cada usuario trabaja con sus propios movimientos, cuentas y categorías.</div>
     </div>`;
   renderUsuariosConfig();
+}
+
+
+function reiniciarDatosApp(){
+  if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para reiniciar datos"); return; }
+  if(!currentUser) return alert("Primero tenés que entrar con un usuario");
+  const msg = "Vas a borrar movimientos, cuentas y categorías de este usuario.\n\nNO se borran usuarios, admin, fecha de inicio de prueba, fecha fin de prueba ni licencia.\n\nEsta acción no se puede deshacer. ¿Continuar?";
+  if(!confirm(msg)) return;
+  const msg2 = "Confirmación final:\n\nSe reinician solo los datos de trabajo.\nLa prueba/licencia queda igual.\n\n¿Reiniciar ahora?";
+  if(!confirm(msg2)) return;
+  movs=[];
+  cuentas=[];
+  categorias=[];
+  guardarStorage();
+  closeModal();
+  render();
+  showNotice("✔ Datos reiniciados. Usuarios, admin y prueba/licencia se mantuvieron.");
 }
 
 function addCuenta(){
@@ -725,7 +749,7 @@ function guardarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba 
   }
   const backup={
     app:"FinanzaSimple",
-    version:"V9.9.4",
+    version:"V9.9.5",
     creado:new Date().toISOString(),
     tipo:admin ? "completo" : "usuario",
     usuarioActual:currentUser,
