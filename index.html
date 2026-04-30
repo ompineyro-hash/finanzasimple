@@ -151,8 +151,9 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
     <input id="login_user" placeholder="Usuario" autocomplete="username">
     <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password">
     <button onclick="login()" style="width:100%;margin:8px 0 0 0;">Entrar</button>
+    <button onclick="crearUsuarioDesdeLogin()" style="width:100%;margin:8px 0 0 0;background:#27ae60;">Crear usuario</button>
     <div id="loginError" class="errorBox"></div>
-    <div class="helper">Si es tu primera vez, pedí tu usuario y clave.</div>
+    <div class="helper">Si es tu primera vez, tocá <b>Crear usuario</b> y empezá tu prueba.</div>
   </div>
 </div>
 
@@ -640,6 +641,13 @@ function openConfig(){
     <input id="ncat" placeholder="Nueva categoría">
     <button onclick="addCategoria()">Agregar</button>
     <hr>
+    <div class="adminBox" style="border-color:#f1c6c1;background:#fff8f7;">
+      <b>Reiniciar datos</b><br>
+      <div class="muted">Borra movimientos, cuentas y categorías del usuario actual. No borra usuarios, admin, prueba ni licencia.</div>
+      <button class="dangerBtn" onclick="reiniciarDatosApp()">🧹 Reiniciar datos de la app</button>
+      <div class="helper">Útil para limpiar pruebas o empezar de cero sin reiniciar los días de uso.</div>
+    </div>
+    <hr>
     <div class="adminBox">
       <b>Backup</b><br>
       <div class="muted">Guardá una copia de seguridad y recuperala cuando la necesites.</div>
@@ -659,6 +667,23 @@ function openConfig(){
       <div class="helper">Cada usuario trabaja con sus propios movimientos, cuentas y categorías.</div>
     </div>`;
   renderUsuariosConfig();
+}
+
+
+function reiniciarDatosApp(){
+  if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para reiniciar datos"); return; }
+  if(!currentUser) return alert("Primero tenés que entrar con un usuario");
+  const msg = "Vas a borrar movimientos, cuentas y categorías de este usuario.\n\nNO se borran usuarios, admin, fecha de inicio de prueba, fecha fin de prueba ni licencia.\n\nEsta acción no se puede deshacer. ¿Continuar?";
+  if(!confirm(msg)) return;
+  const msg2 = "Confirmación final:\n\nSe reinician solo los datos de trabajo.\nLa prueba/licencia queda igual.\n\n¿Reiniciar ahora?";
+  if(!confirm(msg2)) return;
+  movs=[];
+  cuentas=[];
+  categorias=[];
+  guardarStorage();
+  closeModal();
+  render();
+  showNotice("✔ Datos reiniciados. Usuarios, admin y prueba/licencia se mantuvieron.");
 }
 
 function addCuenta(){
@@ -725,7 +750,7 @@ function guardarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba 
   }
   const backup={
     app:"FinanzaSimple",
-    version:"V9.9.4",
+    version:"V9.9.5",
     creado:new Date().toISOString(),
     tipo:admin ? "completo" : "usuario",
     usuarioActual:currentUser,
@@ -882,6 +907,63 @@ function borrarUsuario(i){
   guardarUsuarios(usuarios);
   ["movs","cuentas","categorias"].forEach(parte=>localStorage.removeItem(claveUsuarioPorNombre(usuario,parte)));
   openConfig();
+}
+
+
+function crearUsuarioDesdeLogin(){
+  const usuario=(login_user.value||"").trim();
+  const clave=(login_pass.value||"").trim();
+
+  if(!usuario || !clave){
+    loginError.style.display="block";
+    loginError.innerText="Para crear usuario, completá usuario y clave";
+    return;
+  }
+  if(usuario.length < 3){
+    loginError.style.display="block";
+    loginError.innerText="El usuario debe tener al menos 3 caracteres";
+    return;
+  }
+  if(clave.length < 4){
+    loginError.style.display="block";
+    loginError.innerText="La clave debe tener al menos 4 caracteres";
+    return;
+  }
+  if(usuario.includes(" ")){
+    loginError.style.display="block";
+    loginError.innerText="El usuario no puede tener espacios";
+    return;
+  }
+  if(usuario.toLowerCase()==="admin"){
+    loginError.style.display="block";
+    loginError.innerText="El usuario admin ya existe";
+    return;
+  }
+
+  const usuarios=initUsuarios();
+  if(usuarios.some(u=>u.usuario.toLowerCase()===usuario.toLowerCase())){
+    loginError.style.display="block";
+    loginError.innerText="Ese usuario ya existe. Usá Entrar.";
+    return;
+  }
+
+  usuarios.push({usuario, clave, admin:false});
+  guardarUsuarios(usuarios);
+  localStorage.setItem(claveUsuarioPorNombre(usuario,"movs"), JSON.stringify([]));
+  localStorage.setItem(claveUsuarioPorNombre(usuario,"cuentas"), JSON.stringify([]));
+  localStorage.setItem(claveUsuarioPorNombre(usuario,"categorias"), JSON.stringify([]));
+
+  currentUser=usuario;
+  cargarDatosUsuario();
+  loginScreen.style.display="none";
+  appScreen.style.display="block";
+  userBadge.innerText="Usuario: " + currentUser + " (usuario)";
+  login_pass.value="";
+  loginError.style.display="none";
+  closeModal();
+  render();
+  renderTrial();
+  bloquearSiTrialVencido();
 }
 
 function login(){
