@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" translate="no" class="notranslate">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanzaSimple – Control de gastos</title>
+<meta name="google" content="notranslate">
+<title>FinanzasSimple</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -140,39 +141,49 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
     -webkit-overflow-scrolling:touch;
   }
 }
+
+.typeWarning{display:none;background:#fff3cd;color:#856404;border:1px solid #f1d28a;border-radius:10px;padding:9px;margin:8px 0;font-size:13px;line-height:1.35}
+.typeWarning b{display:block;margin-bottom:3px}
 </style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#34495e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="FinanzasSimple">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
-<body>
+<body translate="no" class="notranslate">
 
 <div id="loginScreen" class="loginWrap">
   <div class="loginCard">
-    <div class="loginTitle">FinanzaSimple – Control de gastos</div>
-    <div class="loginSub">Ingreso por usuario</div>
-    <input id="login_user" placeholder="Usuario" autocomplete="username">
-    <input id="login_pass" type="password" placeholder="Clave" autocomplete="current-password">
-    <button onclick="login()" style="width:100%;margin:8px 0 0 0;">Entrar</button>
-    <button onclick="crearUsuarioDesdeLogin()" style="width:100%;margin:8px 0 0 0;background:#27ae60;">Crear usuario</button>
+    <div class="loginTitle" data-i18n="appTitle">FinanzaSimple – Control de gastos</div>
+    <div class="loginSub" data-i18n="loginSubtitle">Ingreso por usuario</div>
+    <input id="login_user" data-i18n-placeholder="user" placeholder="Usuario" autocomplete="username">
+    <input id="login_pass" type="password" data-i18n-placeholder="password" placeholder="Clave" autocomplete="current-password">
+    <button onclick="login()" style="width:100%;margin:8px 0 0 0;" data-i18n="enter">Entrar</button>
+    <button onclick="crearUsuarioDesdeLogin()" style="width:100%;margin:8px 0 0 0;background:#27ae60;" data-i18n="createUser">Crear usuario</button>
     <div id="loginError" class="errorBox"></div>
-    <div class="helper">Si es tu primera vez, tocá <b>Crear usuario</b> y empezá tu prueba.</div>
+    <div class="helper" data-i18n-html="loginHelp">Si es tu primera vez, tocá <b>Crear usuario</b> y empezá tu prueba.</div>
   </div>
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span>FinanzaSimple – Control de gastos</span><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ Ayuda</button><button onclick="activarLicencia()" style="background:#e67e22">🔓 Activar</button> <button class="logoutBtn" onclick="logout()">Salir</button></header>
+<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
 
 <div class="container">
 
 <div id="bannerEjemplo" style="display:none;background:#fff3cd;color:#856404;padding:10px;border-radius:8px;margin:10px 0;">
-⚠️ Estás viendo un ejemplo de cómo funciona la app. Iniciá la prueba para usarla con tus datos.
-<button onclick="limpiarEjemplo()" style="margin-left:10px;background:#d9534f;color:white;border:none;padding:5px 10px;border-radius:5px;">🗑 Limpiar ejemplo</button>
+<span data-i18n="exampleBanner">⚠️ Estás viendo un ejemplo de cómo funciona la app. Iniciá la prueba para usarla con tus datos.</span>
+<button onclick="limpiarEjemplo()" style="margin-left:10px;background:#d9534f;color:white;border:none;padding:5px 10px;border-radius:5px;" data-i18n="clearExample">🗑 Limpiar ejemplo</button>
 </div>
 
 <div id="trialBanner" class="trialBanner"></div>
 
 <div class="top">
-<div class="card">Balance<div id="bal" class="value"></div></div>
-<div class="card">Ingresos<div id="ing" class="value"></div></div>
-<div class="card">Gastos<div id="gas" class="value"></div></div>
+<div class="card"><span data-i18n="balance">Balance</span><div id="bal" class="value"></div></div>
+<div class="card"><span data-i18n="incomePlural">Ingresos</span><div id="ing" class="value"></div></div>
+<div class="card"><span data-i18n="expensePlural">Gastos</span><div id="gas" class="value"></div></div>
 </div>
 
 <div style="text-align:center">
@@ -183,35 +194,35 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 
 <div id="notice" style="display:none;background:#eaf7ee;color:#1f6b3a;padding:9px;border-radius:8px;margin:8px 0;font-size:13px;font-weight:bold;"></div>
 
-<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para cargar movimientos');return;} openNuevo()">+ Nuevo</button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para usar configuración');return;} openConfig()">⚙ Config</button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para ver análisis');return;} openAnalisis()">📊 Análisis</button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para exportar');return;} guardarCopia()" style="background:#27ae60">💾 Exportar</button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada('Iniciá la prueba para importar');return;} cargarCopia()" style="background:#7f8c8d">📂 Importar</button>
-<button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none;background:#f39c12">🧪 Ejemplo</button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToAdd'));return;} openNuevo()">+ <span data-i18n="newBtn">Nuevo</span></button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToConfig'));return;} openConfig()">⚙ <span data-i18n="configShort">Config</span></button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToAnalysis'));return;} openAnalisis()">📊 <span data-i18n="analysis">Análisis</span></button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCopia()" style="background:#27ae60">💾 <span data-i18n="export">Exportar</span></button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToImport'));return;} cargarCopia()" style="background:#7f8c8d">📂 <span data-i18n="import">Importar</span></button>
+<button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none;background:#f39c12">🧪 <span data-i18n="example">Ejemplo</span></button>
 
 <div class="searchBox">
-  <label>Buscar</label>
+  <label data-i18n="search">Buscar</label>
   <select id="filtroColumna" onchange="render()">
-    <option value="todo">Todo</option>
-    <option value="fecha">Fecha</option>
-    <option value="tipo">Tipo</option>
-    <option value="cuenta">Cuenta</option>
-    <option value="categoria">Categoría</option>
-    <option value="detalle">Detalle</option>
-    <option value="monto">Monto</option>
+    <option value="todo" data-i18n="all">Todo</option>
+    <option value="fecha" data-i18n="date">Fecha</option>
+    <option value="tipo" data-i18n="type">Tipo</option>
+    <option value="cuenta" data-i18n="account">Cuenta</option>
+    <option value="categoria" data-i18n="category">Categoría</option>
+    <option value="detalle" data-i18n="detail">Detalle</option>
+    <option value="monto" data-i18n="amount">Monto</option>
   </select>
-  <input id="textoBusqueda" placeholder="Escribir búsqueda..." oninput="render()">
-  <button onclick="limpiarBusqueda()">Limpiar</button>
+  <input id="textoBusqueda" data-i18n-placeholder="searchPlaceholder" placeholder="Escribir búsqueda..." oninput="render()">
+  <button onclick="limpiarBusqueda()" data-i18n="clear">Limpiar</button>
   <span id="resultadoBusqueda" class="resultCount">0 resultados</span>
-  <span class="searchNote">La búsqueda solo filtra la lista visible, no borra datos.</span>
+  <span class="searchNote" data-i18n="searchNote">La búsqueda solo filtra la lista visible, no borra datos.</span>
 </div>
 
 <div class="tableWrap">
 <table>
 <thead>
 <tr>
-<th>Fecha</th><th>Tipo</th><th>Cuenta</th><th>Categoría</th><th>Detalle</th><th class="monto">Monto</th><th class="accion">Acción</th>
+<th data-i18n="date">Fecha</th><th data-i18n="type">Tipo</th><th data-i18n="account">Cuenta</th><th data-i18n="category">Categoría</th><th data-i18n="detail">Detalle</th><th class="monto" data-i18n="amount">Monto</th><th class="accion" data-i18n="action">Acción</th>
 </tr>
 </thead>
 <tbody id="tabla"></tbody>
@@ -223,17 +234,131 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 
 <div id="bg" class="modalBg">
   <div id="modal" class="modal">
-    <div id="drag" class="drag"><span id="modalTitle" class="modalTitle">Ventana</span><button class="closeBtn" onclick="closeModal()">✖ Cerrar</button></div>
+    <div id="drag" class="drag"><span id="modalTitle" class="modalTitle">Ventana</span><button class="closeBtn" onclick="closeModal()">✖ <span data-i18n="close">Cerrar</span></button></div>
     <div id="content" class="content"></div>
   </div>
 </div>
 
 <script>
+
+const I18N = {
+  es:{appTitle:"FinanzaSimple – Control de gastos",loginSubtitle:"Ingreso por usuario",user:"Usuario",password:"Clave",enter:"Entrar",createUser:"Crear usuario",loginHelp:"Si es tu primera vez, tocá <b>Crear usuario</b> y empezá tu prueba.",help:"Ayuda",activate:"Activar",logout:"Salir",balance:"Balance",incomePlural:"Ingresos",expensePlural:"Gastos",newBtn:"Nuevo",configShort:"Config",analysis:"Análisis",export:"Exportar",import:"Importar",example:"Ejemplo",search:"Buscar",all:"Todo",date:"Fecha",type:"Tipo",account:"Cuenta",category:"Categoría",detail:"Detalle",amount:"Monto",action:"Acción",clear:"Limpiar",searchPlaceholder:"Escribir búsqueda...",searchNote:"La búsqueda solo filtra la lista visible, no borra datos.",close:"Cerrar",window:"Ventana",newMovement:"Nuevo movimiento",configuration:"Configuración",quickHelp:"Ayuda rápida",monthLocale:"es-AR",income:"Ingreso",expense:"Gasto",selectAccount:"-- Cuenta --",selectCategory:"-- Categoría --",save:"Guardar",configHelp:"Cuenta y categoría se cargan desde Config.",startTrialToAdd:"Iniciá la prueba para cargar movimientos",startTrialToConfig:"Iniciá la prueba para usar configuración",startTrialToAnalysis:"Iniciá la prueba para ver análisis",startTrialToExport:"Iniciá la prueba para exportar",startTrialToImport:"Iniciá la prueba para importar",noResults:"No hay resultados para esa búsqueda. Probá limpiar o cambiar el filtro.",noMovements:"No hay movimientos cargados en este mes. Usá <b>+ Nuevo</b> para cargar el primero.",movements:"movimientos",visible:"visibles",of:"de"},
+  pt:{appTitle:"FinanzaSimple – Controle de gastos",loginSubtitle:"Entrada por usuário",user:"Usuário",password:"Senha",enter:"Entrar",createUser:"Criar usuário",loginHelp:"Se for sua primeira vez, toque em <b>Criar usuário</b> e comece seu teste.",help:"Ajuda",activate:"Ativar",logout:"Sair",balance:"Saldo",incomePlural:"Receitas",expensePlural:"Despesas",newBtn:"Novo",configShort:"Config",analysis:"Análise",export:"Exportar",import:"Importar",example:"Exemplo",search:"Buscar",all:"Tudo",date:"Data",type:"Tipo",account:"Conta",category:"Categoria",detail:"Detalhe",amount:"Valor",action:"Ação",clear:"Limpar",searchPlaceholder:"Digite a busca...",searchNote:"A busca só filtra a lista visível, não apaga dados.",close:"Fechar",window:"Janela",newMovement:"Novo movimento",configuration:"Configuração",quickHelp:"Ajuda rápida",monthLocale:"pt-BR",income:"Receita",expense:"Despesa",selectAccount:"-- Conta --",selectCategory:"-- Categoria --",save:"Salvar",configHelp:"Conta e categoria são carregadas em Config.",startTrialToAdd:"Inicie o teste para lançar movimentos",startTrialToConfig:"Inicie o teste para usar configuração",startTrialToAnalysis:"Inicie o teste para ver análise",startTrialToExport:"Inicie o teste para exportar",startTrialToImport:"Inicie o teste para importar",noResults:"Não há resultados para essa busca. Tente limpar ou trocar o filtro.",noMovements:"Não há movimentos lançados neste mês. Use <b>+ Novo</b> para lançar o primeiro.",movements:"movimentos",visible:"visíveis",of:"de"},
+  en:{appTitle:"FinanzaSimple – Expense control",loginSubtitle:"User login",user:"User",password:"Password",enter:"Log in",createUser:"Create user",loginHelp:"If this is your first time, tap <b>Create user</b> and start your trial.",help:"Help",activate:"Activate",logout:"Log out",balance:"Balance",incomePlural:"Income",expensePlural:"Expenses",newBtn:"New",configShort:"Settings",analysis:"Analysis",export:"Export",import:"Import",example:"Example",search:"Search",all:"All",date:"Date",type:"Type",account:"Account",category:"Category",detail:"Detail",amount:"Amount",action:"Action",clear:"Clear",searchPlaceholder:"Type to search...",searchNote:"Search only filters the visible list; it does not delete data.",close:"Close",window:"Window",newMovement:"New movement",configuration:"Settings",quickHelp:"Quick help",monthLocale:"en-US",income:"Income",expense:"Expense",selectAccount:"-- Account --",selectCategory:"-- Category --",save:"Save",configHelp:"Account and category are loaded from Settings.",startTrialToAdd:"Start the trial to add movements",startTrialToConfig:"Start the trial to use settings",startTrialToAnalysis:"Start the trial to view analysis",startTrialToExport:"Start the trial to export",startTrialToImport:"Start the trial to import",noResults:"No results for that search. Try clearing it or changing the filter.",noMovements:"No movements loaded for this month. Use <b>+ New</b> to add the first one.",movements:"movements",visible:"visible",of:"of"}
+};
+
+Object.assign(I18N.es,{
+  edit:"Editar", delete:"Borrar", add:"Agregar", accounts:"Cuentas", categories:"Categorías", currency:"Moneda", currencyHelp:"Símbolo usado en importes, balance y análisis. Ejemplos: $, R$, €, USD.", currencySymbol:"Símbolo de moneda", saveCurrency:"Guardar moneda", currencySaved:"✔ Moneda guardada.", canEditDelete:"Podés editar. Solo se puede borrar si no tiene movimientos.", newAccount:"Nueva cuenta", newCategory:"Nueva categoría",
+  resetData:"Reiniciar datos", resetDataHelp:"Borra movimientos, cuentas y categorías del usuario actual. No borra usuarios, admin, prueba ni licencia.", resetDataBtn:"🧹 Reiniciar datos de la app", resetDataNote:"Útil para limpiar pruebas o empezar de cero sin reiniciar los días de uso.",
+  backup:"Backup", backupHelp:"Guardá una copia de seguridad y recuperala cuando la necesites.", saveBackup:"💾 Guardar copia", loadBackup:"📂 Cargar copia", backupNote:"Si entrás como admin, la copia guarda todos los usuarios. Si entrás como usuario común, guarda solo tus datos.",
+  users:"Usuarios", usersHelp:"Solo admin puede crear usuarios, cambiar claves y borrar usuarios comunes. El usuario admin no se borra.", newUser:"Nuevo usuario", initialPassword:"Clave inicial", repeatPassword:"Repetir clave", addUser:"Agregar usuario", usersNote:"Cada usuario trabaja con sus propios movimientos, cuentas y categorías.",
+  roleAdmin:"admin", roleUser:"usuario", licenseActivated:"✅ Licencia activada para este usuario.", exampleBanner:"⚠️ Estás viendo un ejemplo de cómo funciona la app. Iniciá la prueba para usarla con tus datos.", clearExample:"🗑 Limpiar ejemplo",
+  editTitle:"Editar movimiento", deleteTitle:"Borrar movimiento", searchCountZero:"0 movimientos", analysisSummary:"Resumen del mes", expensesByCategory:"Gastos por categoría", chart:"Gráfica", noData:"Sin datos", noExpensesChart:"No hay gastos cargados en este mes para mostrar la gráfica.", expensesDistribution:"Distribución de gastos del mes", biggestExpense:"Mayor gasto", noCategory:"Sin categoría"
+});
+Object.assign(I18N.pt,{
+  edit:"Editar", delete:"Excluir", add:"Adicionar", accounts:"Contas", categories:"Categorias", currency:"Moeda", currencyHelp:"Símbolo usado nos valores, saldo e análise. Exemplos: $, R$, €, USD.", currencySymbol:"Símbolo da moeda", saveCurrency:"Salvar moeda", currencySaved:"✔ Moeda salva.", canEditDelete:"Você pode editar. Só é possível excluir se não houver movimentos.", newAccount:"Nova conta", newCategory:"Nova categoria",
+  resetData:"Reiniciar dados", resetDataHelp:"Apaga movimentos, contas e categorias do usuário atual. Não apaga usuários, admin, teste nem licença.", resetDataBtn:"🧹 Reiniciar dados da app", resetDataNote:"Útil para limpar testes ou começar do zero sem reiniciar os dias de uso.",
+  backup:"Backup", backupHelp:"Salve uma cópia de segurança e recupere quando precisar.", saveBackup:"💾 Salvar cópia", loadBackup:"📂 Carregar cópia", backupNote:"Se entrar como admin, a cópia salva todos os usuários. Se entrar como usuário comum, salva só seus dados.",
+  users:"Usuários", usersHelp:"Só o admin pode criar usuários, trocar senhas e excluir usuários comuns. O usuário admin não pode ser excluído.", newUser:"Novo usuário", initialPassword:"Senha inicial", repeatPassword:"Repetir senha", addUser:"Adicionar usuário", usersNote:"Cada usuário trabalha com seus próprios movimentos, contas e categorias.",
+  roleAdmin:"admin", roleUser:"usuário", licenseActivated:"✅ Licença ativada para este usuário.", exampleBanner:"⚠️ Você está vendo um exemplo de como a app funciona. Inicie o teste para usar seus dados.", clearExample:"🗑 Limpar exemplo",
+  editTitle:"Editar movimento", deleteTitle:"Excluir movimento", searchCountZero:"0 movimentos", analysisSummary:"Resumo do mês", expensesByCategory:"Despesas por categoria", chart:"Gráfico", noData:"Sem dados", noExpensesChart:"Não há despesas lançadas neste mês para mostrar o gráfico.", expensesDistribution:"Distribuição das despesas do mês", biggestExpense:"Maior despesa", noCategory:"Sem categoria"
+});
+Object.assign(I18N.en,{
+  edit:"Edit", delete:"Delete", add:"Add", accounts:"Accounts", categories:"Categories", currency:"Currency", currencyHelp:"Symbol used for amounts, balance and analysis. Examples: $, R$, €, USD.", currencySymbol:"Currency symbol", saveCurrency:"Save currency", currencySaved:"✔ Currency saved.", canEditDelete:"You can edit. You can only delete it if it has no movements.", newAccount:"New account", newCategory:"New category",
+  resetData:"Reset data", resetDataHelp:"Deletes movements, accounts and categories for the current user. It does not delete users, admin, trial or license.", resetDataBtn:"🧹 Reset app data", resetDataNote:"Useful for cleaning tests or starting over without restarting the trial days.",
+  backup:"Backup", backupHelp:"Save a backup copy and restore it when needed.", saveBackup:"💾 Save copy", loadBackup:"📂 Load copy", backupNote:"If you log in as admin, the copy saves all users. If you log in as a regular user, it saves only your data.",
+  users:"Users", usersHelp:"Only admin can create users, change passwords and delete regular users. The admin user cannot be deleted.", newUser:"New user", initialPassword:"Initial password", repeatPassword:"Repeat password", addUser:"Add user", usersNote:"Each user works with their own movements, accounts and categories.",
+  roleAdmin:"admin", roleUser:"user", licenseActivated:"✅ License activated for this user.", exampleBanner:"⚠️ You are viewing an example of how the app works. Start the trial to use your own data.", clearExample:"🗑 Clear example",
+  editTitle:"Edit movement", deleteTitle:"Delete movement", searchCountZero:"0 movements", analysisSummary:"Monthly summary", expensesByCategory:"Expenses by category", chart:"Chart", noData:"No data", noExpensesChart:"There are no expenses loaded this month to show the chart.", expensesDistribution:"Monthly expense distribution", biggestExpense:"Biggest expense", noCategory:"No category"
+});
+
+Object.assign(I18N.es,{
+  confirmTypeChange:"Estás cambiando el tipo de {from} a {to}. Esto cambia el balance. ¿Confirmar?",
+  typeChangeSoftTitle:"Atención: cambiaste el tipo", typeChangeSoftText:"Pasaste de {from} a {to}. Esto modifica el balance cuando guardes.", movementUpdated:"✔ Movimiento actualizado", movementSaved:"✔ Movimiento guardado",
+  saveError:"No se pudo guardar el movimiento. Cerrá la ventana, abrila de nuevo y revisá que Fecha, Tipo, Cuenta, Categoría y Monto estén completos. Detalle técnico: {error}",
+  missingDate:"Falta completar fecha", missingType:"Seleccioná tipo", missingAccount:"Seleccioná cuenta", missingCategory:"Seleccioná categoría", missingAmount:"Completá monto", zeroAmount:"El monto no puede ser 0", negativeAmount:"El monto debe cargarse positivo. El Tipo define si suma o resta.",
+  deleteMovementConfirm:"Vas a borrar este movimiento.{detail}\n\nEsta acción no se puede deshacer. ¿Continuar?",
+  startTrialConfirm:"¿Querés iniciar la prueba de {days} días para este usuario?", trialStarted:"Prueba iniciada. Ya podés usar FinanzaSimple.",
+  buyMessage:"Para comprar, contactame por WhatsApp o email. En la próxima versión podemos dejar este botón conectado a tu medio de cobro.", activationPrompt:"Ingresá el código de activación:", activationOk:"Licencia activada correctamente.", activationBad:"Código incorrecto.",
+  newAccountPrompt:"Nuevo nombre de cuenta:", newCategoryPrompt:"Nuevo nombre de categoría:", nameRequired:"El nombre no puede quedar vacío", accountExists:"Esa cuenta ya existe", categoryExists:"Esa categoría ya existe", accountInUse:"No se puede borrar porque tiene movimientos asociados", categoryInUse:"No se puede borrar porque tiene movimientos asociados", deleteAccountConfirm:"¿Seguro que querés borrar la cuenta '{name}'?", deleteCategoryConfirm:"¿Seguro que querés borrar la categoría '{name}'?",
+  mustLogin:"Primero tenés que entrar con un usuario", invalidBackup:"Ese archivo no parece ser una copia válida de FinanzaSimple", adminOnlyFullBackup:"Solo admin puede cargar una copia completa", invalidUsersBackup:"La copia completa no tiene usuarios válidos", replaceAllBackupConfirm:"Esto reemplaza usuarios y datos actuales por la copia. ¿Continuar?", backupLoadedRelogin:"La copia fue cargada. Tenés que volver a entrar.", replaceUserBackupConfirm:"Esto reemplaza los datos del usuario actual por la copia. ¿Continuar?", backupReadError:"No se pudo leer la copia. Revisá que sea el archivo correcto.",
+  adminOnlyAdd:"Solo admin puede agregar usuarios", completeUserPass:"Completar usuario, clave y repetir clave", passwordsDontMatch:"Las claves no coinciden", userMin:"El usuario debe tener al menos 3 caracteres", passMin:"La clave debe tener al menos 4 caracteres", userNoSpaces:"El usuario no puede tener espacios", adminExists:"El usuario admin ya existe y no se puede duplicar", userExists:"Ese usuario ya existe", userCreated:"Usuario creado correctamente", adminOnlyPass:"Solo admin puede cambiar claves", userNotFound:"Usuario no encontrado", newPasswordPrompt:"Nueva clave para {user}:", repeatPasswordPrompt:"Repetir nueva clave para {user}:", passwordEmpty:"La clave no puede quedar vacía", passwordUpdated:"Clave actualizada", adminOnlyDelete:"Solo admin puede borrar usuarios", adminCannotDelete:"Admin no se puede borrar", deleteUserConfirm:"¿Seguro que querés borrar el usuario '{user}' y todos sus datos?",
+  clearExampleConfirm:"¿Querés borrar los datos de ejemplo?", exampleHasData:"Este usuario ya tiene movimientos. Para no mezclar datos, el ejemplo solo aparece y se carga cuando no hay movimientos.", exampleLoaded:"Ejemplo cargado. Ahora podés mirar Movimientos y Análisis.", movementNotFound:"No encontré el movimiento para editar"
+});
+
+Object.assign(I18N.es,{
+  helpTitle3:"FinanzaSimple en 3 pasos", helpStep1:"Primero cargá tus <b>cuentas</b> y <b>categorías</b>.", helpAccountExamples:"Ejemplos de cuenta: Banco, Efectivo, Mercado Pago.", helpCategoryExamples:"Ejemplos de categoría: Sueldo, Alimentos, Servicios.", helpStep2:"Cargá cada ingreso o gasto. Cuenta, categoría y monto son obligatorios.", helpStep3:"Mirá el resumen del mes y los gastos por categoría.", important:"Importante", helpImportant1:"Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.", helpImportant2:"El monto se carga siempre positivo: el Tipo define si suma o resta.", helpImportant3:"Usá Exportar para guardar backup e Importar para recuperarlo.", helpIncludes:"Esta versión incluye:", helpTrialLine:"prueba por días", helpActivationLine:"activación por usuario", helpBeforeTrial:"Antes de iniciar la prueba, estás viendo un ejemplo para entender cómo funciona la app. Iniciá la prueba para usarla con tus propios datos.", loadExampleTest:"Cargar ejemplo para probar", exampleOnlyEmpty:"El ejemplo aparece solo cuando este usuario no tiene movimientos cargados."
+});
+Object.assign(I18N.pt,{
+  confirmTypeChange:"Você está mudando o tipo de {from} para {to}. Isso altera o saldo. Confirmar?",
+  typeChangeSoftTitle:"Atenção: você mudou o tipo", typeChangeSoftText:"Você passou de {from} para {to}. Isso altera o saldo ao salvar.", movementUpdated:"✔ Movimento atualizado", movementSaved:"✔ Movimento salvo",
+  saveError:"Não foi possível salvar o movimento. Feche a janela, abra novamente e confira se Data, Tipo, Conta, Categoria e Valor estão completos. Detalhe técnico: {error}",
+  missingDate:"Falta completar a data", missingType:"Selecione o tipo", missingAccount:"Selecione a conta", missingCategory:"Selecione a categoria", missingAmount:"Complete o valor", zeroAmount:"O valor não pode ser 0", negativeAmount:"O valor deve ser lançado positivo. O Tipo define se soma ou subtrai.",
+  deleteMovementConfirm:"Você vai excluir este movimento.{detail}\n\nEsta ação não pode ser desfeita. Continuar?",
+  startTrialConfirm:"Quer iniciar o teste de {days} dias para este usuário?", trialStarted:"Teste iniciado. Você já pode usar o FinanzaSimple.",
+  buyMessage:"Para comprar, entre em contato por WhatsApp ou email. Na próxima versão podemos conectar este botão ao seu meio de pagamento.", activationPrompt:"Digite o código de ativação:", activationOk:"Licença ativada corretamente.", activationBad:"Código incorreto.",
+  newAccountPrompt:"Novo nome da conta:", newCategoryPrompt:"Novo nome da categoria:", nameRequired:"O nome não pode ficar vazio", accountExists:"Essa conta já existe", categoryExists:"Essa categoria já existe", accountInUse:"Não é possível excluir porque há movimentos associados", categoryInUse:"Não é possível excluir porque há movimentos associados", deleteAccountConfirm:"Tem certeza que quer excluir a conta '{name}'?", deleteCategoryConfirm:"Tem certeza que quer excluir a categoria '{name}'?",
+  mustLogin:"Primeiro você precisa entrar com um usuário", invalidBackup:"Esse arquivo não parece ser uma cópia válida do FinanzaSimple", adminOnlyFullBackup:"Só o admin pode carregar uma cópia completa", invalidUsersBackup:"A cópia completa não tem usuários válidos", replaceAllBackupConfirm:"Isto substitui usuários e dados atuais pela cópia. Continuar?", backupLoadedRelogin:"A cópia foi carregada. Você precisa entrar novamente.", replaceUserBackupConfirm:"Isto substitui os dados do usuário atual pela cópia. Continuar?", backupReadError:"Não foi possível ler a cópia. Confira se é o arquivo correto.",
+  adminOnlyAdd:"Só o admin pode adicionar usuários", completeUserPass:"Complete usuário, senha e repetir senha", passwordsDontMatch:"As senhas não coincidem", userMin:"O usuário deve ter pelo menos 3 caracteres", passMin:"A senha deve ter pelo menos 4 caracteres", userNoSpaces:"O usuário não pode ter espaços", adminExists:"O usuário admin já existe e não pode ser duplicado", userExists:"Esse usuário já existe", userCreated:"Usuário criado corretamente", adminOnlyPass:"Só o admin pode trocar senhas", userNotFound:"Usuário não encontrado", newPasswordPrompt:"Nova senha para {user}:", repeatPasswordPrompt:"Repetir nova senha para {user}:", passwordEmpty:"A senha não pode ficar vazia", passwordUpdated:"Senha atualizada", adminOnlyDelete:"Só o admin pode excluir usuários", adminCannotDelete:"Admin não pode ser excluído", deleteUserConfirm:"Tem certeza que quer excluir o usuário '{user}' e todos os seus dados?",
+  clearExampleConfirm:"Quer apagar os dados de exemplo?", exampleHasData:"Este usuário já tem movimentos. Para não misturar dados, o exemplo só aparece e é carregado quando não há movimentos.", exampleLoaded:"Exemplo carregado. Agora você pode ver Movimentos e Análise.", movementNotFound:"Não encontrei o movimento para editar"
+});
+
+Object.assign(I18N.pt,{
+  helpTitle3:"FinanzaSimple em 3 passos", helpStep1:"Primeiro carregue suas <b>contas</b> e <b>categorias</b>.", helpAccountExamples:"Exemplos de conta: Banco, Dinheiro, Mercado Pago.", helpCategoryExamples:"Exemplos de categoria: Salário, Alimentação, Serviços.", helpStep2:"Lance cada receita ou despesa. Conta, categoria e valor são obrigatórios.", helpStep3:"Veja o resumo do mês e as despesas por categoria.", important:"Importante", helpImportant1:"Cada usuário tem seus próprios dados. Os dados ficam salvos neste dispositivo/navegador.", helpImportant2:"O valor é sempre carregado positivo: o Tipo define se soma ou subtrai.", helpImportant3:"Use Exportar para salvar backup e Importar para recuperar.", helpIncludes:"Esta versão inclui:", helpTrialLine:"teste por dias", helpActivationLine:"ativação por usuário", helpBeforeTrial:"Antes de iniciar o teste, você está vendo um exemplo para entender como a app funciona. Inicie o teste para usar seus próprios dados.", loadExampleTest:"Carregar exemplo para testar", exampleOnlyEmpty:"O exemplo aparece somente quando este usuário não tem movimentos carregados."
+});
+Object.assign(I18N.en,{
+  confirmTypeChange:"You are changing the type from {from} to {to}. This changes the balance. Confirm?",
+  typeChangeSoftTitle:"Attention: you changed the type", typeChangeSoftText:"You changed it from {from} to {to}. This will affect the balance when you save.", movementUpdated:"✔ Movement updated", movementSaved:"✔ Movement saved",
+  saveError:"The movement could not be saved. Close the window, open it again, and check that Date, Type, Account, Category and Amount are complete. Technical detail: {error}",
+  missingDate:"Date is missing", missingType:"Select type", missingAccount:"Select account", missingCategory:"Select category", missingAmount:"Enter amount", zeroAmount:"Amount cannot be 0", negativeAmount:"Amount must be entered as positive. Type defines whether it adds or subtracts.",
+  deleteMovementConfirm:"You are about to delete this movement.{detail}\n\nThis action cannot be undone. Continue?",
+  startTrialConfirm:"Do you want to start the {days}-day trial for this user?", trialStarted:"Trial started. You can now use FinanzaSimple.",
+  buyMessage:"To buy, contact me by WhatsApp or email. In the next version we can connect this button to your payment method.", activationPrompt:"Enter the activation code:", activationOk:"License activated successfully.", activationBad:"Incorrect code.",
+  newAccountPrompt:"New account name:", newCategoryPrompt:"New category name:", nameRequired:"The name cannot be empty", accountExists:"That account already exists", categoryExists:"That category already exists", accountInUse:"It cannot be deleted because it has linked movements", categoryInUse:"It cannot be deleted because it has linked movements", deleteAccountConfirm:"Are you sure you want to delete the account '{name}'?", deleteCategoryConfirm:"Are you sure you want to delete the category '{name}'?",
+  mustLogin:"You must log in first", invalidBackup:"That file does not seem to be a valid FinanzaSimple backup", adminOnlyFullBackup:"Only admin can load a full backup", invalidUsersBackup:"The full backup has no valid users", replaceAllBackupConfirm:"This replaces current users and data with the backup. Continue?", backupLoadedRelogin:"The backup was loaded. You need to log in again.", replaceUserBackupConfirm:"This replaces the current user's data with the backup. Continue?", backupReadError:"The backup could not be read. Check that it is the correct file.",
+  adminOnlyAdd:"Only admin can add users", completeUserPass:"Complete user, password and repeat password", passwordsDontMatch:"Passwords do not match", userMin:"User must have at least 3 characters", passMin:"Password must have at least 4 characters", userNoSpaces:"User cannot contain spaces", adminExists:"The admin user already exists and cannot be duplicated", userExists:"That user already exists", userCreated:"User created successfully", adminOnlyPass:"Only admin can change passwords", userNotFound:"User not found", newPasswordPrompt:"New password for {user}:", repeatPasswordPrompt:"Repeat new password for {user}:", passwordEmpty:"Password cannot be empty", passwordUpdated:"Password updated", adminOnlyDelete:"Only admin can delete users", adminCannotDelete:"Admin cannot be deleted", deleteUserConfirm:"Are you sure you want to delete user '{user}' and all their data?",
+  clearExampleConfirm:"Do you want to delete the example data?", exampleHasData:"This user already has movements. To avoid mixing data, the example only appears and loads when there are no movements.", exampleLoaded:"Example loaded. Now you can view Movements and Analysis.", movementNotFound:"I could not find the movement to edit"
+});
+
+Object.assign(I18N.en,{
+  helpTitle3:"FinanzaSimple in 3 steps", helpStep1:"First add your <b>accounts</b> and <b>categories</b>.", helpAccountExamples:"Account examples: Bank, Cash, Mercado Pago.", helpCategoryExamples:"Category examples: Salary, Food, Utilities.", helpStep2:"Add each income or expense. Account, category and amount are required.", helpStep3:"View the monthly summary and expenses by category.", important:"Important", helpImportant1:"Each user has their own data. Data is saved on this device/browser.", helpImportant2:"Amounts are always entered as positive: Type defines whether it adds or subtracts.", helpImportant3:"Use Export to save a backup and Import to restore it.", helpIncludes:"This version includes:", helpTrialLine:"trial by days", helpActivationLine:"activation per user", helpBeforeTrial:"Before starting the trial, you are viewing an example to understand how the app works. Start the trial to use your own data.", loadExampleTest:"Load example to test", exampleOnlyEmpty:"The example appears only when this user has no movements loaded."
+});
+
+function normalizeLang(lang){
+  const v = String(lang || "").toLowerCase().trim();
+  if(v === "en" || v.includes("ing") || v.includes("eng")) return "en";
+  if(v === "pt" || v.includes("port")) return "pt";
+  return "es";
+}
+let currentLang = normalizeLang(localStorage.getItem("fs_lang") || "es");
+function tr(key){ return (I18N[currentLang] && I18N[currentLang][key]) || I18N.es[key] || key; }
+function tipoTraducido(v){ return v==="Ingreso" ? tr("income") : v==="Gasto" ? tr("expense") : (v||""); }
+function msg(key, vars={}){ return String(tr(key)).replace(/\{(\w+)\}/g, (_,k)=> vars[k] ?? ""); }
+function setLang(lang){ currentLang = normalizeLang(lang); localStorage.setItem("fs_lang", currentLang); applyLang(); try{ render(); }catch(e){} refreshActiveModal(); }
+function refreshActiveModal(){
+  const bgEl=document.getElementById("bg");
+  if(!bgEl || bgEl.style.display!=="block") return;
+  const key=modal.dataset.modalKey;
+  if(key==="config") openConfig();
+  else if(key==="analysis") openAnalisis();
+  else if(key==="help") openAyuda();
+}
+function applyLang(){
+  document.documentElement.lang = currentLang;
+  document.documentElement.setAttribute("translate","no");
+  document.body && document.body.setAttribute("translate","no");
+  const sel=document.getElementById("langSelect"); if(sel) sel.value=currentLang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerText=tr(el.getAttribute("data-i18n")); });
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML=tr(el.getAttribute("data-i18n-html")); });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{ el.placeholder=tr(el.getAttribute("data-i18n-placeholder")); });
+}
+
 let fecha=new Date();
 let currentUser=null;
 let movs=[];
 let cuentas=[];
 let categorias=[];
+let moneda="$";
 
 function leerJSONSeguro(clave, valorDefault){
   try{
@@ -293,7 +418,7 @@ function renderTrial(){
     b.style.display="block";
     b.style.background="#eaf7ee";
     b.style.color="#1f6b3a";
-    b.innerHTML="✅ Licencia activada para este usuario.";
+    b.innerHTML=tr("licenseActivated");
     return;
   }
 
@@ -359,27 +484,27 @@ function iniciarPrueba(){
     closeModal();
     return;
   }
-  if(!confirm("¿Querés iniciar la prueba de " + TRIAL_DAYS + " días para este usuario?")) return;
+  if(!confirm(msg("startTrialConfirm", {days:TRIAL_DAYS}))) return;
   localStorage.setItem(trialKey("inicio"), new Date().toISOString());
   renderTrial();
   closeModal();
-  alert("Prueba iniciada. Ya podés usar FinanzaSimple.");
+  alert(tr("trialStarted"));
 }
 
 function comprarLicencia(){
-  alert("Para comprar, contactame por WhatsApp o email. En la próxima versión podemos dejar este botón conectado a tu medio de cobro.");
+  alert(tr("buyMessage"));
 }
 
 function activarLicencia(){
-  const codigo = prompt("Ingresá el código de activación:");
+  const codigo = prompt(tr("activationPrompt"));
   if(codigo === null) return;
   if(codigo.trim() === ACTIVATION_CODE){
     localStorage.setItem(trialKey("activado"), "SI");
     renderTrial();
     closeModal();
-    alert("Licencia activada correctamente.");
+    alert(tr("activationOk"));
   }else{
-    alert("Código incorrecto.");
+    alert(tr("activationBad"));
   }
 }
 
@@ -400,6 +525,7 @@ function cargarDatosUsuario(){
   movs=leerArraySeguro(claveUsuario("movs"),[]);
   cuentas=leerArraySeguro(claveUsuario("cuentas"),[]);
   categorias=leerArraySeguro(claveUsuario("categorias"),[]);
+  moneda=localStorage.getItem(claveUsuario("moneda")) || "$";
 
   if(!localStorage.getItem(claveUsuario("cuentas")) && currentUser==="admin"){
     const cuentasViejas=leerArraySeguro("cuentas",[]);
@@ -416,9 +542,10 @@ function guardarStorage(){
   localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
   localStorage.setItem(claveUsuario("cuentas"), JSON.stringify(cuentas));
   localStorage.setItem(claveUsuario("categorias"), JSON.stringify(categorias));
+  localStorage.setItem(claveUsuario("moneda"), moneda || "$")
 }
 
-function fmt(n){return "$ "+Number(n).toLocaleString("es-AR");}
+function fmt(n){return (moneda || "$") + " " + Number(n).toLocaleString("es-AR");}
 
 function parseLocalDate(str){
   if(!str) return null;
@@ -428,12 +555,14 @@ function parseLocalDate(str){
 }
 
 function mesTexto(d){
-  return d.toLocaleString("es-AR",{month:"long",year:"numeric"});
+  return d.toLocaleString(tr("monthLocale"),{month:"long",year:"numeric"});
 }
 
-function setModal(tipo, titulo){
+function setModal(tipo, titulo, key){
   modal.className = "modal " + tipo;
+  modal.dataset.modalKey = key || tipo;
   document.getElementById("modalTitle").innerText = titulo;
+  applyLang();
 }
 
 function fechaSugeridaNuevo(){
@@ -458,67 +587,155 @@ function cambiarMes(v){
 function openNuevo(m=null){
   if(bloquearSiTrialVencido()) return;
   bg.style.display="block";
-  setModal("nuevo","Nuevo movimiento");
+  setModal("nuevo",tr("newMovement"),"nuevo");
   content.innerHTML=`
     <input id="f_fecha" type="date" value="${m?.fecha||fechaSugeridaNuevo()}">
-    <select id="f_tipo">
-      <option ${m?.tipo=="Ingreso"?"selected":""}>Ingreso</option>
-      <option ${m?.tipo=="Gasto"?"selected":""}>Gasto</option>
+    <select id="f_tipo" onchange="actualizarAvisoCambioTipo()">
+      <option value="Ingreso" ${m?.tipo=="Ingreso"?"selected":""}>${tr("income")}</option>
+      <option value="Gasto" ${m?.tipo=="Gasto"?"selected":""}>${tr("expense")}</option>
     </select>
     <select id="f_cuenta">
-      <option value="" ${!m?.cuenta?"selected":""}>-- Cuenta --</option>
+      <option value="" ${!m?.cuenta?"selected":""}>${tr("selectAccount")}</option>
       ${cuentas.map(c=>"<option value='"+c+"' "+(m?.cuenta==c?"selected":"")+">"+c+"</option>").join("")}
     </select>
     <select id="f_categoria">
-      <option value="" ${!m?.categoria?"selected":""}>-- Categoría --</option>
+      <option value="" ${!m?.categoria?"selected":""}>${tr("selectCategory")}</option>
       ${categorias.map(c=>"<option value='"+c+"' "+(m?.categoria==c?"selected":"")+">"+c+"</option>").join("")}
     </select>
-    <input id="f_detalle" placeholder="Detalle" value="${m?.detalle||""}">
-    <input id="f_monto" placeholder="Monto" value="${m?.monto||""}">
-    <button onclick="guardar(${m?.id||0})">Guardar</button>
-    <div class="helper">Cuenta y categoría se cargan desde Config.</div>`;
+    <input id="f_detalle" placeholder="${tr("detail")}" value="${m?.detalle||""}">
+    <input id="f_monto" placeholder="${tr("amount")}" value="${m?.monto||""}">
+    <div id="typeChangeWarning" class="typeWarning"></div>
+    <div id="formMsg" class="warnText" style="display:none;margin:6px 0;"></div>
+    <button id="btnGuardarMovimiento" type="button">${tr("save")}</button>
+    <div class="helper">${tr("configHelp")}</div>`;
+
+  const tipoSelect = document.getElementById("f_tipo");
+  if(tipoSelect){ tipoSelect.dataset.tipoOriginal = m?.tipo || tipoSelect.value || ""; }
+  const btnGuardar = document.getElementById("btnGuardarMovimiento");
+  if(btnGuardar){
+    btnGuardar.onclick = function(ev){
+      if(ev) ev.preventDefault();
+      guardarMovimientoSeguro(m?.id || 0);
+    };
+  }
+  actualizarAvisoCambioTipo();
 }
 
-function guardar(id){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para guardar movimientos"); return; }
-  let montoIngresado = parseFloat(f_monto.value);
+function actualizarAvisoCambioTipo(){
+  const sel = document.getElementById("f_tipo");
+  const box = document.getElementById("typeChangeWarning");
+  if(!sel || !box) return;
+  const original = sel.dataset.tipoOriginal || "";
+  const actual = sel.value || "";
+  if(original && actual && original !== actual){
+    box.innerHTML = `<b>⚠ ${tr("typeChangeSoftTitle")}</b>${msg("typeChangeSoftText", {from:tipoTraducido(original), to:tipoTraducido(actual)})}`;
+    box.style.display = "block";
+  }else{
+    box.innerHTML = "";
+    box.style.display = "none";
+  }
+}
+
+function mensajeFormulario(msg){
+  const box = document.getElementById("formMsg");
+  if(box){
+    box.innerText = msg;
+    box.style.display = "block";
+  }
+  showNotice(msg);
+}
+
+function valorCampo(id){
+  const el = document.getElementById(id);
+  return el ? el.value : "";
+}
+
+function numeroDesdeImporte(valor){
+  let txt = String(valor || "").trim();
+  if(!txt) return NaN;
+  txt = txt.replace(/\s/g, "");
+  // Acepta formatos habituales: 1234.56, 1234,56, 1.234,56, 1,234.56
+  const tieneComa = txt.includes(",");
+  const tienePunto = txt.includes(".");
+  if(tieneComa && tienePunto){
+    if(txt.lastIndexOf(",") > txt.lastIndexOf(".")){
+      txt = txt.replace(/\./g, "").replace(",", ".");
+    }else{
+      txt = txt.replace(/,/g, "");
+    }
+  }else if(tieneComa){
+    txt = txt.replace(",", ".");
+  }else if(tienePunto){
+    const partes = txt.split(".");
+    const ultimo = partes[partes.length-1];
+    if(partes.length > 1 && ultimo.length === 3 && partes.slice(0,-1).every(p=>p.length>=1 && p.length<=3)){
+      txt = txt.replace(/\./g, "");
+    }
+  }
+  return Number(txt);
+}
+
+
+function guardarMovimientoSeguro(id){
+  try{
+    return guardar(id || 0);
+  }catch(e){
+    console.error("Error al guardar movimiento", e);
+    alert(msg("saveError", {error:(e && e.message ? e.message : e)}));
+  }
+}
+
+function guardar(id){
+  if(!puedeOperar()){ accionBloqueada(tr("startTrialToAdd")); return; }
+
+  const fechaValor = valorCampo("f_fecha");
+  const tipoValor = valorCampo("f_tipo");
+  const cuentaValor = valorCampo("f_cuenta");
+  const categoriaValor = valorCampo("f_categoria");
+  const detalleValor = valorCampo("f_detalle");
+  const montoIngresado = numeroDesdeImporte(valorCampo("f_monto"));
 
   let m={
     id:id||Date.now(),
-    fecha:f_fecha.value,
-    tipo:f_tipo.value,
-    cuenta:f_cuenta.value,
-    categoria:f_categoria.value,
-    detalle:f_detalle.value||"",
+    fecha:fechaValor,
+    tipo:tipoValor,
+    cuenta:cuentaValor,
+    categoria:categoriaValor,
+    detalle:detalleValor||"",
     monto:montoIngresado
   };
 
-  if(!m.fecha){ showNotice("Falta completar fecha"); return; }
-  if(!m.tipo){ showNotice("Seleccioná tipo"); return; }
-  if(!m.cuenta){ showNotice("Seleccioná cuenta"); return; }
-  if(!m.categoria){ showNotice("Seleccioná categoría"); return; }
-  if(isNaN(m.monto)){ showNotice("Completá monto"); return; }
-  if(m.monto === 0){ showNotice("El monto no puede ser 0"); return; }
-  if(m.monto < 0){ showNotice("El monto debe cargarse positivo. El Tipo define si suma o resta."); return; }
+  if(!m.fecha){ mensajeFormulario(tr("missingDate")); return; }
+  if(!m.tipo){ mensajeFormulario(tr("missingType")); return; }
+  if(!m.cuenta){ mensajeFormulario(tr("missingAccount")); return; }
+  if(!m.categoria){ mensajeFormulario(tr("missingCategory")); return; }
+  if(!Number.isFinite(m.monto)){ mensajeFormulario(tr("missingAmount")); return; }
+  if(m.monto === 0){ mensajeFormulario(tr("zeroAmount")); return; }
+  if(m.monto < 0){ mensajeFormulario(tr("negativeAmount")); return; }
 
-  let i=movs.findIndex(x=>x.id==id);
+  let i=movs.findIndex(x=>String(x.id)===String(id));
   if(i>=0){
     const anterior = movs[i];
     if(anterior.tipo !== m.tipo){
-      if(!confirm("Estás cambiando el Tipo de " + anterior.tipo + " a " + m.tipo + ". Esto cambia el balance. ¿Confirmar?")) return;
+      // Aviso suave: se muestra dentro de la ventana. No bloquea el guardado.
     }
     movs[i]=m;
     guardarStorage();
     closeModal();
     render();
+    showNotice(tr("movementUpdated"));
   }else{
     movs.push(m);
     guardarStorage();
     render();
-    const fechaMantener = f_fecha.value;
-    const tipoMantener = f_tipo.value;
+    const fechaMantener = fechaValor;
+    const tipoMantener = tipoValor;
     openNuevo();
-    f_fecha.value = fechaMantener;
-    f_tipo.value = tipoMantener;
+    const ff=document.getElementById("f_fecha");
+    const ft=document.getElementById("f_tipo");
+    if(ff) ff.value = fechaMantener;
+    if(ft) ft.value = tipoMantener;
+    showNotice(tr("movementSaved"));
   }
 }
 
@@ -526,7 +743,7 @@ function borrar(id){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para
 //id){
   const m = movs.find(x=>x.id==id);
   const detalle = m ? "\n\nFecha: " + (m.fecha||"") + "\nTipo: " + (m.tipo||"") + "\nMonto: " + fmt(montoMovimiento(m)) : "";
-  if(!confirm("Vas a borrar este movimiento." + detalle + "\n\nEsta acción no se puede deshacer. ¿Continuar?")) return;
+  if(!confirm(msg("deleteMovementConfirm", {detail}))) return;
   movs=movs.filter(x=>x.id!=id);
   guardarStorage();
   render();
@@ -554,12 +771,12 @@ function renombrarEnMovimientos(tipo, viejo, nuevo){
 
 function editarCuenta(i){
   const actual = cuentas[i];
-  const nuevo = prompt("Nuevo nombre de cuenta:", actual);
+  const nuevo = prompt(tr("newAccountPrompt"), actual);
   if(nuevo === null) return;
   const limpio = nuevo.trim();
-  if(!limpio) return alert("El nombre no puede quedar vacío");
+  if(!limpio) return alert(tr("nameRequired"));
   if(limpio === actual) return;
-  if(cuentas.includes(limpio)) return alert("Esa cuenta ya existe");
+  if(cuentas.includes(limpio)) return alert(tr("accountExists"));
   cuentas[i] = limpio;
   renombrarEnMovimientos("cuenta", actual, limpio);
   guardarStorage();
@@ -570,9 +787,9 @@ function editarCuenta(i){
 function borrarCuenta(i){
   const actual = cuentas[i];
   if(estaUsado("cuenta", actual)){
-    return alert("No se puede borrar porque tiene movimientos asociados");
+    return alert(tr("accountInUse"));
   }
-  if(!confirm("¿Seguro que querés borrar la cuenta '" + actual + "'?")) return;
+  if(!confirm(msg("deleteAccountConfirm", {name:actual}))) return;
   cuentas.splice(i,1);
   guardarStorage();
   openConfig();
@@ -581,12 +798,12 @@ function borrarCuenta(i){
 
 function editarCategoria(i){
   const actual = categorias[i];
-  const nuevo = prompt("Nuevo nombre de categoría:", actual);
+  const nuevo = prompt(tr("newCategoryPrompt"), actual);
   if(nuevo === null) return;
   const limpio = nuevo.trim();
-  if(!limpio) return alert("El nombre no puede quedar vacío");
+  if(!limpio) return alert(tr("nameRequired"));
   if(limpio === actual) return;
-  if(categorias.includes(limpio)) return alert("Esa categoría ya existe");
+  if(categorias.includes(limpio)) return alert(tr("categoryExists"));
   categorias[i] = limpio;
   renombrarEnMovimientos("categoria", actual, limpio);
   guardarStorage();
@@ -597,9 +814,9 @@ function editarCategoria(i){
 function borrarCategoria(i){
   const actual = categorias[i];
   if(estaUsado("categoria", actual)){
-    return alert("No se puede borrar porque tiene movimientos asociados");
+    return alert(tr("categoryInUse"));
   }
-  if(!confirm("¿Seguro que querés borrar la categoría '" + actual + "'?")) return;
+  if(!confirm(msg("deleteCategoryConfirm", {name:actual}))) return;
   categorias.splice(i,1);
   guardarStorage();
   openConfig();
@@ -609,62 +826,67 @@ function borrarCategoria(i){
 function openConfig(){
   if(bloquearSiTrialVencido()) return;
   bg.style.display="block";
-  setModal("config","Configuración");
+  setModal("config",tr("configuration"),"config");
   content.innerHTML=`
-    <b>Cuentas</b><br>
-    <div class="muted">Podés editar. Solo se puede borrar si no tiene movimientos.</div>
+    <b>${tr("currency")}</b><br>
+    <div class="muted">${tr("currencyHelp")}</div>
+    <input id="monedaSimbolo" placeholder="${tr("currencySymbol")}" value="${escapeHTML(moneda || "$")}">
+    <button onclick="guardarMoneda()">${tr("saveCurrency")}</button>
+    <hr>
+    <b>${tr("accounts")}</b><br>
+    <div class="muted">${tr("canEditDelete")}</div>
     <div style="margin-top:8px">
       ${cuentas.map((c,i)=>`
         <div class="listItem">
-          <span class="listItemName">${c}</span>
+          <span class="listItemName">${escapeHTML(c)}</span>
           <div>
-            <button class="smallBtn" onclick="editarCuenta(${i})">Editar</button>
-            <button class="smallBtn dangerBtn" onclick="borrarCuenta(${i})">Borrar</button>
+            <button class="smallBtn" onclick="editarCuenta(${i})">${tr("edit")}</button>
+            <button class="smallBtn dangerBtn" onclick="borrarCuenta(${i})">${tr("delete")}</button>
           </div>
         </div>`).join("")}
     </div>
-    <input id="nc" placeholder="Nueva cuenta">
-    <button onclick="addCuenta()">Agregar</button>
+    <input id="nc" placeholder="${tr("newAccount")}">
+    <button onclick="addCuenta()">${tr("add")}</button>
     <hr>
-    <b>Categorías</b><br>
-    <div class="muted">Podés editar. Solo se puede borrar si no tiene movimientos.</div>
+    <b>${tr("categories")}</b><br>
+    <div class="muted">${tr("canEditDelete")}</div>
     <div style="margin-top:8px">
       ${categorias.map((c,i)=>`
         <div class="listItem">
-          <span class="listItemName">${c}</span>
+          <span class="listItemName">${escapeHTML(c)}</span>
           <div>
-            <button class="smallBtn" onclick="editarCategoria(${i})">Editar</button>
-            <button class="smallBtn dangerBtn" onclick="borrarCategoria(${i})">Borrar</button>
+            <button class="smallBtn" onclick="editarCategoria(${i})">${tr("edit")}</button>
+            <button class="smallBtn dangerBtn" onclick="borrarCategoria(${i})">${tr("delete")}</button>
           </div>
         </div>`).join("")}
     </div>
-    <input id="ncat" placeholder="Nueva categoría">
-    <button onclick="addCategoria()">Agregar</button>
+    <input id="ncat" placeholder="${tr("newCategory")}">
+    <button onclick="addCategoria()">${tr("add")}</button>
     <hr>
     <div class="adminBox" style="border-color:#f1c6c1;background:#fff8f7;">
-      <b>Reiniciar datos</b><br>
-      <div class="muted">Borra movimientos, cuentas y categorías del usuario actual. No borra usuarios, admin, prueba ni licencia.</div>
-      <button class="dangerBtn" onclick="reiniciarDatosApp()">🧹 Reiniciar datos de la app</button>
-      <div class="helper">Útil para limpiar pruebas o empezar de cero sin reiniciar los días de uso.</div>
+      <b>${tr("resetData")}</b><br>
+      <div class="muted">${tr("resetDataHelp")}</div>
+      <button class="dangerBtn" onclick="reiniciarDatosApp()">${tr("resetDataBtn")}</button>
+      <div class="helper">${tr("resetDataNote")}</div>
     </div>
     <hr>
     <div class="adminBox">
-      <b>Backup</b><br>
-      <div class="muted">Guardá una copia de seguridad y recuperala cuando la necesites.</div>
-      <button onclick="guardarCopia()">💾 Guardar copia</button>
-      <button onclick="cargarCopia()">📂 Cargar copia</button>
-      <div class="helper">Si entrás como admin, la copia guarda todos los usuarios. Si entrás como usuario común, guarda solo tus datos.</div>
+      <b>${tr("backup")}</b><br>
+      <div class="muted">${tr("backupHelp")}</div>
+      <button onclick="guardarCopia()">${tr("saveBackup")}</button>
+      <button onclick="cargarCopia()">${tr("loadBackup")}</button>
+      <div class="helper">${tr("backupNote")}</div>
     </div>
     <hr>
     <div id="usuariosAdminSection" class="adminBox">
-      <b>Usuarios</b><br>
-      <div class="muted">Solo admin puede crear usuarios, cambiar claves y borrar usuarios comunes. El usuario admin no se borra.</div>
+      <b>${tr("users")}</b><br>
+      <div class="muted">${tr("usersHelp")}</div>
       <div id="usuariosBox" style="margin-top:8px"></div>
-      <input id="nu" placeholder="Nuevo usuario">
-      <input id="np" type="password" placeholder="Clave inicial">
-      <input id="npc" type="password" placeholder="Repetir clave">
-      <button id="btnAddUser" onclick="addUsuario()">Agregar usuario</button>
-      <div class="helper">Cada usuario trabaja con sus propios movimientos, cuentas y categorías.</div>
+      <input id="nu" placeholder="${tr("newUser")}">
+      <input id="np" type="password" placeholder="${tr("initialPassword")}">
+      <input id="npc" type="password" placeholder="${tr("repeatPassword")}">
+      <button id="btnAddUser" onclick="addUsuario()">${tr("addUser")}</button>
+      <div class="helper">${tr("usersNote")}</div>
     </div>`;
   renderUsuariosConfig();
 }
@@ -672,7 +894,7 @@ function openConfig(){
 
 function reiniciarDatosApp(){
   if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para reiniciar datos"); return; }
-  if(!currentUser) return alert("Primero tenés que entrar con un usuario");
+  if(!currentUser) return alert(tr("mustLogin"));
   const msg = "Vas a borrar movimientos, cuentas y categorías de este usuario.\n\nNO se borran usuarios, admin, fecha de inicio de prueba, fecha fin de prueba ni licencia.\n\nEsta acción no se puede deshacer. ¿Continuar?";
   if(!confirm(msg)) return;
   const msg2 = "Confirmación final:\n\nSe reinician solo los datos de trabajo.\nLa prueba/licencia queda igual.\n\n¿Reiniciar ahora?";
@@ -684,6 +906,16 @@ function reiniciarDatosApp(){
   closeModal();
   render();
   showNotice("✔ Datos reiniciados. Usuarios, admin y prueba/licencia se mantuvieron.");
+}
+
+function guardarMoneda(){
+  const v=(document.getElementById("monedaSimbolo")?.value || "").trim();
+  if(!v) return alert(tr("currencySymbol"));
+  moneda=v;
+  guardarStorage();
+  render();
+  showNotice(tr("currencySaved"));
+  openConfig();
 }
 
 function addCuenta(){
@@ -707,7 +939,8 @@ function datosDeUsuario(nombre){
   return {
     movs: leerArraySeguro(claveUsuarioPorNombre(nombre,"movs"), []),
     cuentas: leerArraySeguro(claveUsuarioPorNombre(nombre,"cuentas"), []),
-    categorias: leerArraySeguro(claveUsuarioPorNombre(nombre,"categorias"), [])
+    categorias: leerArraySeguro(claveUsuarioPorNombre(nombre,"categorias"), []),
+    moneda: localStorage.getItem(claveUsuarioPorNombre(nombre,"moneda")) || "$"
   };
 }
 
@@ -715,6 +948,7 @@ function guardarDatosDeUsuario(nombre, datos){
   localStorage.setItem(claveUsuarioPorNombre(nombre,"movs"), JSON.stringify(Array.isArray(datos?.movs) ? datos.movs : []));
   localStorage.setItem(claveUsuarioPorNombre(nombre,"cuentas"), JSON.stringify(Array.isArray(datos?.cuentas) ? datos.cuentas : []));
   localStorage.setItem(claveUsuarioPorNombre(nombre,"categorias"), JSON.stringify(Array.isArray(datos?.categorias) ? datos.categorias : []));
+  localStorage.setItem(claveUsuarioPorNombre(nombre,"moneda"), datos?.moneda || "$" );
 }
 
 function fechaArchivo(){
@@ -738,7 +972,7 @@ function showNotice(msg){
 
 function guardarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para exportar datos"); return; }
   if(bloquearSiTrialVencido()) return;
-  if(!currentUser) return alert("Primero tenés que entrar con un usuario");
+  if(!currentUser) return alert(tr("mustLogin"));
   guardarStorage();
   const admin=usuarioActualEsAdmin();
   const usuarios=initUsuarios();
@@ -750,7 +984,7 @@ function guardarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba 
   }
   const backup={
     app:"FinanzaSimple",
-    version:"V9.9.5",
+    version:"V10.3_idiomas_moneda",
     creado:new Date().toISOString(),
     tipo:admin ? "completo" : "usuario",
     usuarioActual:currentUser,
@@ -771,7 +1005,7 @@ function guardarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba 
 
 function cargarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para importar datos"); return; }
   if(bloquearSiTrialVencido()) return;
-  if(!currentUser) return alert("Primero tenés que entrar con un usuario");
+  if(!currentUser) return alert(tr("mustLogin"));
   showNotice("Seleccioná el archivo de backup. Normalmente está en Descargas.");
   const input=document.createElement("input");
   input.type="file";
@@ -784,22 +1018,22 @@ function cargarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba p
       try{
         const backup=JSON.parse(reader.result);
         if(!backup || backup.app!=="FinanzaSimple" || !backup.datos){
-          return alert("Ese archivo no parece ser una copia válida de FinanzaSimple");
+          return alert(tr("invalidBackup"));
         }
         const admin=usuarioActualEsAdmin();
         if(backup.tipo==="completo"){
-          if(!admin) return alert("Solo admin puede cargar una copia completa");
-          if(!Array.isArray(backup.usuarios)) return alert("La copia completa no tiene usuarios válidos");
-          if(!confirm("Esto reemplaza usuarios y datos actuales por la copia. ¿Continuar?")) return;
+          if(!admin) return alert(tr("adminOnlyFullBackup"));
+          if(!Array.isArray(backup.usuarios)) return alert(tr("invalidUsersBackup"));
+          if(!confirm(tr("replaceAllBackupConfirm"))) return;
           guardarUsuarios(backup.usuarios);
           backup.usuarios.forEach(u=>guardarDatosDeUsuario(u.usuario, backup.datos[u.usuario] || {}));
           if(!backup.usuarios.some(u=>u.usuario===currentUser)){
-            alert("La copia fue cargada. Tenés que volver a entrar.");
+            alert(tr("backupLoadedRelogin"));
             logout();
             return;
           }
         }else{
-          if(!confirm("Esto reemplaza los datos del usuario actual por la copia. ¿Continuar?")) return;
+          if(!confirm(tr("replaceUserBackupConfirm"))) return;
           const origen=backup.datos[currentUser] || backup.datos[backup.usuarioActual] || Object.values(backup.datos)[0];
           guardarDatosDeUsuario(currentUser, origen || {});
         }
@@ -808,7 +1042,7 @@ function cargarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba p
         render();
         showNotice("✔ Copia cargada correctamente");
       }catch(e){
-        alert("No se pudo leer la copia. Revisá que sea el archivo correcto.");
+        alert(tr("backupReadError"));
       }
     };
     reader.readAsText(file);
@@ -856,52 +1090,53 @@ function renderUsuariosConfig(){
 }
 
 function addUsuario(){
-  if(!usuarioActualEsAdmin()) return alert("Solo admin puede agregar usuarios");
+  if(!usuarioActualEsAdmin()) return alert(tr("adminOnlyAdd"));
   const usuario=(nu.value||"").trim();
   const clave=(np.value||"").trim();
   const confirma=(npc.value||"").trim();
-  if(!usuario||!clave||!confirma) return alert("Completar usuario, clave y repetir clave");
-  if(clave!==confirma) return alert("Las claves no coinciden");
-  if(usuario.length < 3) return alert("El usuario debe tener al menos 3 caracteres");
-  if(clave.length < 4) return alert("La clave debe tener al menos 4 caracteres");
-  if(usuario.includes(" ")) return alert("El usuario no puede tener espacios");
-  if(usuario.toLowerCase()==="admin") return alert("El usuario admin ya existe y no se puede duplicar");
+  if(!usuario||!clave||!confirma) return alert(tr("completeUserPass"));
+  if(clave!==confirma) return alert(tr("passwordsDontMatch"));
+  if(usuario.length < 3) return alert(tr("userMin"));
+  if(clave.length < 4) return alert(tr("passMin"));
+  if(usuario.includes(" ")) return alert(tr("userNoSpaces"));
+  if(usuario.toLowerCase()==="admin") return alert(tr("adminExists"));
   const usuarios=initUsuarios();
-  if(usuarios.some(u=>u.usuario.toLowerCase()===usuario.toLowerCase())) return alert("Ese usuario ya existe");
+  if(usuarios.some(u=>u.usuario.toLowerCase()===usuario.toLowerCase())) return alert(tr("userExists"));
   usuarios.push({usuario, clave, admin:false});
   guardarUsuarios(usuarios);
   localStorage.setItem(claveUsuarioPorNombre(usuario,"movs"), JSON.stringify([]));
   localStorage.setItem(claveUsuarioPorNombre(usuario,"cuentas"), JSON.stringify([]));
   localStorage.setItem(claveUsuarioPorNombre(usuario,"categorias"), JSON.stringify([]));
-  alert("Usuario creado correctamente");
+  localStorage.setItem(claveUsuarioPorNombre(usuario,"moneda"), "$");
+  alert(tr("userCreated"));
   openConfig();
 }
 
 function cambiarClaveUsuario(i){
-  if(!usuarioActualEsAdmin()) return alert("Solo admin puede cambiar claves");
+  if(!usuarioActualEsAdmin()) return alert(tr("adminOnlyPass"));
   const usuarios=initUsuarios();
   const u=usuarios[i];
-  if(!u) return alert("Usuario no encontrado");
-  const nueva=prompt("Nueva clave para " + u.usuario + ":");
+  if(!u) return alert(tr("userNotFound"));
+  const nueva=prompt(msg("newPasswordPrompt", {user:u.usuario}));
   if(nueva===null) return;
   const limpia=nueva.trim();
-  if(!limpia) return alert("La clave no puede quedar vacía");
-  if(limpia.length < 4) return alert("La clave debe tener al menos 4 caracteres");
-  const repetir=prompt("Repetir nueva clave para " + u.usuario + ":");
+  if(!limpia) return alert(tr("passwordEmpty"));
+  if(limpia.length < 4) return alert(tr("passMin"));
+  const repetir=prompt(msg("repeatPasswordPrompt", {user:u.usuario}));
   if(repetir===null) return;
-  if(limpia !== repetir.trim()) return alert("Las claves no coinciden");
+  if(limpia !== repetir.trim()) return alert(tr("passwordsDontMatch"));
   u.clave=limpia;
   guardarUsuarios(usuarios);
-  alert("Clave actualizada");
+  alert(tr("passwordUpdated"));
 }
 
 function borrarUsuario(i){
-  if(!usuarioActualEsAdmin()) return alert("Solo admin puede borrar usuarios");
+  if(!usuarioActualEsAdmin()) return alert(tr("adminOnlyDelete"));
   const usuarios=initUsuarios();
   const u=usuarios[i];
-  if(!u) return alert("Usuario no encontrado");
-  if(u.usuario==="admin") return alert("Admin no se puede borrar");
-  if(!confirm("¿Seguro que querés borrar el usuario '"+u.usuario+"' y todos sus datos?")) return;
+  if(!u) return alert(tr("userNotFound"));
+  if(u.usuario==="admin") return alert(tr("adminCannotDelete"));
+  if(!confirm(msg("deleteUserConfirm", {user:u.usuario}))) return;
   const usuario=u.usuario;
   usuarios.splice(i,1);
   guardarUsuarios(usuarios);
@@ -952,12 +1187,14 @@ function crearUsuarioDesdeLogin(){
   localStorage.setItem(claveUsuarioPorNombre(usuario,"movs"), JSON.stringify([]));
   localStorage.setItem(claveUsuarioPorNombre(usuario,"cuentas"), JSON.stringify([]));
   localStorage.setItem(claveUsuarioPorNombre(usuario,"categorias"), JSON.stringify([]));
+  localStorage.setItem(claveUsuarioPorNombre(usuario,"moneda"), "$");
 
   currentUser=usuario;
   cargarDatosUsuario();
   loginScreen.style.display="none";
   appScreen.style.display="block";
-  userBadge.innerText="Usuario: " + currentUser + " (usuario)";
+  applyLang();
+  userBadge.innerText=tr("user") + ": " + currentUser + " (" + tr("roleUser") + ")";
   login_pass.value="";
   loginError.style.display="none";
   closeModal();
@@ -980,7 +1217,8 @@ function login(){
   cargarDatosUsuario();
   loginScreen.style.display="none";
   appScreen.style.display="block";
-  userBadge.innerText="Usuario: " + currentUser + (encontrado.admin ? " (admin)" : " (usuario)");
+  applyLang();
+  userBadge.innerText=tr("user") + ": " + currentUser + (encontrado.admin ? " (" + tr("roleAdmin") + ")" : " (" + tr("roleUser") + ")");
   login_pass.value="";
   closeModal();
   render();
@@ -1002,10 +1240,12 @@ function logout(){
 
 function initApp(){
   initUsuarios();
+  applyLang();
   loginScreen.style.display="flex";
   appScreen.style.display="none";
   login_user.addEventListener("keydown", e=>{if(e.key==="Enter") login_pass.focus();});
   login_pass.addEventListener("keydown", e=>{if(e.key==="Enter") login();});
+  applyLang();
   setTimeout(()=>login_user.focus(),100);
 }
 
@@ -1013,41 +1253,41 @@ function initApp(){
 
 function openAyuda(){
   bg.style.display="block";
-  setModal("analisis","Ayuda rápida");
+  setModal("analisis",tr("quickHelp"),"help");
   content.innerHTML=`
-    <b>FinanzaSimple en 3 pasos</b><br><br>
+    <b>${tr("helpTitle3")}</b><br><br>
 
-    <b>1) Config</b><br>
-    Primero cargá tus <b>cuentas</b> y <b>categorías</b>.<br>
-    Ejemplos de cuenta: Banco, Efectivo, Mercado Pago.<br>
-    Ejemplos de categoría: Sueldo, Alimentos, Servicios.<br><br>
+    <b>1) ${tr("configShort")}</b><br>
+    ${tr("helpStep1")}<br>
+    ${tr("helpAccountExamples")}<br>
+    ${tr("helpCategoryExamples")}<br><br>
 
-    <b>2) + Nuevo</b><br>
-    Cargá cada ingreso o gasto. Cuenta, categoría y monto son obligatorios.<br><br>
+    <b>2) + ${tr("newBtn")}</b><br>
+    ${tr("helpStep2")}<br><br>
 
-    <b>3) Análisis</b><br>
-    Mirá el resumen del mes y los gastos por categoría.<br><br>
+    <b>3) ${tr("analysis")}</b><br>
+    ${tr("helpStep3")}<br><br>
 
     <hr>
-    <b>Importante</b><br>
-    Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.<br>
-    El monto se carga siempre positivo: el Tipo define si suma o resta.<br>
-    Usá Exportar para guardar backup e Importar para recuperarlo.<br>
-    Esta versión incluye:
-- prueba por días
-- activación por usuario
+    <b>${tr("important")}</b><br>
+    ${tr("helpImportant1")}<br>
+    ${tr("helpImportant2")}<br>
+    ${tr("helpImportant3")}<br>
+    ${tr("helpIncludes")}
+    <ul style="margin-top:6px;">
+      <li>${tr("helpTrialLine")}</li>
+      <li>${tr("helpActivationLine")}</li>
+    </ul>
 
-Antes de iniciar la prueba, estás viendo un ejemplo para entender cómo funciona la app.
-Iniciá la prueba para usarla con tus propios datos.<br><br>
+    ${tr("helpBeforeTrial")}<br><br>
 
-    <button onclick="cargarEjemplo()">Cargar ejemplo para probar</button>
-    <div class="helper">El ejemplo aparece solo cuando este usuario no tiene movimientos cargados.</div>
+    <button onclick="cargarEjemplo()">${tr("loadExampleTest")}</button>
+    <div class="helper">${tr("exampleOnlyEmpty")}</div>
   `;
 }
 
-
 function limpiarEjemplo(){
-  if(!confirm("¿Querés borrar los datos de ejemplo?")) return;
+  if(!confirm(tr("clearExampleConfirm"))) return;
   movs = [];
   guardarStorage();
   render();
@@ -1056,7 +1296,7 @@ function limpiarEjemplo(){
 function cargarEjemplo(){
   if(bloquearSiTrialVencido()) return;
   if(movs.length){
-    return alert("Este usuario ya tiene movimientos. Para no mezclar datos, el ejemplo solo aparece y se carga cuando no hay movimientos.");
+    return alert(tr("exampleHasData"));
   }
   const hoy = new Date();
   const yyyy = hoy.getFullYear();
@@ -1071,13 +1311,13 @@ function cargarEjemplo(){
   guardarStorage();
   closeModal();
   render();
-  alert("Ejemplo cargado. Ahora podés mirar Movimientos y Análisis.");
+  alert(tr("exampleLoaded"));
 }
 
 function openAnalisis(){
   if(bloquearSiTrialVencido()) return;
   bg.style.display="block";
-  setModal("analisis","Análisis");
+  setModal("analisis",tr("analysis"),"analysis");
 
   let totalIng=0,totalGas=0;
   let porCategoria={};
@@ -1091,7 +1331,7 @@ function openAnalisis(){
       totalIng+=Number(m.monto)||0;
     }else{
       totalGas+=Number(m.monto)||0;
-      const cat = (m.categoria && String(m.categoria).trim()) ? m.categoria : "Sin categoría";
+      const cat = (m.categoria && String(m.categoria).trim()) ? m.categoria : tr("noCategory");
       porCategoria[cat]=(porCategoria[cat]||0)+(Number(m.monto)||0);
     }
   });
@@ -1141,32 +1381,32 @@ function openAnalisis(){
         "></div>
       </div>
       <div style="font-size:13px;color:#555;text-align:center;margin-bottom:12px;">
-        Distribución de gastos del mes
+        ${tr("expensesDistribution")}
       </div>
       <div style="background:#fff3cd;color:#856404;padding:8px;border-radius:8px;margin-bottom:8px;">
-        Mayor gasto: <b>${mayor[0]}</b> — ${fmt(mayor[1])} (${mayorPct.toFixed(1)}%)
+        ${tr("biggestExpense")}: <b>${mayor[0]}</b> — ${fmt(mayor[1])} (${mayorPct.toFixed(1)}%)
       </div>
       <div>${leyenda}</div>
     `;
   } else {
-    detalle = "Sin datos";
-    grafica = `<div style="margin-top:10px;color:#666;">No hay gastos cargados en este mes para mostrar la gráfica.</div>`;
+    detalle = tr("noData");
+    grafica = `<div style="margin-top:10px;color:#666;">${tr("noExpensesChart")}</div>`;
   }
 
   const balanceMes = totalIng-totalGas;
   const balanceClase = balanceMes > 0 ? "balance-pos" : balanceMes < 0 ? "balance-neg" : "balance-zero";
   content.innerHTML = `
-    <b>Resumen del mes</b>
+    <b>${tr("analysisSummary")}</b>
     <div class="analysisCards">
-      <div class="analysisCard">Ingresos<br><b class="ingresos">${fmt(totalIng)}</b></div>
-      <div class="analysisCard">Gastos<br><b class="gastos">${fmt(totalGas)}</b></div>
-      <div class="analysisCard">Balance<br><b class="${balanceClase}">${fmt(balanceMes)}</b></div>
+      <div class="analysisCard">${tr("balance")}<br><b class="${balanceClase}">${fmt(balanceMes)}</b></div>
+      <div class="analysisCard">${tr("incomePlural")}<br><b class="ingresos">${fmt(totalIng)}</b></div>
+      <div class="analysisCard">${tr("expensePlural")}<br><b class="gastos">${fmt(totalGas)}</b></div>
     </div>
     <hr>
-    <b>Gastos por categoría</b><br>
+    <b>${tr("expensesByCategory")}</b><br>
     ${detalle}
     <hr>
-    <b>Gráfica</b><br>
+    <b>${tr("chart")}</b><br>
     ${grafica}
   `;
 }
@@ -1174,7 +1414,7 @@ function openAnalisis(){
 
 function openNuevoPorId(id){
   const m = movs.find(x => String(x.id) === String(id));
-  if(!m) return alert("No encontré el movimiento para editar");
+  if(!m) return alert(tr("movementNotFound"));
   openNuevo(m);
 }
 
@@ -1273,28 +1513,28 @@ function render(){
       const signo = m.tipo=="Ingreso" ? "+ " : "- ";
       tabla.innerHTML += `<tr>
         <td>${escapeHTML(formatoFechaVista(m.fecha||""))}</td>
-        <td class="${claseTipo}">${escapeHTML(m.tipo||"")}</td>
+        <td class="${claseTipo}">${escapeHTML(m.tipo=="Ingreso"?tr("income"):tr("expense"))}</td>
         <td>${escapeHTML(m.cuenta||"")}</td>
         <td>${escapeHTML(m.categoria||"")}</td>
         <td>${escapeHTML(m.detalle||"")}</td>
         <td class="monto ${claseMonto}">${signo}${fmt(Math.abs(Number(m.monto)||0))}</td>
         <td class="accion">
-          <button onclick="openNuevoPorId(${m.id})" title="Editar movimiento">✏️</button>
-          <button onclick='borrar(${m.id})' title="Borrar movimiento">❌</button>
+          <button onclick="openNuevoPorId(${m.id})" title="${tr("editTitle")}">✏️</button>
+          <button onclick='borrar(${m.id})' title="${tr("deleteTitle")}">❌</button>
         </td>
       </tr>`;
     }
   });
 
   if(totalMes === 0){
-    tabla.innerHTML = `<tr class="emptyRow"><td colspan="7">No hay movimientos cargados en este mes. Usá <b>+ Nuevo</b> para cargar el primero.</td></tr>`;
+    tabla.innerHTML = `<tr class="emptyRow"><td colspan="7">${tr("noMovements")}</td></tr>`;
   }else if(visibles === 0){
-    tabla.innerHTML = `<tr class="emptyRow"><td colspan="7">No hay resultados para esa búsqueda. Probá limpiar o cambiar el filtro.</td></tr>`;
+    tabla.innerHTML = `<tr class="emptyRow"><td colspan="7">${tr("noResults")}</td></tr>`;
   }
 
   const contador=document.getElementById("resultadoBusqueda");
   if(contador){
-    contador.innerText = totalMes === 0 ? "0 movimientos" : visibles + " de " + totalMes + " visibles";
+    contador.innerText = totalMes === 0 ? "0 " + tr("movements") : visibles + " " + tr("of") + " " + totalMes + " " + tr("visible");
   }
 
   bal.innerText=fmt(totalBal);
@@ -1338,14 +1578,26 @@ drag.ontouchend=()=>{};
 function closeModal(){
   bg.style.display="none";
   modal.className = "modal";
+  modal.dataset.modalKey = "";
   modal.style.left = "";
   modal.style.right = "";
   modal.style.top = "";
   modal.style.transform = "";
-  document.getElementById("modalTitle").innerText = "Ventana";
+  document.getElementById("modalTitle").innerText = tr("window");
 }
 
+window.guardar = guardar;
+window.guardarMovimientoSeguro = guardarMovimientoSeguro;
 initApp();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(err){
+      console.warn("Service worker no registrado:", err);
+    });
+  });
+}
+
 </script>
 
 </body>
