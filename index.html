@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzasSimple</title>
+<title>FinanzasSimple – V13.3 Filas y columnas equilibradas</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -17,15 +17,26 @@ header{background:#34495e;color:white;padding:12px;text-align:center;display:fle
 .value.balance-zero{color:#666}
 .value.ingresos{color:#1f8b4c}
 .value.gastos{color:#c0392b}
-button{padding:8px 10px;border-radius:8px;border:none;background:#3498db;color:white;margin:5px;cursor:pointer}
+button{padding:7px 10px;border-radius:8px;border:none;background:#3498db;color:white;margin:4px;cursor:pointer}
 .listItem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #eee}
 .listItemName{flex:1;min-width:0;word-break:break-word}
-.smallBtn{padding:4px 8px;font-size:12px;margin:0 0 0 4px}
+.smallBtn{padding:2px 6px;font-size:11px;margin:0 0 0 2px;min-height:24px;}
 .dangerBtn{background:#e74c3c}
 .muted{font-size:12px;color:#666}
-.tableWrap{overflow-x:auto;}
-table{min-width:800px;width:100%;background:white;border-collapse:collapse;}
-th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;}
+.tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{min-width:760px;width:100%;background:white;border-collapse:collapse;table-layout:fixed;}
+th,td{padding:4px 7px;border-bottom:1px solid #eee;text-align:left;font-size:14px;line-height:1.18;vertical-align:middle;}
+tbody td{height:26px;}
+
+th:nth-child(1), td:nth-child(1){width:82px;white-space:nowrap;}   /* Fecha */
+th:nth-child(2), td:nth-child(2){width:74px;white-space:nowrap;}   /* Tipo */
+th:nth-child(6), td:nth-child(6){width:118px;white-space:nowrap;}  /* Monto */
+th:nth-child(7), td:nth-child(7){width:92px;white-space:nowrap;}   /* Acción */
+
+th:nth-child(3), td:nth-child(3){width:125px;}  /* Cuenta */
+th:nth-child(4), td:nth-child(4){width:125px;}  /* Categoría */
+th:nth-child(5), td:nth-child(5){width:auto;word-break:break-word;}   /* Detalle */
+
 th.monto,td.monto{text-align:right}
 th.accion,td.accion{text-align:center}
 
@@ -142,16 +153,31 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
   }
 }
 
+@media (max-width: 600px){
+  table{min-width:720px;}
+  th,td{font-size:13px;padding:3px 5px;line-height:1.15;}
+  tbody td{height:24px;}
+  th:nth-child(1), td:nth-child(1){width:78px;}
+  th:nth-child(2), td:nth-child(2){width:68px;}
+  th:nth-child(3), td:nth-child(3){width:112px;}
+  th:nth-child(4), td:nth-child(4){width:112px;}
+  th:nth-child(6), td:nth-child(6){width:108px;}
+  th:nth-child(7), td:nth-child(7){width:82px;}
+}
+
 .typeWarning{display:none;background:#fff3cd;color:#856404;border:1px solid #f1d28a;border-radius:10px;padding:9px;margin:8px 0;font-size:13px;line-height:1.35}
 .typeWarning b{display:block;margin-bottom:3px}
-</style>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#34495e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="FinanzasSimple">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+tbody tr{
+  height:34px;
+}
+td.accion button{
+  padding:4px 8px !important;
+  min-height:28px;
+  margin:1px !important;
+}
+
+</style>
 </head>
 <body translate="no" class="notranslate">
 
@@ -193,11 +219,14 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 </div>
 
 <div id="notice" style="display:none;background:#eaf7ee;color:#1f6b3a;padding:9px;border-radius:8px;margin:8px 0;font-size:13px;font-weight:bold;"></div>
+<div id="autoBackupInfo"></div>
 
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToAdd'));return;} openNuevo()">+ <span data-i18n="newBtn">Nuevo</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToConfig'));return;} openConfig()">⚙ <span data-i18n="configShort">Config</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToAnalysis'));return;} openAnalisis()">📊 <span data-i18n="analysis">Análisis</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCopia()" style="background:#27ae60">💾 <span data-i18n="export">Exportar</span></button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarExcel()" style="background:#16a085">📊 <span data-i18n="exportExcel">Excel</span></button>
+<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCSV()" style="background:#2c7be5">📄 <span data-i18n="exportCSV">CSV</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToImport'));return;} cargarCopia()" style="background:#7f8c8d">📂 <span data-i18n="import">Importar</span></button>
 <button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none;background:#f39c12">🧪 <span data-i18n="example">Ejemplo</span></button>
 
@@ -242,15 +271,15 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 <script>
 
 const I18N = {
-  es:{appTitle:"FinanzaSimple – Control de gastos",loginSubtitle:"Ingreso por usuario",user:"Usuario",password:"Clave",enter:"Entrar",createUser:"Crear usuario",loginHelp:"Si es tu primera vez, tocá <b>Crear usuario</b> y empezá tu prueba.",help:"Ayuda",activate:"Activar",logout:"Salir",balance:"Balance",incomePlural:"Ingresos",expensePlural:"Gastos",newBtn:"Nuevo",configShort:"Config",analysis:"Análisis",export:"Exportar",import:"Importar",example:"Ejemplo",search:"Buscar",all:"Todo",date:"Fecha",type:"Tipo",account:"Cuenta",category:"Categoría",detail:"Detalle",amount:"Monto",action:"Acción",clear:"Limpiar",searchPlaceholder:"Escribir búsqueda...",searchNote:"La búsqueda solo filtra la lista visible, no borra datos.",close:"Cerrar",window:"Ventana",newMovement:"Nuevo movimiento",configuration:"Configuración",quickHelp:"Ayuda rápida",monthLocale:"es-AR",income:"Ingreso",expense:"Gasto",selectAccount:"-- Cuenta --",selectCategory:"-- Categoría --",save:"Guardar",configHelp:"Cuenta y categoría se cargan desde Config.",startTrialToAdd:"Iniciá la prueba para cargar movimientos",startTrialToConfig:"Iniciá la prueba para usar configuración",startTrialToAnalysis:"Iniciá la prueba para ver análisis",startTrialToExport:"Iniciá la prueba para exportar",startTrialToImport:"Iniciá la prueba para importar",noResults:"No hay resultados para esa búsqueda. Probá limpiar o cambiar el filtro.",noMovements:"No hay movimientos cargados en este mes. Usá <b>+ Nuevo</b> para cargar el primero.",movements:"movimientos",visible:"visibles",of:"de"},
-  pt:{appTitle:"FinanzaSimple – Controle de gastos",loginSubtitle:"Entrada por usuário",user:"Usuário",password:"Senha",enter:"Entrar",createUser:"Criar usuário",loginHelp:"Se for sua primeira vez, toque em <b>Criar usuário</b> e comece seu teste.",help:"Ajuda",activate:"Ativar",logout:"Sair",balance:"Saldo",incomePlural:"Receitas",expensePlural:"Despesas",newBtn:"Novo",configShort:"Config",analysis:"Análise",export:"Exportar",import:"Importar",example:"Exemplo",search:"Buscar",all:"Tudo",date:"Data",type:"Tipo",account:"Conta",category:"Categoria",detail:"Detalhe",amount:"Valor",action:"Ação",clear:"Limpar",searchPlaceholder:"Digite a busca...",searchNote:"A busca só filtra a lista visível, não apaga dados.",close:"Fechar",window:"Janela",newMovement:"Novo movimento",configuration:"Configuração",quickHelp:"Ajuda rápida",monthLocale:"pt-BR",income:"Receita",expense:"Despesa",selectAccount:"-- Conta --",selectCategory:"-- Categoria --",save:"Salvar",configHelp:"Conta e categoria são carregadas em Config.",startTrialToAdd:"Inicie o teste para lançar movimentos",startTrialToConfig:"Inicie o teste para usar configuração",startTrialToAnalysis:"Inicie o teste para ver análise",startTrialToExport:"Inicie o teste para exportar",startTrialToImport:"Inicie o teste para importar",noResults:"Não há resultados para essa busca. Tente limpar ou trocar o filtro.",noMovements:"Não há movimentos lançados neste mês. Use <b>+ Novo</b> para lançar o primeiro.",movements:"movimentos",visible:"visíveis",of:"de"},
-  en:{appTitle:"FinanzaSimple – Expense control",loginSubtitle:"User login",user:"User",password:"Password",enter:"Log in",createUser:"Create user",loginHelp:"If this is your first time, tap <b>Create user</b> and start your trial.",help:"Help",activate:"Activate",logout:"Log out",balance:"Balance",incomePlural:"Income",expensePlural:"Expenses",newBtn:"New",configShort:"Settings",analysis:"Analysis",export:"Export",import:"Import",example:"Example",search:"Search",all:"All",date:"Date",type:"Type",account:"Account",category:"Category",detail:"Detail",amount:"Amount",action:"Action",clear:"Clear",searchPlaceholder:"Type to search...",searchNote:"Search only filters the visible list; it does not delete data.",close:"Close",window:"Window",newMovement:"New movement",configuration:"Settings",quickHelp:"Quick help",monthLocale:"en-US",income:"Income",expense:"Expense",selectAccount:"-- Account --",selectCategory:"-- Category --",save:"Save",configHelp:"Account and category are loaded from Settings.",startTrialToAdd:"Start the trial to add movements",startTrialToConfig:"Start the trial to use settings",startTrialToAnalysis:"Start the trial to view analysis",startTrialToExport:"Start the trial to export",startTrialToImport:"Start the trial to import",noResults:"No results for that search. Try clearing it or changing the filter.",noMovements:"No movements loaded for this month. Use <b>+ New</b> to add the first one.",movements:"movements",visible:"visible",of:"of"}
+  es:{appTitle:"FinanzaSimple – Control de gastos",loginSubtitle:"Ingreso por usuario",user:"Usuario",password:"Clave",enter:"Entrar",createUser:"Crear usuario",loginHelp:"Si es tu primera vez, tocá <b>Crear usuario</b> y empezá tu prueba.",help:"Ayuda",activate:"Activar",logout:"Salir",balance:"Balance",incomePlural:"Ingresos",expensePlural:"Gastos",newBtn:"Nuevo",configShort:"Config",analysis:"Análisis",export:"Guardar copia",import:"Recuperar datos",example:"Ejemplo",search:"Buscar",all:"Todo",date:"Fecha",type:"Tipo",account:"Cuenta",category:"Categoría",detail:"Detalle",amount:"Monto",action:"Acción",clear:"Limpiar",searchPlaceholder:"Escribir búsqueda...",searchNote:"La búsqueda solo filtra la lista visible, no borra datos.",close:"Cerrar",window:"Ventana",newMovement:"Nuevo movimiento",configuration:"Configuración",quickHelp:"Ayuda rápida",monthLocale:"es-AR",income:"Ingreso",expense:"Gasto",selectAccount:"-- Cuenta --",selectCategory:"-- Categoría --",save:"Guardar",configHelp:"Cuenta y categoría se cargan desde Config.",startTrialToAdd:"Iniciá la prueba para cargar movimientos",startTrialToConfig:"Iniciá la prueba para usar configuración",startTrialToAnalysis:"Iniciá la prueba para ver análisis",startTrialToExport:"Iniciá la prueba para exportar",startTrialToImport:"Iniciá la prueba para importar",noResults:"No hay resultados para esa búsqueda. Probá limpiar o cambiar el filtro.",noMovements:"No hay movimientos cargados en este mes. Usá <b>+ Nuevo</b> para cargar el primero.",movements:"movimientos",visible:"visibles",of:"de"},
+  pt:{appTitle:"FinanzaSimple – Controle de gastos",loginSubtitle:"Entrada por usuário",user:"Usuário",password:"Senha",enter:"Entrar",createUser:"Criar usuário",loginHelp:"Se for sua primeira vez, toque em <b>Criar usuário</b> e comece seu teste.",help:"Ajuda",activate:"Ativar",logout:"Sair",balance:"Saldo",incomePlural:"Receitas",expensePlural:"Despesas",newBtn:"Novo",configShort:"Config",analysis:"Análise",export:"Salvar cópia",import:"Recuperar dados",example:"Exemplo",search:"Buscar",all:"Tudo",date:"Data",type:"Tipo",account:"Conta",category:"Categoria",detail:"Detalhe",amount:"Valor",action:"Ação",clear:"Limpar",searchPlaceholder:"Digite a busca...",searchNote:"A busca só filtra a lista visível, não apaga dados.",close:"Fechar",window:"Janela",newMovement:"Novo movimento",configuration:"Configuração",quickHelp:"Ajuda rápida",monthLocale:"pt-BR",income:"Receita",expense:"Despesa",selectAccount:"-- Conta --",selectCategory:"-- Categoria --",save:"Salvar",configHelp:"Conta e categoria são carregadas em Config.",startTrialToAdd:"Inicie o teste para lançar movimentos",startTrialToConfig:"Inicie o teste para usar configuração",startTrialToAnalysis:"Inicie o teste para ver análise",startTrialToExport:"Inicie o teste para exportar",startTrialToImport:"Inicie o teste para importar",noResults:"Não há resultados para essa busca. Tente limpar ou trocar o filtro.",noMovements:"Não há movimentos lançados neste mês. Use <b>+ Novo</b> para lançar o primeiro.",movements:"movimentos",visible:"visíveis",of:"de"},
+  en:{appTitle:"FinanzaSimple – Expense control",loginSubtitle:"User login",user:"User",password:"Password",enter:"Log in",createUser:"Create user",loginHelp:"If this is your first time, tap <b>Create user</b> and start your trial.",help:"Help",activate:"Activate",logout:"Log out",balance:"Balance",incomePlural:"Income",expensePlural:"Expenses",newBtn:"New",configShort:"Settings",analysis:"Analysis",export:"Save copy",import:"Recover data",example:"Example",search:"Search",all:"All",date:"Date",type:"Type",account:"Account",category:"Category",detail:"Detail",amount:"Amount",action:"Action",clear:"Clear",searchPlaceholder:"Type to search...",searchNote:"Search only filters the visible list; it does not delete data.",close:"Close",window:"Window",newMovement:"New movement",configuration:"Settings",quickHelp:"Quick help",monthLocale:"en-US",income:"Income",expense:"Expense",selectAccount:"-- Account --",selectCategory:"-- Category --",save:"Save",configHelp:"Account and category are loaded from Settings.",startTrialToAdd:"Start the trial to add movements",startTrialToConfig:"Start the trial to use settings",startTrialToAnalysis:"Start the trial to view analysis",startTrialToExport:"Start the trial to export",startTrialToImport:"Start the trial to import",noResults:"No results for that search. Try clearing it or changing the filter.",noMovements:"No movements loaded for this month. Use <b>+ New</b> to add the first one.",movements:"movements",visible:"visible",of:"of"}
 };
 
 Object.assign(I18N.es,{
   edit:"Editar", delete:"Borrar", add:"Agregar", accounts:"Cuentas", categories:"Categorías", currency:"Moneda", currencyHelp:"Símbolo usado en importes, balance y análisis. Ejemplos: $, R$, €, USD.", currencySymbol:"Símbolo de moneda", saveCurrency:"Guardar moneda", currencySaved:"✔ Moneda guardada.", canEditDelete:"Podés editar. Solo se puede borrar si no tiene movimientos.", newAccount:"Nueva cuenta", newCategory:"Nueva categoría",
   resetData:"Reiniciar datos", resetDataHelp:"Borra movimientos, cuentas y categorías del usuario actual. No borra usuarios, admin, prueba ni licencia.", resetDataBtn:"🧹 Reiniciar datos de la app", resetDataNote:"Útil para limpiar pruebas o empezar de cero sin reiniciar los días de uso.",
-  backup:"Backup", backupHelp:"Guardá una copia de seguridad y recuperala cuando la necesites.", saveBackup:"💾 Guardar copia", loadBackup:"📂 Cargar copia", backupNote:"Si entrás como admin, la copia guarda todos los usuarios. Si entrás como usuario común, guarda solo tus datos.",
+  backup:"Backup", backupHelp:"Backup completo para recuperación técnica. Puede incluir usuarios y claves: no compartir.", saveBackup:"💾 Backup completo", loadBackup:"📂 Cargar backup", backupNote:"Para enviar datos a otra persona usá Exportar/Importar de la pantalla principal. Esto es solo recuperación avanzada.",
   users:"Usuarios", usersHelp:"Solo admin puede crear usuarios, cambiar claves y borrar usuarios comunes. El usuario admin no se borra.", newUser:"Nuevo usuario", initialPassword:"Clave inicial", repeatPassword:"Repetir clave", addUser:"Agregar usuario", usersNote:"Cada usuario trabaja con sus propios movimientos, cuentas y categorías.",
   roleAdmin:"admin", roleUser:"usuario", licenseActivated:"✅ Licencia activada para este usuario.", exampleBanner:"⚠️ Estás viendo un ejemplo de cómo funciona la app. Iniciá la prueba para usarla con tus datos.", clearExample:"🗑 Limpiar ejemplo",
   editTitle:"Editar movimiento", deleteTitle:"Borrar movimiento", searchCountZero:"0 movimientos", analysisSummary:"Resumen del mes", expensesByCategory:"Gastos por categoría", chart:"Gráfica", noData:"Sin datos", noExpensesChart:"No hay gastos cargados en este mes para mostrar la gráfica.", expensesDistribution:"Distribución de gastos del mes", biggestExpense:"Mayor gasto", noCategory:"Sin categoría"
@@ -258,7 +287,7 @@ Object.assign(I18N.es,{
 Object.assign(I18N.pt,{
   edit:"Editar", delete:"Excluir", add:"Adicionar", accounts:"Contas", categories:"Categorias", currency:"Moeda", currencyHelp:"Símbolo usado nos valores, saldo e análise. Exemplos: $, R$, €, USD.", currencySymbol:"Símbolo da moeda", saveCurrency:"Salvar moeda", currencySaved:"✔ Moeda salva.", canEditDelete:"Você pode editar. Só é possível excluir se não houver movimentos.", newAccount:"Nova conta", newCategory:"Nova categoria",
   resetData:"Reiniciar dados", resetDataHelp:"Apaga movimentos, contas e categorias do usuário atual. Não apaga usuários, admin, teste nem licença.", resetDataBtn:"🧹 Reiniciar dados da app", resetDataNote:"Útil para limpar testes ou começar do zero sem reiniciar os dias de uso.",
-  backup:"Backup", backupHelp:"Salve uma cópia de segurança e recupere quando precisar.", saveBackup:"💾 Salvar cópia", loadBackup:"📂 Carregar cópia", backupNote:"Se entrar como admin, a cópia salva todos os usuários. Se entrar como usuário comum, salva só seus dados.",
+  backup:"Backup", backupHelp:"Backup completo para recuperação técnica. Pode incluir usuários e senhas: não compartilhar.", saveBackup:"💾 Backup completo", loadBackup:"📂 Carregar backup", backupNote:"Para enviar dados a outra pessoa use Exportar/Importar da tela principal. Isto é só recuperação avançada.",
   users:"Usuários", usersHelp:"Só o admin pode criar usuários, trocar senhas e excluir usuários comuns. O usuário admin não pode ser excluído.", newUser:"Novo usuário", initialPassword:"Senha inicial", repeatPassword:"Repetir senha", addUser:"Adicionar usuário", usersNote:"Cada usuário trabalha com seus próprios movimentos, contas e categorias.",
   roleAdmin:"admin", roleUser:"usuário", licenseActivated:"✅ Licença ativada para este usuário.", exampleBanner:"⚠️ Você está vendo um exemplo de como a app funciona. Inicie o teste para usar seus dados.", clearExample:"🗑 Limpar exemplo",
   editTitle:"Editar movimento", deleteTitle:"Excluir movimento", searchCountZero:"0 movimentos", analysisSummary:"Resumo do mês", expensesByCategory:"Despesas por categoria", chart:"Gráfico", noData:"Sem dados", noExpensesChart:"Não há despesas lançadas neste mês para mostrar o gráfico.", expensesDistribution:"Distribuição das despesas do mês", biggestExpense:"Maior despesa", noCategory:"Sem categoria"
@@ -266,7 +295,7 @@ Object.assign(I18N.pt,{
 Object.assign(I18N.en,{
   edit:"Edit", delete:"Delete", add:"Add", accounts:"Accounts", categories:"Categories", currency:"Currency", currencyHelp:"Symbol used for amounts, balance and analysis. Examples: $, R$, €, USD.", currencySymbol:"Currency symbol", saveCurrency:"Save currency", currencySaved:"✔ Currency saved.", canEditDelete:"You can edit. You can only delete it if it has no movements.", newAccount:"New account", newCategory:"New category",
   resetData:"Reset data", resetDataHelp:"Deletes movements, accounts and categories for the current user. It does not delete users, admin, trial or license.", resetDataBtn:"🧹 Reset app data", resetDataNote:"Useful for cleaning tests or starting over without restarting the trial days.",
-  backup:"Backup", backupHelp:"Save a backup copy and restore it when needed.", saveBackup:"💾 Save copy", loadBackup:"📂 Load copy", backupNote:"If you log in as admin, the copy saves all users. If you log in as a regular user, it saves only your data.",
+  backup:"Backup", backupHelp:"Full technical recovery backup. It may include users and passwords: do not share.", saveBackup:"💾 Full backup", loadBackup:"📂 Load backup", backupNote:"To send data to someone else use Export/Import on the main screen. This is only advanced recovery.",
   users:"Users", usersHelp:"Only admin can create users, change passwords and delete regular users. The admin user cannot be deleted.", newUser:"New user", initialPassword:"Initial password", repeatPassword:"Repeat password", addUser:"Add user", usersNote:"Each user works with their own movements, accounts and categories.",
   roleAdmin:"admin", roleUser:"user", licenseActivated:"✅ License activated for this user.", exampleBanner:"⚠️ You are viewing an example of how the app works. Start the trial to use your own data.", clearExample:"🗑 Clear example",
   editTitle:"Edit movement", deleteTitle:"Delete movement", searchCountZero:"0 movements", analysisSummary:"Monthly summary", expensesByCategory:"Expenses by category", chart:"Chart", noData:"No data", noExpensesChart:"There are no expenses loaded this month to show the chart.", expensesDistribution:"Monthly expense distribution", biggestExpense:"Biggest expense", noCategory:"No category"
@@ -287,7 +316,7 @@ Object.assign(I18N.es,{
 });
 
 Object.assign(I18N.es,{
-  helpTitle3:"FinanzaSimple en 3 pasos", helpStep1:"Primero cargá tus <b>cuentas</b> y <b>categorías</b>.", helpAccountExamples:"Ejemplos de cuenta: Banco, Efectivo, Mercado Pago.", helpCategoryExamples:"Ejemplos de categoría: Sueldo, Alimentos, Servicios.", helpStep2:"Cargá cada ingreso o gasto. Cuenta, categoría y monto son obligatorios.", helpStep3:"Mirá el resumen del mes y los gastos por categoría.", important:"Importante", helpImportant1:"Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.", helpImportant2:"El monto se carga siempre positivo: el Tipo define si suma o resta.", helpImportant3:"Usá Exportar para guardar backup e Importar para recuperarlo.", helpIncludes:"Esta versión incluye:", helpTrialLine:"prueba por días", helpActivationLine:"activación por usuario", helpBeforeTrial:"Antes de iniciar la prueba, estás viendo un ejemplo para entender cómo funciona la app. Iniciá la prueba para usarla con tus propios datos.", loadExampleTest:"Cargar ejemplo para probar", exampleOnlyEmpty:"El ejemplo aparece solo cuando este usuario no tiene movimientos cargados."
+  helpTitle3:"FinanzaSimple en 3 pasos", helpStep1:"Primero cargá tus <b>cuentas</b> y <b>categorías</b>.", helpAccountExamples:"Ejemplos de cuenta: Banco, Efectivo, Mercado Pago.", helpCategoryExamples:"Ejemplos de categoría: Sueldo, Alimentos, Servicios.", helpStep2:"Cargá cada ingreso o gasto. Cuenta, categoría y monto son obligatorios.", helpStep3:"Mirá el resumen del mes y los gastos por categoría.", important:"Importante", helpImportant1:"Cada usuario tiene sus propios datos. Los datos se guardan en este dispositivo/navegador.", helpImportant2:"El monto se carga siempre positivo: el Tipo define si suma o resta.", helpImportant3:"Usá Exportar/Importar para transferir movimientos sin repetir. El backup completo queda separado en Config.", helpIncludes:"Esta versión incluye:", helpTrialLine:"prueba por días", helpActivationLine:"activación por usuario", helpBeforeTrial:"Antes de iniciar la prueba, estás viendo un ejemplo para entender cómo funciona la app. Iniciá la prueba para usarla con tus propios datos.", loadExampleTest:"Cargar ejemplo para probar", exampleOnlyEmpty:"El ejemplo aparece solo cuando este usuario no tiene movimientos cargados."
 });
 Object.assign(I18N.pt,{
   confirmTypeChange:"Você está mudando o tipo de {from} para {to}. Isso altera o saldo. Confirmar?",
@@ -304,7 +333,7 @@ Object.assign(I18N.pt,{
 });
 
 Object.assign(I18N.pt,{
-  helpTitle3:"FinanzaSimple em 3 passos", helpStep1:"Primeiro carregue suas <b>contas</b> e <b>categorias</b>.", helpAccountExamples:"Exemplos de conta: Banco, Dinheiro, Mercado Pago.", helpCategoryExamples:"Exemplos de categoria: Salário, Alimentação, Serviços.", helpStep2:"Lance cada receita ou despesa. Conta, categoria e valor são obrigatórios.", helpStep3:"Veja o resumo do mês e as despesas por categoria.", important:"Importante", helpImportant1:"Cada usuário tem seus próprios dados. Os dados ficam salvos neste dispositivo/navegador.", helpImportant2:"O valor é sempre carregado positivo: o Tipo define se soma ou subtrai.", helpImportant3:"Use Exportar para salvar backup e Importar para recuperar.", helpIncludes:"Esta versão inclui:", helpTrialLine:"teste por dias", helpActivationLine:"ativação por usuário", helpBeforeTrial:"Antes de iniciar o teste, você está vendo um exemplo para entender como a app funciona. Inicie o teste para usar seus próprios dados.", loadExampleTest:"Carregar exemplo para testar", exampleOnlyEmpty:"O exemplo aparece somente quando este usuário não tem movimentos carregados."
+  helpTitle3:"FinanzaSimple em 3 passos", helpStep1:"Primeiro carregue suas <b>contas</b> e <b>categorias</b>.", helpAccountExamples:"Exemplos de conta: Banco, Dinheiro, Mercado Pago.", helpCategoryExamples:"Exemplos de categoria: Salário, Alimentação, Serviços.", helpStep2:"Lance cada receita ou despesa. Conta, categoria e valor são obrigatórios.", helpStep3:"Veja o resumo do mês e as despesas por categoria.", important:"Importante", helpImportant1:"Cada usuário tem seus próprios dados. Os dados ficam salvos neste dispositivo/navegador.", helpImportant2:"O valor é sempre carregado positivo: o Tipo define se soma ou subtrai.", helpImportant3:"Use Exportar/Importar para transferir movimentos sem repetir. O backup completo fica separado em Config.", helpIncludes:"Esta versão inclui:", helpTrialLine:"teste por dias", helpActivationLine:"ativação por usuário", helpBeforeTrial:"Antes de iniciar o teste, você está vendo um exemplo para entender como a app funciona. Inicie o teste para usar seus próprios dados.", loadExampleTest:"Carregar exemplo para testar", exampleOnlyEmpty:"O exemplo aparece somente quando este usuário não tem movimentos carregados."
 });
 Object.assign(I18N.en,{
   confirmTypeChange:"You are changing the type from {from} to {to}. This changes the balance. Confirm?",
@@ -321,7 +350,27 @@ Object.assign(I18N.en,{
 });
 
 Object.assign(I18N.en,{
-  helpTitle3:"FinanzaSimple in 3 steps", helpStep1:"First add your <b>accounts</b> and <b>categories</b>.", helpAccountExamples:"Account examples: Bank, Cash, Mercado Pago.", helpCategoryExamples:"Category examples: Salary, Food, Utilities.", helpStep2:"Add each income or expense. Account, category and amount are required.", helpStep3:"View the monthly summary and expenses by category.", important:"Important", helpImportant1:"Each user has their own data. Data is saved on this device/browser.", helpImportant2:"Amounts are always entered as positive: Type defines whether it adds or subtracts.", helpImportant3:"Use Export to save a backup and Import to restore it.", helpIncludes:"This version includes:", helpTrialLine:"trial by days", helpActivationLine:"activation per user", helpBeforeTrial:"Before starting the trial, you are viewing an example to understand how the app works. Start the trial to use your own data.", loadExampleTest:"Load example to test", exampleOnlyEmpty:"The example appears only when this user has no movements loaded."
+  helpTitle3:"FinanzaSimple in 3 steps", helpStep1:"First add your <b>accounts</b> and <b>categories</b>.", helpAccountExamples:"Account examples: Bank, Cash, Mercado Pago.", helpCategoryExamples:"Category examples: Salary, Food, Utilities.", helpStep2:"Add each income or expense. Account, category and amount are required.", helpStep3:"View the monthly summary and expenses by category.", important:"Important", helpImportant1:"Each user has their own data. Data is saved on this device/browser.", helpImportant2:"Amounts are always entered as positive: Type defines whether it adds or subtracts.", helpImportant3:"Use Export/Import to transfer movements without duplicates. Full backup is separated in Settings.", helpIncludes:"This version includes:", helpTrialLine:"trial by days", helpActivationLine:"activation per user", helpBeforeTrial:"Before starting the trial, you are viewing an example to understand how the app works. Start the trial to use your own data.", loadExampleTest:"Load example to test", exampleOnlyEmpty:"The example appears only when this user has no movements loaded."
+});
+
+
+Object.assign(I18N.es,{
+  exportExcel:"Excel", exportExcelDone:"✔ Archivo Excel generado en Descargas: <b>{name}</b>.", exportCSV:"CSV", exportCSVDone:"✔ Archivo CSV generado en Descargas: <b>{name}</b>.",
+  undoDelete:"↩ Deshacer borrado", undoDone:"✔ Borrado deshecho. El movimiento volvió a la lista.", undoNothing:"No hay un borrado reciente para deshacer.", deletedCanUndo:"✔ Movimiento borrado. Podés deshacerlo si fue un error.",
+  helpCopyTitle:"Guardar copia y recuperar datos", helpCopy1:"Guardar copia crea un archivo con tus movimientos actuales. Es una foto del momento: no reemplaza copias anteriores.", helpCopy2:"Recuperar datos compara la copia con lo que ya tenés y muestra solo los movimientos que faltan.", helpCopy3:"No duplica movimientos y no pisa datos existentes.", helpCopy4:"Si borrás un movimiento, solo podés recuperarlo desde una copia anterior donde todavía existía.", helpCopy5:"Si guardás una copia después de borrar, ese movimiento ya no estará en esa copia nueva.",
+  helpUndoTitle:"Deshacer último borrado", helpUndo1:"Si borrás un movimiento por error, aparece la opción Deshacer borrado.", helpUndo2:"Deshacer recupera solo el último movimiento borrado, sin buscar archivos.", helpExcelTitle:"Exportar a Excel", helpExcel1:"Exportar Excel genera una planilla simple con Fecha, Tipo, Cuenta, Categoría, Detalle y Monto.", helpExcel2:"Es para revisar o enviar datos. No incluye usuarios, claves ni datos técnicos.", helpCSVTitle:"Exportar CSV", helpCSV1:"Exportar CSV genera un archivo simple, liviano y compatible con Google Sheets, Excel viejo y otros sistemas.", helpCSV2:"Es la opción recomendada cuando no hay Excel instalado o cuando querés compartir datos sin problemas.", autoBackupSaved:"✔ Copia interna actualizada automáticamente.", autoBackupLine:"Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas."
+});
+Object.assign(I18N.pt,{
+  exportExcel:"Excel", exportExcelDone:"✔ Arquivo Excel gerado em Downloads: <b>{name}</b>.", exportCSV:"CSV", exportCSVDone:"✔ Arquivo CSV gerado em Downloads: <b>{name}</b>.",
+  undoDelete:"↩ Desfazer exclusão", undoDone:"✔ Exclusão desfeita. O movimento voltou para a lista.", undoNothing:"Não há uma exclusão recente para desfazer.", deletedCanUndo:"✔ Movimento excluído. Você pode desfazer se foi um erro.",
+  helpCopyTitle:"Salvar cópia e recuperar dados", helpCopy1:"Salvar cópia cria um arquivo com seus movimentos atuais. É uma foto do momento: não substitui cópias anteriores.", helpCopy2:"Recuperar dados compara a cópia com o que você já tem e mostra somente os movimentos que faltam.", helpCopy3:"Não duplica movimentos e não sobrescreve dados existentes.", helpCopy4:"Se você excluir um movimento, só poderá recuperá-lo a partir de uma cópia anterior onde ele ainda existia.", helpCopy5:"Se você salvar uma cópia depois de excluir, esse movimento já não estará nessa nova cópia.",
+  helpUndoTitle:"Desfazer última exclusão", helpUndo1:"Se você excluir um movimento por engano, aparece a opção Desfazer exclusão.", helpUndo2:"Desfazer recupera somente o último movimento excluído, sem procurar arquivos.", helpExcelTitle:"Exportar para Excel", helpExcel1:"Exportar Excel gera uma planilha simples com Data, Tipo, Conta, Categoria, Detalhe e Valor.", helpExcel2:"Serve para revisar ou enviar dados. Não inclui usuários, senhas nem dados técnicos.", helpCSVTitle:"Exportar CSV", helpCSV1:"Exportar CSV gera um arquivo simples, leve e compatível com Google Sheets, Excel antigo e outros sistemas.", helpCSV2:"É a opção recomendada quando não há Excel instalado ou quando você quer compartilhar dados sem problemas.", autoBackupSaved:"✔ Cópia interna atualizada automaticamente.", autoBackupLine:"Seus dados são salvos automaticamente neste dispositivo. As cópias manuais são baixadas em Downloads."
+});
+Object.assign(I18N.en,{
+  exportExcel:"Excel", exportExcelDone:"✔ Excel file created in Downloads: <b>{name}</b>.", exportCSV:"CSV", exportCSVDone:"✔ CSV file created in Downloads: <b>{name}</b>.",
+  undoDelete:"↩ Undo delete", undoDone:"✔ Delete undone. The movement returned to the list.", undoNothing:"There is no recent delete to undo.", deletedCanUndo:"✔ Movement deleted. You can undo it if it was a mistake.",
+  helpCopyTitle:"Save copy and recover data", helpCopy1:"Save copy creates a file with your current movements. It is a snapshot of the moment: it does not replace previous copies.", helpCopy2:"Recover data compares the copy with what you already have and shows only missing movements.", helpCopy3:"It does not duplicate movements and does not overwrite existing data.", helpCopy4:"If you delete a movement, you can only recover it from an earlier copy where it still existed.", helpCopy5:"If you save a copy after deleting, that movement will no longer be in the new copy.",
+  helpUndoTitle:"Undo last delete", helpUndo1:"If you delete a movement by mistake, the Undo delete option appears.", helpUndo2:"Undo restores only the last deleted movement, without looking for files.", helpExcelTitle:"Export to Excel", helpExcel1:"Export Excel creates a simple spreadsheet with Date, Type, Account, Category, Detail and Amount.", helpExcel2:"It is for reviewing or sending data. It does not include users, passwords or technical data.", helpCSVTitle:"Export CSV", helpCSV1:"Export CSV creates a simple, light file compatible with Google Sheets, old Excel and other systems.", helpCSV2:"It is recommended when Excel is not installed or when you want to share data without issues.", autoBackupSaved:"✔ Internal copy updated automatically.", autoBackupLine:"Your data is saved automatically on this device. Manual copies are downloaded to Downloads."
 });
 
 function normalizeLang(lang){
@@ -351,6 +400,7 @@ function applyLang(){
   document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerText=tr(el.getAttribute("data-i18n")); });
   document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML=tr(el.getAttribute("data-i18n-html")); });
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{ el.placeholder=tr(el.getAttribute("data-i18n-placeholder")); });
+  try{ mostrarEstadoAutoBackup(); }catch(e){}
 }
 
 let fecha=new Date();
@@ -359,6 +409,7 @@ let movs=[];
 let cuentas=[];
 let categorias=[];
 let moneda="$";
+let ultimoBorrado=null;
 
 function leerJSONSeguro(clave, valorDefault){
   try{
@@ -542,7 +593,41 @@ function guardarStorage(){
   localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
   localStorage.setItem(claveUsuario("cuentas"), JSON.stringify(cuentas));
   localStorage.setItem(claveUsuario("categorias"), JSON.stringify(categorias));
-  localStorage.setItem(claveUsuario("moneda"), moneda || "$")
+  localStorage.setItem(claveUsuario("moneda"), moneda || "$" );
+  guardarCopiaInternaAutomatica();
+}
+
+function guardarCopiaInternaAutomatica(){
+  try{
+    if(!currentUser) return;
+    const paquete={
+      app:"FinanzasSimple",
+      version:"V13_1_backup_auto",
+      creado:new Date().toISOString(),
+      tipo:"copia_interna",
+      usuarioOrigen: currentUser,
+      moneda: moneda || "$",
+      movs: Array.isArray(movs) ? movs : [],
+      cuentas: Array.isArray(cuentas) ? cuentas : [],
+      categorias: Array.isArray(categorias) ? categorias : []
+    };
+    localStorage.setItem(claveUsuario("auto_backup"), JSON.stringify(paquete));
+    localStorage.setItem(claveUsuario("auto_backup_fecha"), paquete.creado);
+    mostrarEstadoAutoBackup();
+  }catch(e){
+    console.warn("No se pudo guardar copia interna automática", e);
+  }
+}
+
+function mostrarEstadoAutoBackup(){
+  const box=document.getElementById("autoBackupInfo");
+  if(!box || !currentUser) return;
+  const fechaAuto=localStorage.getItem(claveUsuario("auto_backup_fecha"));
+  if(!fechaAuto){ box.style.display="none"; return; }
+  const d=new Date(fechaAuto);
+  const hora=isNaN(d.getTime()) ? "" : " " + d.toLocaleString(tr("monthLocale"));
+  box.innerHTML=(tr("autoBackupSaved") || "✔ Copia interna actualizada automáticamente.") + hora + "<br><span style='font-weight:normal'>" + (tr("autoBackupLine") || "Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas.") + "</span>";
+  box.style.display="block";
 }
 
 function fmt(n){return (moneda || "$") + " " + Number(n).toLocaleString("es-AR");}
@@ -739,14 +824,51 @@ function guardar(id){
   }
 }
 
-function borrar(id){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para modificar datos"); return; }
-//id){
-  const m = movs.find(x=>x.id==id);
-  const detalle = m ? "\n\nFecha: " + (m.fecha||"") + "\nTipo: " + (m.tipo||"") + "\nMonto: " + fmt(montoMovimiento(m)) : "";
-  if(!confirm(msg("deleteMovementConfirm", {detail}))) return;
-  movs=movs.filter(x=>x.id!=id);
+function borrar(id){
+  try{
+    if(!puedeOperar()){ accionBloqueada(tr("startTrialToAdd")); return; }
+    const idx = movs.findIndex(x=>String(x.id)===String(id));
+    if(idx < 0){ alert(tr("movementNotFound")); return; }
+    const m = movs[idx] || {};
+    const detalleBorrado =
+      "\n\n" + tr("date") + ": " + formatoFechaVista(m.fecha||"") +
+      "\n" + tr("type") + ": " + tipoTraducido(m.tipo||"") +
+      "\n" + tr("account") + ": " + (m.cuenta||"") +
+      "\n" + tr("category") + ": " + (m.categoria||"") +
+      "\n" + tr("amount") + ": " + fmt(Math.abs(Number(m.monto)||0));
+    if(!confirm(msg("deleteMovementConfirm", {detail: detalleBorrado}))) return;
+
+    ultimoBorrado = {movimiento:{...m}, indice:idx, cuando:Date.now()};
+    movs.splice(idx,1);
+    guardarStorage();
+    render();
+    showNotice(`${tr("deletedCanUndo")} <button onclick="deshacerUltimoBorrado()" style="background:#27ae60;margin-left:8px;">${tr("undoDelete")}</button>`);
+  }catch(e){
+    console.error("Error al borrar movimiento", e);
+    alert("No se pudo borrar el movimiento. Detalle: " + (e && e.message ? e.message : e));
+  }
+}
+
+function deshacerUltimoBorrado(){
+  if(!ultimoBorrado || !ultimoBorrado.movimiento){
+    alert(tr("undoNothing"));
+    return;
+  }
+  const m = {...ultimoBorrado.movimiento};
+  const existe = movs.some(x => claveMovimiento(x) === claveMovimiento(m) || (m.uid && x.uid === m.uid) || (String(x.id) === String(m.id)));
+  if(existe){
+    ultimoBorrado=null;
+    alert(tr("undoNothing"));
+    return;
+  }
+  const pos = Math.max(0, Math.min(Number(ultimoBorrado.indice)||0, movs.length));
+  movs.splice(pos,0,m);
+  if(m.cuenta && !cuentas.includes(m.cuenta)) cuentas.push(m.cuenta);
+  if(m.categoria && !categorias.includes(m.categoria)) categorias.push(m.categoria);
   guardarStorage();
+  ultimoBorrado=null;
   render();
+  showNotice(tr("undoDone"));
 }
 
 
@@ -873,8 +995,8 @@ function openConfig(){
     <div class="adminBox">
       <b>${tr("backup")}</b><br>
       <div class="muted">${tr("backupHelp")}</div>
-      <button onclick="guardarCopia()">${tr("saveBackup")}</button>
-      <button onclick="cargarCopia()">${tr("loadBackup")}</button>
+      <button onclick="guardarBackupCompleto()">${tr("saveBackup")}</button>
+      <button onclick="cargarBackupCompleto()">${tr("loadBackup")}</button>
       <div class="helper">${tr("backupNote")}</div>
     </div>
     <hr>
@@ -970,43 +1092,330 @@ function showNotice(msg){
   window.fsNoticeTimer=setTimeout(()=>{n.style.display="none";},5000);
 }
 
-function guardarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para exportar datos"); return; }
-  if(bloquearSiTrialVencido()) return;
-  if(!currentUser) return alert(tr("mustLogin"));
-  guardarStorage();
-  const admin=usuarioActualEsAdmin();
-  const usuarios=initUsuarios();
-  const datos={};
-  if(admin){
-    usuarios.forEach(u=>{ datos[u.usuario]=datosDeUsuario(u.usuario); });
-  }else{
-    datos[currentUser]=datosDeUsuario(currentUser);
-  }
-  const backup={
-    app:"FinanzaSimple",
-    version:"V10.3_idiomas_moneda",
-    creado:new Date().toISOString(),
-    tipo:admin ? "completo" : "usuario",
-    usuarioActual:currentUser,
-    usuarios:admin ? usuarios : [{usuario:currentUser, admin:false}],
-    datos
-  };
-  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+
+function descargarArchivo(nombre, contenido, tipo="application/json"){
+  const blob=new Blob([contenido],{type:tipo});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download=`FinanzaSimple_backup_${admin ? "completo" : currentUser}_${fechaArchivo()}.json`;
+  a.download=nombre;
   document.body.appendChild(a);
   a.click();
   const href=a.href;
   a.remove();
   setTimeout(()=>URL.revokeObjectURL(href),1000);
-  showNotice("✔ Backup guardado. Si no elegiste carpeta, revisá Descargas.");
 }
 
-function cargarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba para importar datos"); return; }
+function codigoMovimiento(m){
+  if(!m.uid){
+    const base = [m.id || Date.now(), m.fecha || "", m.tipo || "", m.cuenta || "", m.categoria || "", m.detalle || "", m.monto || 0].join("|");
+    let h=0;
+    for(let i=0;i<base.length;i++) h = ((h<<5)-h + base.charCodeAt(i)) | 0;
+    m.uid = "FS-" + Math.abs(h) + "-" + (m.id || Date.now());
+  }
+  return m.uid;
+}
+
+function claveMovimiento(m){
+  const monto = Number(m.monto || 0).toFixed(2);
+  return [
+    String(m.uid || "").trim(),
+    String(m.fecha || "").trim(),
+    String(m.tipo || "").trim().toLowerCase(),
+    textoNormalizado(m.cuenta || "").trim(),
+    textoNormalizado(m.categoria || "").trim(),
+    textoNormalizado(m.detalle || "").trim(),
+    monto
+  ].join("|");
+}
+
+function movimientoLimpioParaTransferir(m){
+  return {
+    codigo: codigoMovimiento(m),
+    fecha: m.fecha || "",
+    tipo: m.tipo || "",
+    cuenta: m.cuenta || "",
+    categoria: m.categoria || "",
+    detalle: m.detalle || "",
+    monto: Number(m.monto) || 0
+  };
+}
+
+function normalizarMovimientoImportado(x){
+  if(!x || typeof x !== "object") return null;
+  const m={
+    uid: String(x.codigo || x.uid || "").trim(),
+    id: Date.now() + Math.floor(Math.random()*1000000),
+    fecha: String(x.fecha || "").trim(),
+    tipo: String(x.tipo || "").trim(),
+    cuenta: String(x.cuenta || "").trim(),
+    categoria: String(x.categoria || "").trim(),
+    detalle: String(x.detalle || "").trim(),
+    monto: Number(x.monto)
+  };
+  const tipoNorm = textoNormalizado(m.tipo);
+  if(tipoNorm === "income" || tipoNorm === "receita" || tipoNorm === "ingreso") m.tipo="Ingreso";
+  if(tipoNorm === "expense" || tipoNorm === "despesa" || tipoNorm === "gasto") m.tipo="Gasto";
+  if(!m.fecha || !m.tipo || !m.cuenta || !m.categoria || !isFinite(m.monto) || m.monto===0) return null;
+  if(m.monto < 0) m.monto = Math.abs(m.monto);
+  if(!m.uid) m.uid = codigoMovimiento(m);
+  return m;
+}
+
+function guardarCopia(){
+  // EXPORTAR = transferencia limpia de movimientos. No incluye usuarios, claves ni admin.
+  if(!puedeOperar()){ accionBloqueada(tr("startTrialToExport")); return; }
   if(bloquearSiTrialVencido()) return;
   if(!currentUser) return alert(tr("mustLogin"));
-  showNotice("Seleccioná el archivo de backup. Normalmente está en Descargas.");
+  guardarStorage();
+
+  const movimientos = movs.map(movimientoLimpioParaTransferir);
+  guardarStorage();
+
+  const paquete={
+    app:"FinanzasSimple",
+    version:"V13_1_backup_auto",
+    creado:new Date().toISOString(),
+    tipo:"movimientos",
+    modo:"acumulativo_sin_repetir",
+    usuarioOrigen: currentUser,
+    moneda: moneda || "$",
+    movimientos
+  };
+
+  const nombre=`FinanzasSimple_movimientos_${currentUser}_${fechaArchivo()}.json`;
+  descargarArchivo(nombre, JSON.stringify(paquete,null,2));
+  showNotice(`✔ Exportación lista. Se envió a Descargas como: <b>${escapeHTML(nombre)}</b>. No incluye usuarios ni claves.`);
+}
+
+
+function valorExcel(v){
+  return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function guardarExcel(){
+  if(!puedeOperar()){ accionBloqueada(tr("startTrialToExport")); return; }
+  if(bloquearSiTrialVencido()) return;
+  if(!currentUser) return alert(tr("mustLogin"));
+  guardarStorage();
+
+  const ordenados = [...movs].sort((a,b)=>String(a.fecha||"").localeCompare(String(b.fecha||"")));
+  const filas = ordenados.map(m=>{
+    const monto = m.tipo==="Gasto" ? -(Math.abs(Number(m.monto)||0)) : Math.abs(Number(m.monto)||0);
+    return `<tr>
+      <td>${valorExcel(formatoFechaVista(m.fecha||""))}</td>
+      <td>${valorExcel(tipoTraducido(m.tipo||""))}</td>
+      <td>${valorExcel(m.cuenta||"")}</td>
+      <td>${valorExcel(m.categoria||"")}</td>
+      <td>${valorExcel(m.detalle||"")}</td>
+      <td style="mso-number-format:'0.00';">${monto}</td>
+    </tr>`;
+  }).join("");
+
+  const htmlExcel = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<table border="1">
+  <thead>
+    <tr>
+      <th>${valorExcel(tr("date"))}</th>
+      <th>${valorExcel(tr("type"))}</th>
+      <th>${valorExcel(tr("account"))}</th>
+      <th>${valorExcel(tr("category"))}</th>
+      <th>${valorExcel(tr("detail"))}</th>
+      <th>${valorExcel(tr("amount"))}</th>
+    </tr>
+  </thead>
+  <tbody>${filas}</tbody>
+</table>
+</body>
+</html>`;
+  const nombre=`FinanzasSimple_excel_${currentUser}_${fechaArchivo()}.xls`;
+  descargarArchivo(nombre, htmlExcel, "application/vnd.ms-excel;charset=utf-8");
+  showNotice(msg("exportExcelDone", {name:escapeHTML(nombre)}));
+}
+
+
+
+function valorCSV(v){
+  const s = String(v ?? "");
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
+function guardarCSV(){
+  if(!puedeOperar()){ accionBloqueada(tr("startTrialToExport")); return; }
+  if(bloquearSiTrialVencido()) return;
+  if(!currentUser) return alert(tr("mustLogin"));
+  guardarStorage();
+
+  const ordenados = [...movs].sort((a,b)=>String(a.fecha||"").localeCompare(String(b.fecha||"")));
+  const encabezado = [tr("date"), tr("type"), tr("account"), tr("category"), tr("detail"), tr("amount")].map(valorCSV).join(",");
+  const filas = ordenados.map(m=>{
+    const monto = m.tipo==="Gasto" ? -(Math.abs(Number(m.monto)||0)) : Math.abs(Number(m.monto)||0);
+    return [
+      formatoFechaVista(m.fecha||""),
+      tipoTraducido(m.tipo||""),
+      m.cuenta||"",
+      m.categoria||"",
+      m.detalle||"",
+      monto
+    ].map(valorCSV).join(",");
+  }).join("\n");
+
+  const csv = "\ufeff" + encabezado + "\n" + filas;
+  const nombre=`FinanzasSimple_csv_${currentUser}_${fechaArchivo()}.csv`;
+  descargarArchivo(nombre, csv, "text/csv;charset=utf-8");
+  showNotice(msg("exportCSVDone", {name:escapeHTML(nombre)}));
+}
+
+function textosRecuperacion(k){
+  const t={
+    es:{selectFile:"Seleccioná la copia de movimientos de FinanzasSimple. Normalmente está en Descargas.", invalid:"Ese archivo no parece ser una copia de movimientos de FinanzasSimple.", readError:"No se pudo leer el archivo. Revisá que sea una copia correcta de FinanzasSimple.", title:"Recuperar datos", intro:"Movimientos encontrados en la copia que no están en la app:", none:"No hay movimientos nuevos para recuperar. Lo que está en la copia ya existe en la app.", selectHelp:"Marcá solo lo que querés recuperar. No se pisa nada existente.", recoverSelected:"Recuperar seleccionados", recoverAll:"Recuperar todos", cancel:"Cancelar", noSelection:"No seleccionaste movimientos para recuperar.", done:"✔ Recuperación terminada: <b>{n}</b> movimientos recuperados. No se pisó nada existente.", invalidCount:"Se ignoraron {n} movimientos inválidos.", source:"Archivo", amount:"Monto"},
+    pt:{selectFile:"Selecione a cópia de movimentos do FinanzasSimple. Normalmente está em Downloads.", invalid:"Esse arquivo não parece ser uma cópia de movimentos do FinanzasSimple.", readError:"Não foi possível ler o arquivo. Confira se é uma cópia correta do FinanzasSimple.", title:"Recuperar dados", intro:"Movimentos encontrados na cópia que não estão na app:", none:"Não há movimentos novos para recuperar. O que está na cópia já existe na app.", selectHelp:"Marque só o que você quer recuperar. Nada existente será substituído.", recoverSelected:"Recuperar selecionados", recoverAll:"Recuperar todos", cancel:"Cancelar", noSelection:"Você não selecionou movimentos para recuperar.", done:"✔ Recuperação concluída: <b>{n}</b> movimentos recuperados. Nada existente foi substituído.", invalidCount:"Foram ignorados {n} movimentos inválidos.", source:"Arquivo", amount:"Valor"},
+    en:{selectFile:"Select the FinanzasSimple movements copy. It is usually in Downloads.", invalid:"That file does not look like a FinanzasSimple movements copy.", readError:"The file could not be read. Check that it is a valid FinanzasSimple copy.", title:"Recover data", intro:"Movements found in the copy that are not in the app:", none:"There are no new movements to recover. Everything in the copy already exists in the app.", selectHelp:"Select only what you want to recover. Existing data will not be overwritten.", recoverSelected:"Recover selected", recoverAll:"Recover all", cancel:"Cancel", noSelection:"You did not select any movement to recover.", done:"✔ Recovery complete: <b>{n}</b> movements recovered. Existing data was not overwritten.", invalidCount:"Ignored {n} invalid movements.", source:"File", amount:"Amount"}
+  };
+  return (t[currentLang] && t[currentLang][k]) || t.es[k] || k;
+}
+
+function movimientoResumenHTML(m){
+  return `${escapeHTML(formatoFechaVista(m.fecha))} | <b>${escapeHTML(tipoTraducido(m.tipo))}</b> | ${escapeHTML(m.cuenta)} | ${escapeHTML(m.categoria)} | ${escapeHTML(m.detalle || "-")} | <b>${fmt(Number(m.monto)||0)}</b>`;
+}
+
+function recuperarMovimientos(candidatos, indices){
+  const elegidos = indices.map(i=>candidatos[i]).filter(Boolean);
+  if(!elegidos.length){ alert(textosRecuperacion("noSelection")); return; }
+  elegidos.forEach(m=>{
+    movs.push(m);
+    if(m.cuenta && !cuentas.includes(m.cuenta)) cuentas.push(m.cuenta);
+    if(m.categoria && !categorias.includes(m.categoria)) categorias.push(m.categoria);
+  });
+  guardarStorage();
+  closeModal();
+  render();
+  showNotice(textosRecuperacion("done").replace("{n}", elegidos.length));
+}
+
+function recuperarSeleccionadosDesdeModal(){
+  const candidatos = window.fsRecuperacionCandidatos || [];
+  const indices = Array.from(document.querySelectorAll(".fsRecuperarCheck:checked")).map(ch=>Number(ch.value));
+  recuperarMovimientos(candidatos, indices);
+}
+
+function recuperarTodosDesdeModal(){
+  const candidatos = window.fsRecuperacionCandidatos || [];
+  recuperarMovimientos(candidatos, candidatos.map((_,i)=>i));
+}
+
+function mostrarMovimientosRecuperables(candidatos, invalidos, nombreArchivo){
+  window.fsRecuperacionCandidatos = candidatos;
+  bg.style.display="block";
+  setModal("analisis", textosRecuperacion("title"), "recover");
+  const invalidTxt = invalidos ? `<div class="helper" style="color:#a94442;margin:8px 0;">${textosRecuperacion("invalidCount").replace("{n}", invalidos)}</div>` : "";
+  if(!candidatos.length){
+    content.innerHTML = `
+      <div style="background:#eaf7ee;color:#1f6b3a;padding:12px;border-radius:10px;font-weight:bold;">${textosRecuperacion("none")}</div>
+      ${invalidTxt}
+      <div class="helper" style="margin-top:8px;">${textosRecuperacion("source")}: ${escapeHTML(nombreArchivo || "")}</div>
+      <button onclick="closeModal()">${textosRecuperacion("cancel")}</button>`;
+    return;
+  }
+  content.innerHTML = `
+    <b>${textosRecuperacion("intro")}</b>
+    <div class="helper" style="margin:6px 0 10px;">${textosRecuperacion("selectHelp")}</div>
+    ${invalidTxt}
+    <div style="max-height:360px;overflow:auto;border:1px solid #ddd;border-radius:10px;background:#fafafa;">
+      ${candidatos.map((m,i)=>`
+        <label style="display:flex;gap:8px;align-items:flex-start;padding:10px;border-bottom:1px solid #eee;cursor:pointer;background:white;">
+          <input class="fsRecuperarCheck" type="checkbox" value="${i}" checked style="width:auto;margin-top:3px;">
+          <span style="line-height:1.35;">${movimientoResumenHTML(m)}</span>
+        </label>`).join("")}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+      <button onclick="recuperarSeleccionadosDesdeModal()" style="background:#27ae60">${textosRecuperacion("recoverSelected")}</button>
+      <button onclick="recuperarTodosDesdeModal()" style="background:#3498db">${textosRecuperacion("recoverAll")}</button>
+      <button onclick="closeModal()" style="background:#7f8c8d">${textosRecuperacion("cancel")}</button>
+    </div>
+    <div class="helper" style="margin-top:8px;">${textosRecuperacion("source")}: ${escapeHTML(nombreArchivo || "")}</div>`;
+}
+
+function cargarCopia(){
+  // RECUPERAR DATOS = muestra solo movimientos faltantes para elegir. No pisa ni duplica.
+  if(!puedeOperar()){ accionBloqueada(tr("startTrialToImport")); return; }
+  if(bloquearSiTrialVencido()) return;
+  if(!currentUser) return alert(tr("mustLogin"));
+  showNotice(textosRecuperacion("selectFile"));
+
+  const input=document.createElement("input");
+  input.type="file";
+  input.accept="application/json,.json";
+  input.onchange=()=>{
+    const file=input.files && input.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const paquete=JSON.parse(reader.result);
+        const appOk = !paquete?.app || paquete.app === "FinanzasSimple" || paquete.app === "FinanzaSimple";
+        const lista = Array.isArray(paquete?.movimientos) ? paquete.movimientos : (Array.isArray(paquete) ? paquete : null);
+        if(!appOk || !lista){
+          return alert(textosRecuperacion("invalid"));
+        }
+
+        const clavesExistentes = new Set(movs.map(claveMovimiento));
+        const clavesCandidatas = new Set();
+        const candidatos=[];
+        let invalidos=0;
+
+        lista.forEach(x=>{
+          const m=normalizarMovimientoImportado(x);
+          if(!m){ invalidos++; return; }
+          const clave=claveMovimiento(m);
+          if(clavesExistentes.has(clave) || clavesCandidatas.has(clave)) return;
+          clavesCandidatas.add(clave);
+          candidatos.push(m);
+        });
+
+        mostrarMovimientosRecuperables(candidatos, invalidos, file.name);
+      }catch(e){
+        alert(textosRecuperacion("readError"));
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function guardarBackupCompleto(){
+  // BACKUP COMPLETO = recuperación técnica. Puede incluir usuarios y claves. No compartir.
+  if(!puedeOperar()){ accionBloqueada(tr("startTrialToExport")); return; }
+  if(bloquearSiTrialVencido()) return;
+  if(!currentUser) return alert(tr("mustLogin"));
+  if(!confirm("Backup completo: puede incluir usuarios, claves y datos internos. Usalo solo para recuperar tu propia app. ¿Continuar?")) return;
+  guardarStorage();
+  const admin=usuarioActualEsAdmin();
+  const usuarios=initUsuarios();
+  const datos={};
+  if(admin){ usuarios.forEach(u=>{ datos[u.usuario]=datosDeUsuario(u.usuario); }); }
+  else{ datos[currentUser]=datosDeUsuario(currentUser); }
+  const backup={
+    app:"FinanzasSimple",
+    version:"V13_1_backup_auto",
+    creado:new Date().toISOString(),
+    tipo:admin ? "backup_completo" : "backup_usuario",
+    usuarioActual:currentUser,
+    usuarios:admin ? usuarios : [{usuario:currentUser, admin:false}],
+    datos
+  };
+  const nombre=`FinanzasSimple_BACKUP_COMPLETO_${admin ? "admin" : currentUser}_${fechaArchivo()}.json`;
+  descargarArchivo(nombre, JSON.stringify(backup,null,2));
+  showNotice(`✔ Backup completo guardado en Descargas como: <b>${escapeHTML(nombre)}</b>. No lo compartas con usuarios finales.`);
+}
+
+function cargarBackupCompleto(){
+  if(!puedeOperar()){ accionBloqueada(tr("startTrialToImport")); return; }
+  if(bloquearSiTrialVencido()) return;
+  if(!currentUser) return alert(tr("mustLogin"));
+  if(!confirm("Cargar backup completo puede reemplazar datos. Para sumar movimientos usá Importar de la pantalla principal. ¿Continuar con backup completo?")) return;
   const input=document.createElement("input");
   input.type="file";
   input.accept="application/json,.json";
@@ -1017,11 +1426,11 @@ function cargarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba p
     reader.onload=()=>{
       try{
         const backup=JSON.parse(reader.result);
-        if(!backup || backup.app!=="FinanzaSimple" || !backup.datos){
+        if(!backup || !backup.datos || !(backup.tipo==="backup_completo" || backup.tipo==="backup_usuario" || backup.tipo==="completo" || backup.tipo==="usuario")){
           return alert(tr("invalidBackup"));
         }
         const admin=usuarioActualEsAdmin();
-        if(backup.tipo==="completo"){
+        if(backup.tipo==="backup_completo" || backup.tipo==="completo"){
           if(!admin) return alert(tr("adminOnlyFullBackup"));
           if(!Array.isArray(backup.usuarios)) return alert(tr("invalidUsersBackup"));
           if(!confirm(tr("replaceAllBackupConfirm"))) return;
@@ -1040,7 +1449,7 @@ function cargarCopia(){ if(!puedeOperar()){ accionBloqueada("Iniciá la prueba p
         cargarDatosUsuario();
         closeModal();
         render();
-        showNotice("✔ Copia cargada correctamente");
+        showNotice("✔ Backup completo cargado correctamente");
       }catch(e){
         alert(tr("backupReadError"));
       }
@@ -1280,6 +1689,26 @@ function openAyuda(){
     </ul>
 
     ${tr("helpBeforeTrial")}<br><br>
+
+    <hr>
+    <b>💾 ${tr("helpCopyTitle")}</b><br>
+    ${tr("helpCopy1")}<br>
+    ${tr("helpCopy2")}<br>
+    ${tr("helpCopy3")}<br>
+    <b>⚠ ${tr("important")}:</b> ${tr("helpCopy4")}<br>
+    ${tr("helpCopy5")}<br><br>
+
+    <b>↩ ${tr("helpUndoTitle")}</b><br>
+    ${tr("helpUndo1")}<br>
+    ${tr("helpUndo2")}<br><br>
+
+    <b>📊 ${tr("helpExcelTitle")}</b><br>
+    ${tr("helpExcel1")}<br>
+    ${tr("helpExcel2")}<br><br>
+    <b>💾 Backup automático</b><br>${tr("autoBackupLine")}<br><br>
+    <b>📄 ${tr("helpCSVTitle")}</b><br>
+    ${tr("helpCSV1")}<br>
+    ${tr("helpCSV2")}<br><br>
 
     <button onclick="cargarEjemplo()">${tr("loadExampleTest")}</button>
     <div class="helper">${tr("exampleOnlyEmpty")}</div>
@@ -1588,16 +2017,10 @@ function closeModal(){
 
 window.guardar = guardar;
 window.guardarMovimientoSeguro = guardarMovimientoSeguro;
+window.deshacerUltimoBorrado = deshacerUltimoBorrado;
+window.guardarExcel = guardarExcel;
+window.guardarCSV = guardarCSV;
 initApp();
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function(){
-    navigator.serviceWorker.register("sw.js").catch(function(err){
-      console.warn("Service worker no registrado:", err);
-    });
-  });
-}
-
 </script>
 
 </body>
