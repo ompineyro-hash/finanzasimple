@@ -228,7 +228,7 @@ td.accion button{
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarExcel()" style="background:#16a085">📊 <span data-i18n="exportExcel">Excel</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCSV()" style="background:#2c7be5">📄 <span data-i18n="exportCSV">CSV</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToImport'));return;} cargarCopia()" style="background:#7f8c8d">📂 <span data-i18n="import">Importar</span></button>
-<button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none;background:#f39c12">🧪 <span data-i18n="example">Ejemplo</span></button>
+<button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none!important;background:#f39c12">🧪 <span data-i18n="example">Ejemplo</span></button>
 
 <div class="searchBox">
   <label data-i18n="search">Buscar</label>
@@ -371,6 +371,34 @@ Object.assign(I18N.en,{
   undoDelete:"↩ Undo delete", undoDone:"✔ Delete undone. The movement returned to the list.", undoNothing:"There is no recent delete to undo.", deletedCanUndo:"✔ Movement deleted. You can undo it if it was a mistake.",
   helpCopyTitle:"Save copy and recover data", helpCopy1:"Save copy creates a file with your current movements. It is a snapshot of the moment: it does not replace previous copies.", helpCopy2:"Recover data compares the copy with what you already have and shows only missing movements.", helpCopy3:"It does not duplicate movements and does not overwrite existing data.", helpCopy4:"If you delete a movement, you can only recover it from an earlier copy where it still existed.", helpCopy5:"If you save a copy after deleting, that movement will no longer be in the new copy.",
   helpUndoTitle:"Undo last delete", helpUndo1:"If you delete a movement by mistake, the Undo delete option appears.", helpUndo2:"Undo restores only the last deleted movement, without looking for files.", helpExcelTitle:"Export to Excel", helpExcel1:"Export Excel creates a simple spreadsheet with Date, Type, Account, Category, Detail and Amount.", helpExcel2:"It is for reviewing or sending data. It does not include users, passwords or technical data.", helpCSVTitle:"Export CSV", helpCSV1:"Export CSV creates a simple, light file compatible with Google Sheets, old Excel and other systems.", helpCSV2:"It is recommended when Excel is not installed or when you want to share data without issues.", autoBackupSaved:"✔ Internal copy updated automatically.", autoBackupLine:"Your data is saved automatically on this device. Manual copies are downloaded to Downloads."
+});
+
+Object.assign(I18N.es,{
+  helpDevicesTitle:"Pasar datos entre celular y computadora",
+  helpDevices1:"En el dispositivo donde tenés los datos, tocá Guardar copia o Exportar.",
+  helpDevices2:"Enviá el archivo por WhatsApp, Gmail, Google Drive o cable USB.",
+  helpDevices3:"En el otro dispositivo, abrí FinanzaSimple y tocá Recuperar datos o Importar.",
+  helpDevices4:"Elegí el archivo .json y la app agregará los datos que falten sin borrar lo anterior.",
+  helpDevicesTip:"Consejo: antes de cambiar de teléfono o computadora, guardá una copia.",
+  helpDevicesSimple:"Resumen: Exportar → enviar archivo → Importar."
+});
+Object.assign(I18N.pt,{
+  helpDevicesTitle:"Passar dados entre celular e computador",
+  helpDevices1:"No dispositivo onde estão os dados, toque em Salvar cópia ou Exportar.",
+  helpDevices2:"Envie o arquivo por WhatsApp, Gmail, Google Drive ou cabo USB.",
+  helpDevices3:"No outro dispositivo, abra o FinanzaSimple e toque em Recuperar dados ou Importar.",
+  helpDevices4:"Escolha o arquivo .json e a app adicionará os dados que faltam sem apagar os anteriores.",
+  helpDevicesTip:"Conselho: antes de trocar de celular ou computador, salve uma cópia.",
+  helpDevicesSimple:"Resumo: Exportar → enviar arquivo → Importar."
+});
+Object.assign(I18N.en,{
+  helpDevicesTitle:"Move data between phone and computer",
+  helpDevices1:"On the device where your data is stored, tap Save copy or Export.",
+  helpDevices2:"Send the file by WhatsApp, Gmail, Google Drive or USB cable.",
+  helpDevices3:"On the other device, open FinanzaSimple and tap Recover data or Import.",
+  helpDevices4:"Choose the .json file and the app will add missing data without deleting what is already there.",
+  helpDevicesTip:"Tip: before changing phone or computer, save a copy.",
+  helpDevicesSimple:"Summary: Export → send file → Import."
 });
 
 function normalizeLang(lang){
@@ -573,19 +601,12 @@ function guardarUsuarios(usuarios){
 }
 
 function cargarDatosUsuario(){
+  // V13.6: aislamiento estricto. Cada usuario lee solo sus propias claves.
+  // No se copian cuentas/categorías/movimientos de otro usuario ni de versiones viejas.
   movs=leerArraySeguro(claveUsuario("movs"),[]);
   cuentas=leerArraySeguro(claveUsuario("cuentas"),[]);
   categorias=leerArraySeguro(claveUsuario("categorias"),[]);
   moneda=localStorage.getItem(claveUsuario("moneda")) || "$";
-
-  if(!localStorage.getItem(claveUsuario("cuentas")) && currentUser==="admin"){
-    const cuentasViejas=leerArraySeguro("cuentas",[]);
-    const categoriasViejas=leerArraySeguro("categorias",[]);
-    const movsViejos=leerArraySeguro("movs",[]);
-    if(cuentasViejas.length || categoriasViejas.length || movsViejos.length){
-      cuentas=cuentasViejas; categorias=categoriasViejas; movs=movsViejos; guardarStorage();
-    }
-  }
 }
 
 function guardarStorage(){
@@ -1477,6 +1498,18 @@ function claveUsuarioPorNombre(usuario, parte){
   return "fs_v8_" + nombreSeguroStorage(usuario) + "_" + parte;
 }
 
+function limpiarDatosLocalesDeUsuario(usuario){
+  if(!usuario) return;
+  ["movs","cuentas","categorias","moneda","auto_backup","auto_backup_fecha"].forEach(parte=>{
+    localStorage.removeItem(claveUsuarioPorNombre(usuario, parte));
+  });
+}
+
+function inicializarUsuarioLimpio(usuario){
+  limpiarDatosLocalesDeUsuario(usuario);
+  inicializarUsuarioLimpio(usuario);
+}
+
 function renderUsuariosConfig(){
   const section=document.getElementById("usuariosAdminSection");
   const box=document.getElementById("usuariosBox");
@@ -1513,10 +1546,7 @@ function addUsuario(){
   if(usuarios.some(u=>u.usuario.toLowerCase()===usuario.toLowerCase())) return alert(tr("userExists"));
   usuarios.push({usuario, clave, admin:false});
   guardarUsuarios(usuarios);
-  localStorage.setItem(claveUsuarioPorNombre(usuario,"movs"), JSON.stringify([]));
-  localStorage.setItem(claveUsuarioPorNombre(usuario,"cuentas"), JSON.stringify([]));
-  localStorage.setItem(claveUsuarioPorNombre(usuario,"categorias"), JSON.stringify([]));
-  localStorage.setItem(claveUsuarioPorNombre(usuario,"moneda"), "$");
+  inicializarUsuarioLimpio(usuario);
   alert(tr("userCreated"));
   openConfig();
 }
@@ -1549,7 +1579,7 @@ function borrarUsuario(i){
   const usuario=u.usuario;
   usuarios.splice(i,1);
   guardarUsuarios(usuarios);
-  ["movs","cuentas","categorias"].forEach(parte=>localStorage.removeItem(claveUsuarioPorNombre(usuario,parte)));
+  limpiarDatosLocalesDeUsuario(usuario);
   openConfig();
 }
 
@@ -1593,10 +1623,7 @@ function crearUsuarioDesdeLogin(){
 
   usuarios.push({usuario, clave, admin:false});
   guardarUsuarios(usuarios);
-  localStorage.setItem(claveUsuarioPorNombre(usuario,"movs"), JSON.stringify([]));
-  localStorage.setItem(claveUsuarioPorNombre(usuario,"cuentas"), JSON.stringify([]));
-  localStorage.setItem(claveUsuarioPorNombre(usuario,"categorias"), JSON.stringify([]));
-  localStorage.setItem(claveUsuarioPorNombre(usuario,"moneda"), "$");
+  inicializarUsuarioLimpio(usuario);
 
   currentUser=usuario;
   cargarDatosUsuario();
@@ -1697,6 +1724,17 @@ function openAyuda(){
     ${tr("helpCopy3")}<br>
     <b>⚠ ${tr("important")}:</b> ${tr("helpCopy4")}<br>
     ${tr("helpCopy5")}<br><br>
+
+    <hr>
+    <b>📱💻 ${tr("helpDevicesTitle")}</b><br>
+    <ol style="margin-top:6px;padding-left:20px;line-height:1.35;">
+      <li>${tr("helpDevices1")}</li>
+      <li>${tr("helpDevices2")}</li>
+      <li>${tr("helpDevices3")}</li>
+      <li>${tr("helpDevices4")}</li>
+    </ol>
+    <b>${tr("helpDevicesSimple")}</b><br>
+    <span class="helper">${tr("helpDevicesTip")}</span><br><br>
 
     <b>↩ ${tr("helpUndoTitle")}</b><br>
     ${tr("helpUndo1")}<br>
@@ -1874,8 +1912,8 @@ function limpiarBusqueda(){
 function actualizarBannerEjemplo(){
   const b = document.getElementById("bannerEjemplo");
   if(!b) return;
-  const hayEjemplo = movs.some(m => (m.detalle||"").includes("ejemplo"));
-  b.style.display = hayEjemplo ? "block" : "none";
+  // V13.6: ejemplo deshabilitado en versión de entrega.
+  b.style.display = "none";
 }
 
 function formatoFechaVista(str){
