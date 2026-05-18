@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzasSimple – V13.3 Filas y columnas equilibradas</title>
+<title>FinanzaSimple – V13.4 lista para entregar</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -434,7 +434,7 @@ function claveUsuario(parte){
 }
 
 const TRIAL_DAYS = 15;
-const ACTIVATION_CODE = "FS-2026-ACTIVA";
+const ACTIVATION_CODE = "FS-ENTREGA-2026-7439";
 
 function trialKey(parte){
   const usuario = currentUser ? nombreSeguroStorage(currentUser) : "sin_usuario";
@@ -562,7 +562,7 @@ function activarLicencia(){
 function initUsuarios(){
   let usuarios = leerJSONSeguro("fs_v8_usuarios", null);
   if(!Array.isArray(usuarios) || !usuarios.length){
-    usuarios=[{usuario:"admin", clave:"1234", admin:true}];
+    usuarios=[{usuario:"propietario", clave:"FS-7439-2026", admin:true}];
     localStorage.setItem("fs_v8_usuarios", JSON.stringify(usuarios));
   }
   return usuarios;
@@ -602,7 +602,7 @@ function guardarCopiaInternaAutomatica(){
     if(!currentUser) return;
     const paquete={
       app:"FinanzasSimple",
-      version:"V13_1_backup_auto",
+      version:"V13_4_backup_auto",
       creado:new Date().toISOString(),
       tipo:"copia_interna",
       usuarioOrigen: currentUser,
@@ -1173,7 +1173,7 @@ function guardarCopia(){
 
   const paquete={
     app:"FinanzasSimple",
-    version:"V13_1_backup_auto",
+    version:"V13_4_backup_auto",
     creado:new Date().toISOString(),
     tipo:"movimientos",
     modo:"acumulativo_sin_repetir",
@@ -1399,7 +1399,7 @@ function guardarBackupCompleto(){
   else{ datos[currentUser]=datosDeUsuario(currentUser); }
   const backup={
     app:"FinanzasSimple",
-    version:"V13_1_backup_auto",
+    version:"V13_4_backup_auto",
     creado:new Date().toISOString(),
     tipo:admin ? "backup_completo" : "backup_usuario",
     usuarioActual:currentUser,
