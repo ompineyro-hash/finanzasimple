@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzaSimple – V13.4 lista para entregar</title>
+<title>FinanzaSimple – V13.5 sin ejemplo automático</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -1710,8 +1710,7 @@ function openAyuda(){
     ${tr("helpCSV1")}<br>
     ${tr("helpCSV2")}<br><br>
 
-    <button onclick="cargarEjemplo()">${tr("loadExampleTest")}</button>
-    <div class="helper">${tr("exampleOnlyEmpty")}</div>
+    <div class="helper">En esta versión de entrega el ejemplo está deshabilitado para evitar mezclar datos de usuarios.</div>
   `;
 }
 
@@ -1723,24 +1722,8 @@ function limpiarEjemplo(){
 }
 
 function cargarEjemplo(){
-  if(bloquearSiTrialVencido()) return;
-  if(movs.length){
-    return alert(tr("exampleHasData"));
-  }
-  const hoy = new Date();
-  const yyyy = hoy.getFullYear();
-  const mm = String(hoy.getMonth()+1).padStart(2,"0");
-  cuentas = ["Efectivo", "Banco"];
-  categorias = ["Sueldo", "Alimentos", "Servicios"];
-  movs = [
-    {id:Date.now()+1, fecha:`${yyyy}-${mm}-01`, tipo:"Ingreso", cuenta:"Banco", categoria:"Sueldo", detalle:"Ingreso de ejemplo", monto:250000},
-    {id:Date.now()+2, fecha:`${yyyy}-${mm}-03`, tipo:"Gasto", cuenta:"Efectivo", categoria:"Alimentos", detalle:"Compra de ejemplo", monto:35000},
-    {id:Date.now()+3, fecha:`${yyyy}-${mm}-05`, tipo:"Gasto", cuenta:"Banco", categoria:"Servicios", detalle:"Servicio de ejemplo", monto:18000}
-  ];
-  guardarStorage();
-  closeModal();
-  render();
-  alert(tr("exampleLoaded"));
+  // Versión entrega: el ejemplo queda deshabilitado para evitar confusión entre usuarios.
+  alert("El ejemplo está deshabilitado en esta versión de entrega. Cargá cuentas, categorías y movimientos propios.");
 }
 
 function openAnalisis(){
@@ -1907,7 +1890,8 @@ function formatoFechaVista(str){
 function actualizarBotonEjemplo(){
   const btn = document.getElementById("btnEjemplo");
   if(!btn) return;
-  btn.style.display = (Array.isArray(movs) && movs.length === 0) ? "inline-block" : "none";
+  // Versión entrega: no mostrar el botón Ejemplo para evitar mezclar datos entre usuarios.
+  btn.style.display = "none";
 }
 
 function render(){
