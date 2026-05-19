@@ -685,9 +685,24 @@ function fechaSugeridaNuevo(){
   return `${yyyy}-${mm}-${dd}`;
 }
 
+let vistaAnalisisActual = "mes";
+
 function cambiarMes(v){
   fecha.setMonth(fecha.getMonth()+v);
   render();
+
+  try{
+    const bgEl = document.getElementById("bg");
+    const modalEl = document.getElementById("modal");
+
+    if(bgEl && bgEl.style.display === "block" && modalEl && modalEl.dataset.modalKey === "analysis"){
+
+      // Solo actualizar automáticamente si la vista depende del mes visible
+      if(vistaAnalisisActual === "mes" || vistaAnalisisActual === "acumulado"){
+        renderAnalisisVista(vistaAnalisisActual);
+      }
+    }
+  }catch(e){}
 }
 
 function openNuevo(m=null){
@@ -1765,6 +1780,7 @@ function cargarEjemplo(){
 }
 
 
+
 function resumenMensualGlobal(){
   const resumen = {};
   movs.forEach(m=>{
@@ -1802,6 +1818,7 @@ function claseBalance(valor){
 }
 
 function renderAnalisisVista(vista){
+  vistaAnalisisActual = vista;
   const data = resumenMensualGlobal();
   const anioActual = fecha.getFullYear();
   const hastaActual = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
@@ -1810,24 +1827,16 @@ function renderAnalisisVista(vista){
   const acumuladoHastaMes = data.filter(x=>x.fecha <= hastaActual);
 
   let html = `
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;position:sticky;top:0;background:white;padding:6px 0;z-index:3;">
       <button onclick="renderAnalisisVista('mes')" style="${vista==='mes'?'background:#6f42c1':''}">Mes actual</button>
       <button onclick="renderAnalisisVista('anual')" style="${vista==='anual'?'background:#6f42c1':''}">Resumen anual</button>
       <button onclick="renderAnalisisVista('acumulado')" style="${vista==='acumulado'?'background:#6f42c1':''}">Acumulado</button>
     </div>
   `;
 
-  if(vista === "mes"){
-    html += analisisMesActualHTML();
-  }
-
-  if(vista === "anual"){
-    html += resumenTablaMesesHTML(anual, "Resumen anual " + anioActual);
-  }
-
-  if(vista === "acumulado"){
-    html += resumenTablaMesesHTML(acumuladoHastaMes, "Acumulado hasta " + mesTexto(hastaActual));
-  }
+  if(vista === "mes") html += analisisMesActualHTML();
+  if(vista === "anual") html += resumenTablaMesesHTML(anual, "Resumen anual " + anioActual);
+  if(vista === "acumulado") html += resumenTablaMesesHTML(acumuladoHastaMes, "Acumulado hasta " + mesTexto(hastaActual));
 
   content.innerHTML = html;
 }
@@ -1847,12 +1856,7 @@ function resumenTablaMesesHTML(lista, titulo){
   `).join("");
 
   if(!lista.length){
-    return `
-      <b>${titulo}</b>
-      <div style="margin-top:10px;color:#666;background:#fafafa;border-radius:10px;padding:14px;">
-        Todavía no hay movimientos para mostrar en este resumen.
-      </div>
-    `;
+    return `<b>${titulo}</b><div style="margin-top:10px;color:#666;background:#fafafa;border-radius:10px;padding:14px;">Todavía no hay movimientos para mostrar en este resumen.</div>`;
   }
 
   return `
@@ -1864,15 +1868,7 @@ function resumenTablaMesesHTML(lista, titulo){
     </div>
     <div style="overflow-x:auto;margin-top:10px;">
       <table style="min-width:560px;width:100%;background:white;border-collapse:collapse;">
-        <thead>
-          <tr>
-            <th>Mes</th>
-            <th style="text-align:right;">Ingresos</th>
-            <th style="text-align:right;">Gastos</th>
-            <th style="text-align:right;">Balance</th>
-            <th style="text-align:center;">Mov.</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Mes</th><th style="text-align:right;">Ingresos</th><th style="text-align:right;">Gastos</th><th style="text-align:right;">Balance</th><th style="text-align:center;">Mov.</th></tr></thead>
         <tbody>
           ${filas}
           <tr style="background:#f7fbff;font-weight:bold;">
@@ -1884,8 +1880,7 @@ function resumenTablaMesesHTML(lista, titulo){
           </tr>
         </tbody>
       </table>
-    </div>
-  `;
+    </div>`;
 }
 
 function analisisMesActualHTML(){
@@ -1919,45 +1914,18 @@ function analisisMesActualHTML(){
       const inicio = acumulado;
       acumulado += porcentaje;
       const color = colores[i % colores.length];
-      leyenda += `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;">
-          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <span style="width:12px;height:12px;border-radius:50%;background:${color};display:inline-block;flex:none;"></span>
-            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat}</span>
-          </div>
-          <div style="text-align:right;white-space:nowrap;">${fmt(monto)} (${porcentaje.toFixed(1)}%)</div>
-        </div>`;
+      leyenda += `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;"><div style="display:flex;align-items:center;gap:8px;min-width:0;"><span style="width:12px;height:12px;border-radius:50%;background:${color};display:inline-block;flex:none;"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat}</span></div><div style="text-align:right;white-space:nowrap;">${fmt(monto)} (${porcentaje.toFixed(1)}%)</div></div>`;
       return `${color} ${inicio.toFixed(2)}% ${acumulado.toFixed(2)}%`;
     }).join(", ");
 
     detalle = entradas.map(([cat,monto])=>{
       const porcentaje = totalGas>0 ? (monto/totalGas)*100 : 0;
-      return `
-        <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;border-bottom:1px solid #eee;padding-bottom:5px;">
-          <span>${cat}</span>
-          <span style="white-space:nowrap;text-align:right;"><b>${fmt(monto)}</b> (${porcentaje.toFixed(1)}%)</span>
-        </div>`;
+      return `<div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;border-bottom:1px solid #eee;padding-bottom:5px;"><span>${cat}</span><span style="white-space:nowrap;text-align:right;"><b>${fmt(monto)}</b> (${porcentaje.toFixed(1)}%)</span></div>`;
     }).join("");
 
     const mayor = entradas[0];
     const mayorPct = totalGas>0 ? (mayor[1]/totalGas)*100 : 0;
-
-    grafica = `
-      <div style="display:flex;justify-content:center;margin:14px 0 10px;">
-        <div style="
-          width:190px;height:190px;border-radius:50%;
-          background:conic-gradient(${partes});
-          box-shadow:inset 0 0 0 18px rgba(255,255,255,0.95), 0 2px 8px rgba(0,0,0,.08);
-        "></div>
-      </div>
-      <div style="font-size:13px;color:#555;text-align:center;margin-bottom:12px;">
-        ${tr("expensesDistribution")}
-      </div>
-      <div style="background:#fff3cd;color:#856404;padding:8px;border-radius:8px;margin-bottom:8px;">
-        ${tr("biggestExpense")}: <b>${mayor[0]}</b> — ${fmt(mayor[1])} (${mayorPct.toFixed(1)}%)
-      </div>
-      <div>${leyenda}</div>
-    `;
+    grafica = `<div style="display:flex;justify-content:center;margin:14px 0 10px;"><div style="width:190px;height:190px;border-radius:50%;background:conic-gradient(${partes});box-shadow:inset 0 0 0 18px rgba(255,255,255,0.95), 0 2px 8px rgba(0,0,0,.08);"></div></div><div style="font-size:13px;color:#555;text-align:center;margin-bottom:12px;">${tr("expensesDistribution")}</div><div style="background:#fff3cd;color:#856404;padding:8px;border-radius:8px;margin-bottom:8px;">${tr("biggestExpense")}: <b>${mayor[0]}</b> — ${fmt(mayor[1])} (${mayorPct.toFixed(1)}%)</div><div>${leyenda}</div>`;
   } else {
     detalle = tr("noData");
     grafica = `<div style="margin-top:10px;color:#666;">${tr("noExpensesChart")}</div>`;
@@ -1965,20 +1933,7 @@ function analisisMesActualHTML(){
 
   const balanceMes = totalIng-totalGas;
   const balanceClase = balanceMes > 0 ? "balance-pos" : balanceMes < 0 ? "balance-neg" : "balance-zero";
-  return `
-    <b>${tr("analysisSummary")}</b>
-    <div class="analysisCards">
-      <div class="analysisCard">${tr("balance")}<br><b class="${balanceClase}">${fmt(balanceMes)}</b></div>
-      <div class="analysisCard">${tr("incomePlural")}<br><b class="ingresos">${fmt(totalIng)}</b></div>
-      <div class="analysisCard">${tr("expensePlural")}<br><b class="gastos">${fmt(totalGas)}</b></div>
-    </div>
-    <hr>
-    <b>${tr("expensesByCategory")}</b><br>
-    ${detalle}
-    <hr>
-    <b>${tr("chart")}</b><br>
-    ${grafica}
-  `;
+  return `<b>${tr("analysisSummary")}</b><div class="analysisCards"><div class="analysisCard">${tr("balance")}<br><b class="${balanceClase}">${fmt(balanceMes)}</b></div><div class="analysisCard">${tr("incomePlural")}<br><b class="ingresos">${fmt(totalIng)}</b></div><div class="analysisCard">${tr("expensePlural")}<br><b class="gastos">${fmt(totalGas)}</b></div></div><hr><b>${tr("expensesByCategory")}</b><br>${detalle}<hr><b>${tr("chart")}</b><br>${grafica}`;
 }
 
 function openAnalisis(){
