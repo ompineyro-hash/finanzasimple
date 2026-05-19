@@ -1764,11 +1764,131 @@ function cargarEjemplo(){
   alert("El ejemplo está deshabilitado en esta versión de entrega. Cargá cuentas, categorías y movimientos propios.");
 }
 
-function openAnalisis(){
-  if(bloquearSiTrialVencido()) return;
-  bg.style.display="block";
-  setModal("analisis",tr("analysis"),"analysis");
 
+function resumenMensualGlobal(){
+  const resumen = {};
+  movs.forEach(m=>{
+    const f=parseLocalDate(m.fecha);
+    if(!f) return;
+    const key = f.getFullYear() + "-" + String(f.getMonth()+1).padStart(2,"0");
+    if(!resumen[key]){
+      resumen[key] = {
+        fecha:new Date(f.getFullYear(), f.getMonth(), 1),
+        ingresos:0,
+        gastos:0,
+        balance:0,
+        cantidad:0
+      };
+    }
+    const monto = Number(m.monto) || 0;
+    if(m.tipo === "Ingreso"){
+      resumen[key].ingresos += monto;
+      resumen[key].balance += monto;
+    }else{
+      resumen[key].gastos += monto;
+      resumen[key].balance -= monto;
+    }
+    resumen[key].cantidad++;
+  });
+  return Object.values(resumen).sort((a,b)=>a.fecha-b.fecha);
+}
+
+function nombreMesCorto(d){
+  return d.toLocaleString(tr("monthLocale"),{month:"short",year:"numeric"});
+}
+
+function claseBalance(valor){
+  return valor > 0 ? "balance-pos" : valor < 0 ? "balance-neg" : "balance-zero";
+}
+
+function renderAnalisisVista(vista){
+  const data = resumenMensualGlobal();
+  const anioActual = fecha.getFullYear();
+  const hastaActual = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
+
+  const anual = data.filter(x=>x.fecha.getFullYear() === anioActual);
+  const acumuladoHastaMes = data.filter(x=>x.fecha <= hastaActual);
+
+  let html = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button onclick="renderAnalisisVista('mes')" style="${vista==='mes'?'background:#6f42c1':''}">Mes actual</button>
+      <button onclick="renderAnalisisVista('anual')" style="${vista==='anual'?'background:#6f42c1':''}">Resumen anual</button>
+      <button onclick="renderAnalisisVista('acumulado')" style="${vista==='acumulado'?'background:#6f42c1':''}">Acumulado</button>
+    </div>
+  `;
+
+  if(vista === "mes"){
+    html += analisisMesActualHTML();
+  }
+
+  if(vista === "anual"){
+    html += resumenTablaMesesHTML(anual, "Resumen anual " + anioActual);
+  }
+
+  if(vista === "acumulado"){
+    html += resumenTablaMesesHTML(acumuladoHastaMes, "Acumulado hasta " + mesTexto(hastaActual));
+  }
+
+  content.innerHTML = html;
+}
+
+function resumenTablaMesesHTML(lista, titulo){
+  const totalIng = lista.reduce((s,x)=>s+x.ingresos,0);
+  const totalGas = lista.reduce((s,x)=>s+x.gastos,0);
+  const totalBal = totalIng - totalGas;
+  const filas = lista.map(x=>`
+    <tr>
+      <td>${nombreMesCorto(x.fecha)}</td>
+      <td style="text-align:right;color:#1f8b4c;font-weight:bold;">${fmt(x.ingresos)}</td>
+      <td style="text-align:right;color:#c0392b;font-weight:bold;">${fmt(x.gastos)}</td>
+      <td style="text-align:right;font-weight:bold;" class="${claseBalance(x.balance)}">${fmt(x.balance)}</td>
+      <td style="text-align:center;">${x.cantidad}</td>
+    </tr>
+  `).join("");
+
+  if(!lista.length){
+    return `
+      <b>${titulo}</b>
+      <div style="margin-top:10px;color:#666;background:#fafafa;border-radius:10px;padding:14px;">
+        Todavía no hay movimientos para mostrar en este resumen.
+      </div>
+    `;
+  }
+
+  return `
+    <b>${titulo}</b>
+    <div class="analysisCards">
+      <div class="analysisCard">${tr("balance")}<br><b class="${claseBalance(totalBal)}">${fmt(totalBal)}</b></div>
+      <div class="analysisCard">${tr("incomePlural")}<br><b class="ingresos">${fmt(totalIng)}</b></div>
+      <div class="analysisCard">${tr("expensePlural")}<br><b class="gastos">${fmt(totalGas)}</b></div>
+    </div>
+    <div style="overflow-x:auto;margin-top:10px;">
+      <table style="min-width:560px;width:100%;background:white;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th style="text-align:right;">Ingresos</th>
+            <th style="text-align:right;">Gastos</th>
+            <th style="text-align:right;">Balance</th>
+            <th style="text-align:center;">Mov.</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filas}
+          <tr style="background:#f7fbff;font-weight:bold;">
+            <td>Total</td>
+            <td style="text-align:right;color:#1f8b4c;">${fmt(totalIng)}</td>
+            <td style="text-align:right;color:#c0392b;">${fmt(totalGas)}</td>
+            <td style="text-align:right;" class="${claseBalance(totalBal)}">${fmt(totalBal)}</td>
+            <td style="text-align:center;">${lista.reduce((s,x)=>s+x.cantidad,0)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function analisisMesActualHTML(){
   let totalIng=0,totalGas=0;
   let porCategoria={};
 
@@ -1845,7 +1965,7 @@ function openAnalisis(){
 
   const balanceMes = totalIng-totalGas;
   const balanceClase = balanceMes > 0 ? "balance-pos" : balanceMes < 0 ? "balance-neg" : "balance-zero";
-  content.innerHTML = `
+  return `
     <b>${tr("analysisSummary")}</b>
     <div class="analysisCards">
       <div class="analysisCard">${tr("balance")}<br><b class="${balanceClase}">${fmt(balanceMes)}</b></div>
@@ -1859,6 +1979,13 @@ function openAnalisis(){
     <b>${tr("chart")}</b><br>
     ${grafica}
   `;
+}
+
+function openAnalisis(){
+  if(bloquearSiTrialVencido()) return;
+  bg.style.display="block";
+  setModal("analisis",tr("analysis"),"analysis");
+  renderAnalisisVista("mes");
 }
 
 
