@@ -24,17 +24,17 @@ button{padding:7px 10px;border-radius:8px;border:none;background:#3498db;color:w
 .dangerBtn{background:#e74c3c}
 .muted{font-size:12px;color:#666}
 .tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-table{min-width:760px;width:100%;background:white;border-collapse:collapse;table-layout:fixed;}
-th,td{padding:4px 7px;border-bottom:1px solid #eee;text-align:left;font-size:14px;line-height:1.18;vertical-align:middle;}
-tbody td{height:26px;}
+table{min-width:660px;width:100%;background:white;border-collapse:collapse;table-layout:fixed;}
+th,td{padding:3px 5px;border-bottom:1px solid #eee;text-align:left;font-size:14px;line-height:1.12;vertical-align:middle;}
+tbody td{height:22px;}
 
-th:nth-child(1), td:nth-child(1){width:82px;white-space:nowrap;}   /* Fecha */
-th:nth-child(2), td:nth-child(2){width:74px;white-space:nowrap;}   /* Tipo */
-th:nth-child(6), td:nth-child(6){width:118px;white-space:nowrap;}  /* Monto */
-th:nth-child(7), td:nth-child(7){width:92px;white-space:nowrap;}   /* Acción */
+th:nth-child(1), td:nth-child(1){width:74px;white-space:nowrap;}   /* Fecha */
+th:nth-child(2), td:nth-child(2){width:58px;white-space:nowrap;}   /* Tipo */
+th:nth-child(6), td:nth-child(6){width:132px;white-space:nowrap;}  /* Monto: puede crecer */
+th:nth-child(7), td:nth-child(7){width:70px;white-space:nowrap;}   /* Acción */
 
-th:nth-child(3), td:nth-child(3){width:125px;}  /* Cuenta */
-th:nth-child(4), td:nth-child(4){width:125px;}  /* Categoría */
+th:nth-child(3), td:nth-child(3){width:104px;}  /* Cuenta */
+th:nth-child(4), td:nth-child(4){width:104px;}  /* Categoría */
 th:nth-child(5), td:nth-child(5){width:auto;word-break:break-word;}   /* Detalle */
 
 th.monto,td.monto{text-align:right}
@@ -154,27 +154,61 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 }
 
 @media (max-width: 600px){
-  table{min-width:720px;}
-  th,td{font-size:13px;padding:3px 5px;line-height:1.15;}
-  tbody td{height:24px;}
-  th:nth-child(1), td:nth-child(1){width:78px;}
-  th:nth-child(2), td:nth-child(2){width:68px;}
-  th:nth-child(3), td:nth-child(3){width:112px;}
-  th:nth-child(4), td:nth-child(4){width:112px;}
-  th:nth-child(6), td:nth-child(6){width:108px;}
-  th:nth-child(7), td:nth-child(7){width:82px;}
+  table{min-width:620px;}
+  th,td{font-size:12.5px;padding:2px 4px;line-height:1.1;}
+  tbody td{height:21px;}
+  th:nth-child(1), td:nth-child(1){width:70px;}
+  th:nth-child(2), td:nth-child(2){width:54px;}
+  th:nth-child(3), td:nth-child(3){width:96px;}
+  th:nth-child(4), td:nth-child(4){width:96px;}
+  th:nth-child(6), td:nth-child(6){width:118px;}
+  th:nth-child(7), td:nth-child(7){width:64px;}
 }
 
 .typeWarning{display:none;background:#fff3cd;color:#856404;border:1px solid #f1d28a;border-radius:10px;padding:9px;margin:8px 0;font-size:13px;line-height:1.35}
 .typeWarning b{display:block;margin-bottom:3px}
 
 tbody tr{
-  height:34px;
+  height:24px;
 }
 td.accion button{
-  padding:4px 8px !important;
-  min-height:28px;
-  margin:1px !important;
+  padding:2px 6px !important;
+  min-height:24px;
+  margin:0 1px !important;
+}
+
+
+/* V14.3 - Tabla más compacta y mejor uso en celular */
+@media (max-width: 600px){
+  .modal.analisis{
+    width:96vw;
+    left:2vw;
+    right:2vw;
+    top:56px;
+    max-height:calc(100vh - 60px);
+  }
+  .modal.analisis .drag{
+    padding:9px 12px;
+  }
+  .modal.analisis .content{
+    padding:8px;
+    max-height:calc(100vh - 125px);
+  }
+  .analysisCards{
+    gap:6px;
+  }
+  .analysisCard{
+    min-width:100%;
+    padding:7px;
+  }
+  .analysisCard b{
+    font-size:15px;
+  }
+  .pieChartFS{
+    width:145px !important;
+    height:145px !important;
+    box-shadow:inset 0 0 0 14px rgba(255,255,255,0.95), 0 2px 8px rgba(0,0,0,.08) !important;
+  }
 }
 
 </style>
@@ -1925,7 +1959,7 @@ function analisisMesActualHTML(){
 
     const mayor = entradas[0];
     const mayorPct = totalGas>0 ? (mayor[1]/totalGas)*100 : 0;
-    grafica = `<div style="display:flex;justify-content:center;margin:14px 0 10px;"><div style="width:190px;height:190px;border-radius:50%;background:conic-gradient(${partes});box-shadow:inset 0 0 0 18px rgba(255,255,255,0.95), 0 2px 8px rgba(0,0,0,.08);"></div></div><div style="font-size:13px;color:#555;text-align:center;margin-bottom:12px;">${tr("expensesDistribution")}</div><div style="background:#fff3cd;color:#856404;padding:8px;border-radius:8px;margin-bottom:8px;">${tr("biggestExpense")}: <b>${mayor[0]}</b> — ${fmt(mayor[1])} (${mayorPct.toFixed(1)}%)</div><div>${leyenda}</div>`;
+    grafica = `<div style="display:flex;justify-content:center;margin:14px 0 10px;"><div class="pieChartFS" style="width:190px;height:190px;border-radius:50%;background:conic-gradient(${partes});box-shadow:inset 0 0 0 18px rgba(255,255,255,0.95), 0 2px 8px rgba(0,0,0,.08);"></div></div><div style="font-size:13px;color:#555;text-align:center;margin-bottom:12px;">${tr("expensesDistribution")}</div><div style="background:#fff3cd;color:#856404;padding:8px;border-radius:8px;margin-bottom:8px;">${tr("biggestExpense")}: <b>${mayor[0]}</b> — ${fmt(mayor[1])} (${mayorPct.toFixed(1)}%)</div><div>${leyenda}</div>`;
   } else {
     detalle = tr("noData");
     grafica = `<div style="margin-top:10px;color:#666;">${tr("noExpensesChart")}</div>`;
