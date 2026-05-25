@@ -473,6 +473,76 @@ let categorias=[];
 let moneda="$";
 let ultimoBorrado=null;
 
+/* V14.5 - Protección automática base
+   Prepara los movimientos para sincronización futura:
+   - ID único invisible por movimiento
+   - fecha de creación/modificación
+   - dispositivo origen
+   - normalización antiduplicados
+*/
+function fsDeviceId(){
+  let id = localStorage.getItem("fs_device_id");
+  if(!id){
+    id = "DEV-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,10);
+    localStorage.setItem("fs_device_id", id);
+  }
+  return id;
+}
+
+function generarMovimientoUID(){
+  const rnd = (crypto && crypto.getRandomValues)
+    ? Array.from(crypto.getRandomValues(new Uint32Array(2))).map(n=>n.toString(36)).join("")
+    : Math.random().toString(36).slice(2,12);
+  return "MOV-" + Date.now().toString(36) + "-" + rnd;
+}
+
+function asegurarProteccionMovimiento(m){
+  if(!m || typeof m !== "object") return m;
+  if(!m.uid) m.uid = generarMovimientoUID();
+  if(!m.fsCreadoEn) m.fsCreadoEn = new Date().toISOString();
+  if(!m.fsActualizadoEn) m.fsActualizadoEn = m.fsCreadoEn;
+  if(!m.fsDispositivo) m.fsDispositivo = fsDeviceId();
+  return m;
+}
+
+function tocarMovimiento(m){
+  asegurarProteccionMovimiento(m);
+  m.fsActualizadoEn = new Date().toISOString();
+  m.fsDispositivo = fsDeviceId();
+  return m;
+}
+
+function prepararMovimientosParaProteccion(){
+  let cambio=false;
+  movs = (Array.isArray(movs) ? movs : []).map(m=>{
+    const antes = JSON.stringify({uid:m.uid,fsCreadoEn:m.fsCreadoEn,fsActualizadoEn:m.fsActualizadoEn,fsDispositivo:m.fsDispositivo});
+    asegurarProteccionMovimiento(m);
+    const despues = JSON.stringify({uid:m.uid,fsCreadoEn:m.fsCreadoEn,fsActualizadoEn:m.fsActualizadoEn,fsDispositivo:m.fsDispositivo});
+    if(antes !== despues) cambio=true;
+    return m;
+  });
+  return cambio;
+}
+
+function proteccionEstadoHTML(){
+  const fechaAuto = localStorage.getItem(claveUsuario("auto_backup_fecha"));
+  let linea = "Tus datos están protegidos en este dispositivo.";
+  if(fechaAuto){
+    const d = new Date(fechaAuto);
+    if(!isNaN(d.getTime())){
+      linea = "Tus datos están protegidos. Última actualización: " + d.toLocaleString("es-AR");
+    }
+  }
+  return `
+    <div class="adminBox" style="border-color:#cdebd6;background:#f4fff7;">
+      <b>Protección automática</b><br>
+      <div class="muted">${linea}</div>
+      <div class="helper">La app prepara tus datos para evitar repeticiones y pérdidas. No tenés que hacer nada.</div>
+    </div>
+    <hr>`;
+}
+
+
 function leerJSONSeguro(clave, valorDefault){
   try{
     const raw = localStorage.getItem(clave);
@@ -641,10 +711,16 @@ function cargarDatosUsuario(){
   cuentas=leerArraySeguro(claveUsuario("cuentas"),[]);
   categorias=leerArraySeguro(claveUsuario("categorias"),[]);
   moneda=localStorage.getItem(claveUsuario("moneda")) || "$";
+
+  // V14.5: agrega protección interna sin cambiar lo visible para el usuario.
+  if(prepararMovimientosParaProteccion()){
+    localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
+  }
 }
 
 function guardarStorage(){
   if(!currentUser) return;
+  prepararMovimientosParaProteccion();
   localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
   localStorage.setItem(claveUsuario("cuentas"), JSON.stringify(cuentas));
   localStorage.setItem(claveUsuario("categorias"), JSON.stringify(categorias));
@@ -657,7 +733,7 @@ function guardarCopiaInternaAutomatica(){
     if(!currentUser) return;
     const paquete={
       app:"FinanzasSimple",
-      version:"V13_4_backup_auto",
+      version:"V14_5_proteccion_base",
       creado:new Date().toISOString(),
       tipo:"copia_interna",
       usuarioOrigen: currentUser,
@@ -850,8 +926,13 @@ function guardar(id){
   const detalleValor = valorCampo("f_detalle");
   const montoIngresado = numeroDesdeImporte(valorCampo("f_monto"));
 
+  const existente = movs.find(x=>String(x.id)===String(id));
   let m={
     id:id||Date.now(),
+    uid: existente?.uid || generarMovimientoUID(),
+    fsCreadoEn: existente?.fsCreadoEn || new Date().toISOString(),
+    fsActualizadoEn: new Date().toISOString(),
+    fsDispositivo: fsDeviceId(),
     fecha:fechaValor,
     tipo:tipoValor,
     cuenta:cuentaValor,
@@ -859,6 +940,7 @@ function guardar(id){
     detalle:detalleValor||"",
     monto:montoIngresado
   };
+  tocarMovimiento(m);
 
   if(!m.fecha){ mensajeFormulario(tr("missingDate")); return; }
   if(!m.tipo){ mensajeFormulario(tr("missingType")); return; }
@@ -1025,6 +1107,7 @@ function openConfig(){
     <input id="monedaSimbolo" placeholder="${tr("currencySymbol")}" value="${escapeHTML(moneda || "$")}">
     <button onclick="guardarMoneda()">${tr("saveCurrency")}</button>
     <hr>
+    ${proteccionEstadoHTML()}
     <b>${tr("accounts")}</b><br>
     <div class="muted">${tr("canEditDelete")}</div>
     <div style="margin-top:8px">
@@ -1176,12 +1259,7 @@ function descargarArchivo(nombre, contenido, tipo="application/json"){
 }
 
 function codigoMovimiento(m){
-  if(!m.uid){
-    const base = [m.id || Date.now(), m.fecha || "", m.tipo || "", m.cuenta || "", m.categoria || "", m.detalle || "", m.monto || 0].join("|");
-    let h=0;
-    for(let i=0;i<base.length;i++) h = ((h<<5)-h + base.charCodeAt(i)) | 0;
-    m.uid = "FS-" + Math.abs(h) + "-" + (m.id || Date.now());
-  }
+  asegurarProteccionMovimiento(m);
   return m.uid;
 }
 
@@ -1199,8 +1277,13 @@ function claveMovimiento(m){
 }
 
 function movimientoLimpioParaTransferir(m){
+  asegurarProteccionMovimiento(m);
   return {
     codigo: codigoMovimiento(m),
+    uid: m.uid || codigoMovimiento(m),
+    fsCreadoEn: m.fsCreadoEn || "",
+    fsActualizadoEn: m.fsActualizadoEn || "",
+    fsDispositivo: m.fsDispositivo || "",
     fecha: m.fecha || "",
     tipo: m.tipo || "",
     cuenta: m.cuenta || "",
@@ -1213,8 +1296,11 @@ function movimientoLimpioParaTransferir(m){
 function normalizarMovimientoImportado(x){
   if(!x || typeof x !== "object") return null;
   const m={
-    uid: String(x.codigo || x.uid || "").trim(),
+    uid: String(x.uid || x.codigo || "").trim(),
     id: Date.now() + Math.floor(Math.random()*1000000),
+    fsCreadoEn: String(x.fsCreadoEn || "").trim(),
+    fsActualizadoEn: String(x.fsActualizadoEn || "").trim(),
+    fsDispositivo: String(x.fsDispositivo || "").trim(),
     fecha: String(x.fecha || "").trim(),
     tipo: String(x.tipo || "").trim(),
     cuenta: String(x.cuenta || "").trim(),
@@ -1228,6 +1314,7 @@ function normalizarMovimientoImportado(x){
   if(!m.fecha || !m.tipo || !m.cuenta || !m.categoria || !isFinite(m.monto) || m.monto===0) return null;
   if(m.monto < 0) m.monto = Math.abs(m.monto);
   if(!m.uid) m.uid = codigoMovimiento(m);
+  asegurarProteccionMovimiento(m);
   return m;
 }
 
@@ -1243,7 +1330,7 @@ function guardarCopia(){
 
   const paquete={
     app:"FinanzasSimple",
-    version:"V13_4_backup_auto",
+    version:"V14_5_proteccion_base",
     creado:new Date().toISOString(),
     tipo:"movimientos",
     modo:"acumulativo_sin_repetir",
@@ -1469,7 +1556,7 @@ function guardarBackupCompleto(){
   else{ datos[currentUser]=datosDeUsuario(currentUser); }
   const backup={
     app:"FinanzasSimple",
-    version:"V13_4_backup_auto",
+    version:"V14_5_proteccion_base",
     creado:new Date().toISOString(),
     tipo:admin ? "backup_completo" : "backup_usuario",
     usuarioActual:currentUser,
