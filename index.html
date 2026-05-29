@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzaSimple – Control de gastos</title>
+<title>FinanzaSimple V16.1 – Control de gastos</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -229,7 +229,7 @@ td.accion button{
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
+<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V16.1 DEV</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
 
 <div class="container">
 
@@ -262,6 +262,7 @@ td.accion button{
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarExcel()" style="background:#16a085">📊 <span data-i18n="exportExcel">Excel</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCSV()" style="background:#2c7be5">📄 <span data-i18n="exportCSV">CSV</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToImport'));return;} cargarCopia()" style="background:#7f8c8d">📂 <span data-i18n="import">Importar</span></button>
+<button onclick="fsSincronizarAhora()" style="background:#0f766e">🔄 Actualizar ahora</button>
 <button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none!important;background:#f39c12">🧪 <span data-i18n="example">Ejemplo</span></button>
 
 <div class="searchBox">
@@ -524,9 +525,193 @@ function prepararMovimientosParaProteccion(){
   return cambio;
 }
 
+
+/* V15 - Sincronización tranquila entre dispositivos
+   Pensado para usuario final:
+   - no consulta cada pocos segundos
+   - sincroniza al entrar, al guardar y con botón manual
+   - mantiene copia local si no hay internet
+   - mezcla movimientos por UID para evitar duplicados
+*/
+let fsSyncTimer = null;
+let fsSyncBusy = false;
+
+function fsSyncUrlKey(){
+  return claveUsuario("sync_url");
+}
+function fsSyncEnabled(){
+  return !!(currentUser && localStorage.getItem(fsSyncUrlKey()));
+}
+function fsSyncUrl(){
+  return localStorage.getItem(fsSyncUrlKey()) || "";
+}
+function fsSyncStatusKey(){
+  return claveUsuario("sync_status");
+}
+function fsSetSyncStatus(txt, tipo){
+  try{
+    const estado = {txt:txt||"", tipo:tipo||"", fecha:new Date().toISOString()};
+    localStorage.setItem(fsSyncStatusKey(), JSON.stringify(estado));
+    mostrarEstadoAutoBackup();
+  }catch(e){}
+}
+function fsGetSyncStatus(){
+  try{return JSON.parse(localStorage.getItem(fsSyncStatusKey())||"{}")||{};}catch(e){return{};}
+}
+function fsPaqueteDatos(){
+  prepararMovimientosParaProteccion();
+  return {
+    app:"FinanzaSimple",
+    version:"V16_1_sync_segura_dev",
+    usuario: currentUser,
+    actualizado:new Date().toISOString(),
+    moneda: moneda || "$",
+    movs: Array.isArray(movs) ? movs : [],
+    cuentas: Array.isArray(cuentas) ? cuentas : [],
+    categorias: Array.isArray(categorias) ? categorias : []
+  };
+}
+function fsUnirListas(a,b){
+  const set = new Set([...(Array.isArray(a)?a:[]), ...(Array.isArray(b)?b:[])].map(x=>String(x||"").trim()).filter(Boolean));
+  return Array.from(set);
+}
+function fsFechaNum(v){
+  const n = new Date(v || 0).getTime();
+  return Number.isFinite(n) ? n : 0;
+}
+function fsFusionarMovimientos(locales, remotos){
+  const mapa = new Map();
+  (Array.isArray(locales)?locales:[]).forEach(m=>{
+    asegurarProteccionMovimiento(m);
+    mapa.set(m.uid || codigoMovimiento(m), m);
+  });
+  (Array.isArray(remotos)?remotos:[]).forEach(m=>{
+    asegurarProteccionMovimiento(m);
+    const uid = m.uid || codigoMovimiento(m);
+    const actual = mapa.get(uid);
+    if(!actual){
+      mapa.set(uid, m);
+    }else if(fsFechaNum(m.fsActualizadoEn) >= fsFechaNum(actual.fsActualizadoEn)){
+      mapa.set(uid, m);
+    }
+  });
+  return Array.from(mapa.values());
+}
+function fsAplicarPaqueteRemoto(pkg){
+  if(!pkg || typeof pkg !== "object") return false;
+  const antes = JSON.stringify({movs,categorias,cuentas,moneda});
+  movs = fsFusionarMovimientos(movs, pkg.movs || []);
+  cuentas = fsUnirListas(cuentas, pkg.cuentas || []);
+  categorias = fsUnirListas(categorias, pkg.categorias || []);
+  if(!moneda && pkg.moneda) moneda = pkg.moneda;
+  prepararMovimientosParaProteccion();
+  localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
+  localStorage.setItem(claveUsuario("cuentas"), JSON.stringify(cuentas));
+  localStorage.setItem(claveUsuario("categorias"), JSON.stringify(categorias));
+  localStorage.setItem(claveUsuario("moneda"), moneda || "$");
+  guardarCopiaInternaAutomatica();
+  const despues = JSON.stringify({movs,categorias,cuentas,moneda});
+  return antes !== despues;
+}
+async function fsSyncDescargar(){
+  if(!fsSyncEnabled() || fsSyncBusy) return false;
+  fsSyncBusy = true;
+  try{
+    const url = fsSyncUrl();
+    const r = await fetch(url + "?user=" + encodeURIComponent(currentUser) + "&t=" + Date.now());
+    const data = await r.json();
+    if(data && data.ok && data.paquete){
+      const cambio = fsAplicarPaqueteRemoto(data.paquete);
+      if(cambio) render();
+    }
+    fsSetSyncStatus("Tus datos están protegidos. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
+    return true;
+  }catch(e){
+    console.warn("No se pudo descargar sincronización", e);
+    fsSetSyncStatus("Sin conexión con la copia protegida. Tus datos siguen guardados en este dispositivo.", "warn");
+    return false;
+  }finally{
+    fsSyncBusy = false;
+  }
+}
+async function fsSyncSubir(){
+  if(!fsSyncEnabled() || fsSyncBusy) return false;
+  fsSyncBusy = true;
+  try{
+    const r = await fetch(fsSyncUrl(), {
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({user: currentUser, paquete: fsPaqueteDatos()})
+    });
+    const data = await r.json();
+    if(data && data.ok){
+      fsSetSyncStatus("Tus datos están protegidos. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
+      return true;
+    }
+    throw new Error("Respuesta no válida");
+  }catch(e){
+    console.warn("No se pudo subir sincronización", e);
+    fsSetSyncStatus("Guardado localmente. Se actualizará la copia protegida cuando haya conexión.", "warn");
+    return false;
+  }finally{
+    fsSyncBusy = false;
+  }
+}
+function fsProgramarSubida(){
+  if(!fsSyncEnabled()) return;
+  clearTimeout(fsSyncTimer);
+  fsSyncTimer = setTimeout(()=>fsSyncSubir(), 1200);
+}
+async function fsSincronizarAhora(){
+  if(!currentUser){ alert("Primero entrá con tu usuario."); return; }
+  if(!fsSyncEnabled()){
+    alert("La protección entre dispositivos todavía no está activada para este usuario.");
+    return;
+  }
+  fsSetSyncStatus("Actualizando datos protegidos...", "");
+  await fsSyncDescargar();
+  await fsSyncSubir();
+  render();
+  mostrarEstadoAutoBackup();
+}
+function fsActivarSync(){
+  if(!currentUser){ alert("Primero entrá con tu usuario."); return; }
+  const actual = fsSyncUrl();
+  const url = prompt("Pegá la dirección de protección de datos. Esto se configura una sola vez:", actual);
+  if(url === null) return;
+  const limpio = String(url||"").trim();
+  if(!limpio){
+    localStorage.removeItem(fsSyncUrlKey());
+    fsSetSyncStatus("Protección entre dispositivos desactivada.", "warn");
+    mostrarEstadoAutoBackup();
+    return;
+  }
+  localStorage.setItem(fsSyncUrlKey(), limpio);
+  fsSetSyncStatus("Protección entre dispositivos activada.", "ok");
+  fsSincronizarAhora();
+}
+function fsSyncPanelHTML(){
+  const st = fsGetSyncStatus();
+  const activo = fsSyncEnabled();
+  const msg = activo
+    ? (st.txt || "Tus datos están protegidos entre dispositivos.")
+    : "Opcional: activá protección entre celular, computadora y tablet.";
+  const color = activo ? "#f4fff7" : "#f7fbff";
+  const border = activo ? "#cdebd6" : "#d8e9f8";
+  return `
+    <div class="adminBox" style="border-color:${border};background:${color};">
+      <b>Protección entre dispositivos</b><br>
+      <div class="muted">${msg}</div>
+      <div class="helper">Sincroniza al abrir, al guardar y cuando tocás actualizar. No trabaja todo el tiempo.</div>
+      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Cambiar protección' : 'Activar protección'}</button>
+      <button onclick="fsSincronizarAhora()" style="background:#3498db">Actualizar ahora</button>
+    </div>
+    <hr>`;
+}
+
 function proteccionEstadoHTML(){
   const fechaAuto = localStorage.getItem(claveUsuario("auto_backup_fecha"));
-  let linea = "Tus datos están protegidos en este dispositivo.";
+  let linea = fsSyncEnabled && fsSyncEnabled() ? "Tus datos están protegidos entre dispositivos." : "Tus datos están protegidos en este dispositivo.";
   if(fechaAuto){
     const d = new Date(fechaAuto);
     if(!isNaN(d.getTime())){
@@ -565,6 +750,7 @@ function claveUsuario(parte){
   return claveUsuarioPorNombre(currentUser, parte);
 }
 
+const FS_DEV_MODE_V161 = true;
 const TRIAL_DAYS = 15;
 const ACTIVATION_CODE = "FS-ENTREGA-2026-7439";
 
@@ -574,6 +760,9 @@ function trialKey(parte){
 }
 
 function trialInfo(){
+  if(typeof FS_DEV_MODE_V161 !== "undefined" && FS_DEV_MODE_V161){
+    return {activado:true, desarrollo:true, pendiente:false, usados:0, restantes:999, vencido:false};
+  }
   const hoy = new Date();
   let inicio = localStorage.getItem(trialKey("inicio"));
   let activado = localStorage.getItem(trialKey("activado")) === "SI";
@@ -596,6 +785,14 @@ function renderTrial(){
   const b = document.getElementById("trialBanner");
   if(!b) return;
   const t = trialInfo();
+
+  if(t.desarrollo){
+    b.style.display="block";
+    b.style.background="#eaf4ff";
+    b.style.color="#1f4f8b";
+    b.innerHTML="🔧 Modo desarrollo V16.1: prueba/licencia desactivada para testear sincronización.";
+    return;
+  }
 
   if(t.activado){
     b.style.display="block";
@@ -713,7 +910,9 @@ function cargarDatosUsuario(){
   moneda=localStorage.getItem(claveUsuario("moneda")) || "$";
 
   // V14.5: agrega protección interna sin cambiar lo visible para el usuario.
-  if(prepararMovimientosParaProteccion()){
+  let cambioIdentidad = prepararMovimientosParaProteccion();
+  movs.forEach(m=>{ const antesId=m.id; fsAsegurarIdentidadMovimiento(m); if(antesId!==m.id) cambioIdentidad=true; });
+  if(cambioIdentidad){
     localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
   }
 }
@@ -726,6 +925,7 @@ function guardarStorage(){
   localStorage.setItem(claveUsuario("categorias"), JSON.stringify(categorias));
   localStorage.setItem(claveUsuario("moneda"), moneda || "$" );
   guardarCopiaInternaAutomatica();
+  if(typeof fsProgramarSubida === "function") fsProgramarSubida();
 }
 
 function guardarCopiaInternaAutomatica(){
@@ -733,7 +933,7 @@ function guardarCopiaInternaAutomatica(){
     if(!currentUser) return;
     const paquete={
       app:"FinanzasSimple",
-      version:"V14_5_proteccion_base",
+      version:"V16_1_sync_segura_dev",
       creado:new Date().toISOString(),
       tipo:"copia_interna",
       usuarioOrigen: currentUser,
@@ -757,7 +957,9 @@ function mostrarEstadoAutoBackup(){
   if(!fechaAuto){ box.style.display="none"; return; }
   const d=new Date(fechaAuto);
   const hora=isNaN(d.getTime()) ? "" : " " + d.toLocaleString(tr("monthLocale"));
-  box.innerHTML=(tr("autoBackupSaved") || "✔ Copia interna actualizada automáticamente.") + hora + "<br><span style='font-weight:normal'>" + (tr("autoBackupLine") || "Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas.") + "</span>";
+  const syncSt = (typeof fsGetSyncStatus === "function") ? fsGetSyncStatus() : {};
+  const syncTxt = syncSt && syncSt.txt ? "<br><span style='font-weight:normal'>🔄 " + escapeHTML(syncSt.txt) + "</span>" : "";
+  box.innerHTML=(tr("autoBackupSaved") || "✔ Copia interna actualizada automáticamente.") + hora + "<br><span style='font-weight:normal'>" + (tr("autoBackupLine") || "Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas.") + "</span>" + syncTxt;
   box.style.display="block";
 }
 
@@ -815,6 +1017,35 @@ function cambiarMes(v){
   }catch(e){}
 }
 
+
+function fsAsegurarIdentidadMovimiento(m){
+  if(!m || typeof m !== "object") return m;
+  asegurarProteccionMovimiento(m);
+  if(!m.id) m.id = m.uid || generarMovimientoUID();
+  return m;
+}
+
+function fsBuscarMovimientoPorClave(clave){
+  const k = String(clave ?? "");
+  return movs.find(m => {
+    fsAsegurarIdentidadMovimiento(m);
+    return String(m.uid||"") === k || String(m.id||"") === k;
+  });
+}
+
+function fsIndiceMovimientoPorClave(clave){
+  const k = String(clave ?? "");
+  return movs.findIndex(m => {
+    fsAsegurarIdentidadMovimiento(m);
+    return String(m.uid||"") === k || String(m.id||"") === k;
+  });
+}
+
+function fsClaveMovimientoVisible(m){
+  fsAsegurarIdentidadMovimiento(m);
+  return String(m.uid || m.id || "");
+}
+
 function openNuevo(m=null){
   if(bloquearSiTrialVencido()) return;
   bg.style.display="block";
@@ -846,7 +1077,7 @@ function openNuevo(m=null){
   if(btnGuardar){
     btnGuardar.onclick = function(ev){
       if(ev) ev.preventDefault();
-      guardarMovimientoSeguro(m?.id || 0);
+      guardarMovimientoSeguro(m ? fsClaveMovimientoVisible(m) : "");
     };
   }
   actualizarAvisoCambioTipo();
@@ -926,9 +1157,9 @@ function guardar(id){
   const detalleValor = valorCampo("f_detalle");
   const montoIngresado = numeroDesdeImporte(valorCampo("f_monto"));
 
-  const existente = movs.find(x=>String(x.id)===String(id));
+  const existente = id ? fsBuscarMovimientoPorClave(id) : null;
   let m={
-    id:id||Date.now(),
+    id: existente?.id || existente?.uid || generarMovimientoUID(),
     uid: existente?.uid || generarMovimientoUID(),
     fsCreadoEn: existente?.fsCreadoEn || new Date().toISOString(),
     fsActualizadoEn: new Date().toISOString(),
@@ -950,7 +1181,7 @@ function guardar(id){
   if(m.monto === 0){ mensajeFormulario(tr("zeroAmount")); return; }
   if(m.monto < 0){ mensajeFormulario(tr("negativeAmount")); return; }
 
-  let i=movs.findIndex(x=>String(x.id)===String(id));
+  let i = id ? fsIndiceMovimientoPorClave(id) : -1;
   if(i>=0){
     const anterior = movs[i];
     if(anterior.tipo !== m.tipo){
@@ -979,7 +1210,7 @@ function guardar(id){
 function borrar(id){
   try{
     if(!puedeOperar()){ accionBloqueada(tr("startTrialToAdd")); return; }
-    const idx = movs.findIndex(x=>String(x.id)===String(id));
+    const idx = fsIndiceMovimientoPorClave(id);
     if(idx < 0){ alert(tr("movementNotFound")); return; }
     const m = movs[idx] || {};
     const detalleBorrado =
@@ -1108,6 +1339,7 @@ function openConfig(){
     <button onclick="guardarMoneda()">${tr("saveCurrency")}</button>
     <hr>
     ${proteccionEstadoHTML()}
+    ${fsSyncPanelHTML()}
     <b>${tr("accounts")}</b><br>
     <div class="muted">${tr("canEditDelete")}</div>
     <div style="margin-top:8px">
@@ -1330,7 +1562,7 @@ function guardarCopia(){
 
   const paquete={
     app:"FinanzasSimple",
-    version:"V14_5_proteccion_base",
+    version:"V16_1_sync_segura_dev",
     creado:new Date().toISOString(),
     tipo:"movimientos",
     modo:"acumulativo_sin_repetir",
@@ -1556,7 +1788,7 @@ function guardarBackupCompleto(){
   else{ datos[currentUser]=datosDeUsuario(currentUser); }
   const backup={
     app:"FinanzasSimple",
-    version:"V14_5_proteccion_base",
+    version:"V16_1_sync_segura_dev",
     creado:new Date().toISOString(),
     tipo:admin ? "backup_completo" : "backup_usuario",
     usuarioActual:currentUser,
@@ -1773,6 +2005,9 @@ function crearUsuarioDesdeLogin(){
   render();
   renderTrial();
   bloquearSiTrialVencido();
+  if(fsSyncEnabled && fsSyncEnabled()){
+    setTimeout(()=>fsSyncDescargar(), 600);
+  }
 }
 
 function login(){
@@ -2065,11 +2300,12 @@ function openAnalisis(){
 }
 
 
-function openNuevoPorId(id){
-  const m = movs.find(x => String(x.id) === String(id));
+function openNuevoPorClave(clave){
+  const m = fsBuscarMovimientoPorClave(clave);
   if(!m) return alert(tr("movementNotFound"));
   openNuevo(m);
 }
+function openNuevoPorId(id){ openNuevoPorClave(id); }
 
 
 function textoNormalizado(v){
@@ -2173,8 +2409,8 @@ function render(){
         <td>${escapeHTML(m.detalle||"")}</td>
         <td class="monto ${claseMonto}">${signo}${fmt(Math.abs(Number(m.monto)||0))}</td>
         <td class="accion">
-          <button onclick="openNuevoPorId(${m.id})" title="${tr("editTitle")}">✏️</button>
-          <button onclick='borrar(${m.id})' title="${tr("deleteTitle")}">❌</button>
+          <button onclick='openNuevoPorClave(${JSON.stringify(fsClaveMovimientoVisible(m))})' title="${tr("editTitle")}">✏️</button>
+          <button onclick='borrar(${JSON.stringify(fsClaveMovimientoVisible(m))})' title="${tr("deleteTitle")}">❌</button>
         </td>
       </tr>`;
     }
@@ -2240,8 +2476,236 @@ function closeModal(){
   document.getElementById("modalTitle").innerText = tr("window");
 }
 
+
+
+/* V16 - Sincronización segura
+   Mejora sobre V15:
+   - cola de sincronización para que no se pisen cargas simultáneas
+   - sincroniza al entrar, guardar, modificar, borrar y deshacer borrado
+   - guarda "borrados" para que un movimiento eliminado no vuelva desde otro dispositivo
+   - botón Actualizar ahora visible en la pantalla principal
+*/
+let fsSyncInProgressV16 = false;
+let fsSyncPendingV16 = false;
+let fsSyncReasonV16 = "";
+
+function fsDeletedKeyV16(){ return claveUsuario("sync_deleted_v16"); }
+function fsLeerBorradosV16(){
+  try{
+    const data = JSON.parse(localStorage.getItem(fsDeletedKeyV16()) || "[]");
+    return Array.isArray(data) ? data : [];
+  }catch(e){ return []; }
+}
+function fsGuardarBorradosV16(lista){
+  const depurada = (Array.isArray(lista) ? lista : [])
+    .filter(x=>x && (x.uid || x.id || x.clave))
+    .sort((a,b)=>fsFechaNum(b.borradoEn)-fsFechaNum(a.borradoEn))
+    .slice(0,1000);
+  localStorage.setItem(fsDeletedKeyV16(), JSON.stringify(depurada));
+}
+function fsClaveBorradoV16(m){
+  if(!m) return "";
+  return String(m.uid || m.id || (typeof codigoMovimiento === "function" ? codigoMovimiento(m) : ""));
+}
+function fsRegistrarBorradoV16(m){
+  if(!currentUser || !m) return;
+  const clave = fsClaveBorradoV16(m);
+  if(!clave) return;
+  const lista = fsLeerBorradosV16();
+  const tomb = {
+    uid: m.uid || "",
+    id: m.id || "",
+    clave,
+    borradoEn: new Date().toISOString(),
+    dispositivo: fsDeviceId()
+  };
+  const filtrada = lista.filter(x=>fsClaveBorradoV16(x) !== clave && String(x.clave||"") !== clave);
+  filtrada.push(tomb);
+  fsGuardarBorradosV16(filtrada);
+}
+function fsQuitarBorradoV16(m){
+  if(!currentUser || !m) return;
+  const clave = fsClaveBorradoV16(m);
+  if(!clave) return;
+  fsGuardarBorradosV16(fsLeerBorradosV16().filter(x=>fsClaveBorradoV16(x) !== clave && String(x.clave||"") !== clave));
+}
+function fsMapaBorradosV16(lista){
+  const mapa = new Map();
+  (Array.isArray(lista)?lista:[]).forEach(x=>{
+    const claves = [x.uid, x.id, x.clave].map(v=>String(v||"")).filter(Boolean);
+    const t = fsFechaNum(x.borradoEn);
+    claves.forEach(k=>{ if(!mapa.has(k) || t > mapa.get(k)) mapa.set(k,t); });
+  });
+  return mapa;
+}
+function fsMovimientoBorradoV16(m, mapa){
+  const keys = [m.uid, m.id, (typeof codigoMovimiento === "function" ? codigoMovimiento(m) : "")].map(v=>String(v||"")).filter(Boolean);
+  const actualizado = fsFechaNum(m.fsActualizadoEn || m.fsCreadoEn);
+  return keys.some(k => mapa.has(k) && mapa.get(k) >= actualizado);
+}
+
+fsPaqueteDatos = function(){
+  prepararMovimientosParaProteccion();
+  return {
+    app:"FinanzaSimple",
+    version:"V16_1_sync_segura_dev",
+    usuario: currentUser,
+    actualizado:new Date().toISOString(),
+    moneda: moneda || "$",
+    movs: Array.isArray(movs) ? movs : [],
+    cuentas: Array.isArray(cuentas) ? cuentas : [],
+    categorias: Array.isArray(categorias) ? categorias : [],
+    borrados: fsLeerBorradosV16()
+  };
+};
+
+fsFusionarMovimientos = function(locales, remotos, borradosCombinados=[]){
+  const mapaBorrados = fsMapaBorradosV16(borradosCombinados);
+  const mapa = new Map();
+  (Array.isArray(locales)?locales:[]).forEach(m=>{
+    asegurarProteccionMovimiento(m);
+    if(!fsMovimientoBorradoV16(m, mapaBorrados)) mapa.set(m.uid || codigoMovimiento(m), m);
+  });
+  (Array.isArray(remotos)?remotos:[]).forEach(m=>{
+    asegurarProteccionMovimiento(m);
+    if(fsMovimientoBorradoV16(m, mapaBorrados)) return;
+    const uid = m.uid || codigoMovimiento(m);
+    const actual = mapa.get(uid);
+    if(!actual || fsFechaNum(m.fsActualizadoEn) >= fsFechaNum(actual.fsActualizadoEn)) mapa.set(uid, m);
+  });
+  return Array.from(mapa.values());
+};
+
+fsAplicarPaqueteRemoto = function(pkg){
+  if(!pkg || typeof pkg !== "object") return false;
+  const antes = JSON.stringify({movs,categorias,cuentas,moneda,borrados:fsLeerBorradosV16()});
+  const borradosCombinados = fsLeerBorradosV16().concat(Array.isArray(pkg.borrados) ? pkg.borrados : []);
+  fsGuardarBorradosV16(borradosCombinados);
+  movs = fsFusionarMovimientos(movs, pkg.movs || [], fsLeerBorradosV16());
+  cuentas = fsUnirListas(cuentas, pkg.cuentas || []);
+  categorias = fsUnirListas(categorias, pkg.categorias || []);
+  if(!moneda && pkg.moneda) moneda = pkg.moneda;
+  prepararMovimientosParaProteccion();
+  localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
+  localStorage.setItem(claveUsuario("cuentas"), JSON.stringify(cuentas));
+  localStorage.setItem(claveUsuario("categorias"), JSON.stringify(categorias));
+  localStorage.setItem(claveUsuario("moneda"), moneda || "$" );
+  guardarCopiaInternaAutomatica();
+  const despues = JSON.stringify({movs,categorias,cuentas,moneda,borrados:fsLeerBorradosV16()});
+  return antes !== despues;
+};
+
+fsSyncDescargar = async function(){
+  if(!fsSyncEnabled()) return false;
+  try{
+    const url = fsSyncUrl();
+    const r = await fetch(url + "?user=" + encodeURIComponent(currentUser) + "&t=" + Date.now());
+    const data = await r.json();
+    if(data && data.ok && data.paquete){
+      const cambio = fsAplicarPaqueteRemoto(data.paquete);
+      if(cambio) render();
+    }
+    fsSetSyncStatus("Tus datos están protegidos. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
+    return true;
+  }catch(e){
+    console.warn("No se pudo descargar sincronización", e);
+    fsSetSyncStatus("Sin conexión con la copia protegida. Tus datos siguen guardados en este dispositivo.", "warn");
+    return false;
+  }
+};
+
+fsSyncSubir = async function(){
+  if(!fsSyncEnabled()) return false;
+  try{
+    const r = await fetch(fsSyncUrl(), {
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({user: currentUser, paquete: fsPaqueteDatos()})
+    });
+    const data = await r.json();
+    if(data && data.ok){
+      fsSetSyncStatus("Tus datos están protegidos. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
+      return true;
+    }
+    throw new Error("Respuesta no válida");
+  }catch(e){
+    console.warn("No se pudo subir sincronización", e);
+    fsSetSyncStatus("Guardado localmente. Se actualizará la copia protegida cuando haya conexión.", "warn");
+    return false;
+  }
+};
+
+async function fsSyncCompletaV16(reason="manual"){
+  if(!fsSyncEnabled()) return false;
+  fsSyncReasonV16 = reason;
+  if(fsSyncInProgressV16){ fsSyncPendingV16 = true; return false; }
+  fsSyncInProgressV16 = true;
+  try{
+    fsSetSyncStatus(reason === "manual" ? "Actualizando datos protegidos..." : "Guardando cambios protegidos...", "");
+    await fsSyncDescargar();
+    await fsSyncSubir();
+    render();
+    mostrarEstadoAutoBackup();
+    return true;
+  }finally{
+    fsSyncInProgressV16 = false;
+    if(fsSyncPendingV16){
+      fsSyncPendingV16 = false;
+      setTimeout(()=>fsSyncCompletaV16(fsSyncReasonV16 || "pendiente"), 500);
+    }
+  }
+}
+
+fsProgramarSubida = function(){
+  if(!fsSyncEnabled()) return;
+  clearTimeout(fsSyncTimer);
+  fsSyncTimer = setTimeout(()=>fsSyncCompletaV16("cambio"), 900);
+};
+
+fsSincronizarAhora = async function(){
+  if(!currentUser){ alert("Primero entrá con tu usuario."); return; }
+  if(!fsSyncEnabled()){
+    alert("La protección entre dispositivos todavía no está activada para este usuario.");
+    return;
+  }
+  await fsSyncCompletaV16("manual");
+};
+
+const fsLoginOriginalV16 = login;
+login = function(){
+  fsLoginOriginalV16();
+  if(currentUser && fsSyncEnabled()) setTimeout(()=>fsSyncCompletaV16("entrada"), 700);
+};
+
+const fsBorrarOriginalV16 = borrar;
+borrar = function(id){
+  const m = fsBuscarMovimientoPorClave(id);
+  const clave = m ? fsClaveMovimientoVisible(m) : String(id);
+  fsBorrarOriginalV16(id);
+  if(m && !fsBuscarMovimientoPorClave(clave)){
+    fsRegistrarBorradoV16(m);
+    guardarStorage();
+    render();
+  }
+};
+
+const fsDeshacerOriginalV16 = deshacerUltimoBorrado;
+deshacerUltimoBorrado = function(){
+  const m = ultimoBorrado && ultimoBorrado.movimiento ? {...ultimoBorrado.movimiento} : null;
+  if(m) fsQuitarBorradoV16(m);
+  fsDeshacerOriginalV16();
+  if(m) fsProgramarSubida();
+};
+
+const fsSyncPanelHTMLOriginalV16 = fsSyncPanelHTML;
+fsSyncPanelHTML = function(){
+  const html = fsSyncPanelHTMLOriginalV16();
+  return html.replace("Sincroniza al abrir, al guardar y cuando tocás actualizar. No trabaja todo el tiempo.", "V16: sincroniza al entrar, guardar, modificar, borrar, deshacer y tocar Actualizar ahora. Evita duplicados y respeta borrados.");
+};
+
 window.guardar = guardar;
 window.guardarMovimientoSeguro = guardarMovimientoSeguro;
+window.openNuevoPorClave = openNuevoPorClave;
 window.deshacerUltimoBorrado = deshacerUltimoBorrado;
 window.guardarExcel = guardarExcel;
 window.guardarCSV = guardarCSV;
