@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzaSimple V16 – Control de gastos</title>
+<title>FinanzaSimple V16.1 – Control de gastos</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -229,7 +229,7 @@ td.accion button{
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V16</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
+<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V16.1 DEV</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
 
 <div class="container">
 
@@ -562,7 +562,7 @@ function fsPaqueteDatos(){
   prepararMovimientosParaProteccion();
   return {
     app:"FinanzaSimple",
-    version:"V16_sync_segura",
+    version:"V16_1_sync_segura_dev",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
     moneda: moneda || "$",
@@ -750,6 +750,7 @@ function claveUsuario(parte){
   return claveUsuarioPorNombre(currentUser, parte);
 }
 
+const FS_DEV_MODE_V161 = true;
 const TRIAL_DAYS = 15;
 const ACTIVATION_CODE = "FS-ENTREGA-2026-7439";
 
@@ -759,6 +760,9 @@ function trialKey(parte){
 }
 
 function trialInfo(){
+  if(typeof FS_DEV_MODE_V161 !== "undefined" && FS_DEV_MODE_V161){
+    return {activado:true, desarrollo:true, pendiente:false, usados:0, restantes:999, vencido:false};
+  }
   const hoy = new Date();
   let inicio = localStorage.getItem(trialKey("inicio"));
   let activado = localStorage.getItem(trialKey("activado")) === "SI";
@@ -781,6 +785,14 @@ function renderTrial(){
   const b = document.getElementById("trialBanner");
   if(!b) return;
   const t = trialInfo();
+
+  if(t.desarrollo){
+    b.style.display="block";
+    b.style.background="#eaf4ff";
+    b.style.color="#1f4f8b";
+    b.innerHTML="🔧 Modo desarrollo V16.1: prueba/licencia desactivada para testear sincronización.";
+    return;
+  }
 
   if(t.activado){
     b.style.display="block";
@@ -898,7 +910,9 @@ function cargarDatosUsuario(){
   moneda=localStorage.getItem(claveUsuario("moneda")) || "$";
 
   // V14.5: agrega protección interna sin cambiar lo visible para el usuario.
-  if(prepararMovimientosParaProteccion()){
+  let cambioIdentidad = prepararMovimientosParaProteccion();
+  movs.forEach(m=>{ const antesId=m.id; fsAsegurarIdentidadMovimiento(m); if(antesId!==m.id) cambioIdentidad=true; });
+  if(cambioIdentidad){
     localStorage.setItem(claveUsuario("movs"), JSON.stringify(movs));
   }
 }
@@ -919,7 +933,7 @@ function guardarCopiaInternaAutomatica(){
     if(!currentUser) return;
     const paquete={
       app:"FinanzasSimple",
-      version:"V16_sync_segura",
+      version:"V16_1_sync_segura_dev",
       creado:new Date().toISOString(),
       tipo:"copia_interna",
       usuarioOrigen: currentUser,
@@ -943,7 +957,9 @@ function mostrarEstadoAutoBackup(){
   if(!fechaAuto){ box.style.display="none"; return; }
   const d=new Date(fechaAuto);
   const hora=isNaN(d.getTime()) ? "" : " " + d.toLocaleString(tr("monthLocale"));
-  box.innerHTML=(tr("autoBackupSaved") || "✔ Copia interna actualizada automáticamente.") + hora + "<br><span style='font-weight:normal'>" + (tr("autoBackupLine") || "Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas.") + "</span>";
+  const syncSt = (typeof fsGetSyncStatus === "function") ? fsGetSyncStatus() : {};
+  const syncTxt = syncSt && syncSt.txt ? "<br><span style='font-weight:normal'>🔄 " + escapeHTML(syncSt.txt) + "</span>" : "";
+  box.innerHTML=(tr("autoBackupSaved") || "✔ Copia interna actualizada automáticamente.") + hora + "<br><span style='font-weight:normal'>" + (tr("autoBackupLine") || "Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas.") + "</span>" + syncTxt;
   box.style.display="block";
 }
 
@@ -1001,6 +1017,35 @@ function cambiarMes(v){
   }catch(e){}
 }
 
+
+function fsAsegurarIdentidadMovimiento(m){
+  if(!m || typeof m !== "object") return m;
+  asegurarProteccionMovimiento(m);
+  if(!m.id) m.id = m.uid || generarMovimientoUID();
+  return m;
+}
+
+function fsBuscarMovimientoPorClave(clave){
+  const k = String(clave ?? "");
+  return movs.find(m => {
+    fsAsegurarIdentidadMovimiento(m);
+    return String(m.uid||"") === k || String(m.id||"") === k;
+  });
+}
+
+function fsIndiceMovimientoPorClave(clave){
+  const k = String(clave ?? "");
+  return movs.findIndex(m => {
+    fsAsegurarIdentidadMovimiento(m);
+    return String(m.uid||"") === k || String(m.id||"") === k;
+  });
+}
+
+function fsClaveMovimientoVisible(m){
+  fsAsegurarIdentidadMovimiento(m);
+  return String(m.uid || m.id || "");
+}
+
 function openNuevo(m=null){
   if(bloquearSiTrialVencido()) return;
   bg.style.display="block";
@@ -1032,7 +1077,7 @@ function openNuevo(m=null){
   if(btnGuardar){
     btnGuardar.onclick = function(ev){
       if(ev) ev.preventDefault();
-      guardarMovimientoSeguro(m?.id || 0);
+      guardarMovimientoSeguro(m ? fsClaveMovimientoVisible(m) : "");
     };
   }
   actualizarAvisoCambioTipo();
@@ -1112,9 +1157,9 @@ function guardar(id){
   const detalleValor = valorCampo("f_detalle");
   const montoIngresado = numeroDesdeImporte(valorCampo("f_monto"));
 
-  const existente = movs.find(x=>String(x.id)===String(id));
+  const existente = id ? fsBuscarMovimientoPorClave(id) : null;
   let m={
-    id:id||Date.now(),
+    id: existente?.id || existente?.uid || generarMovimientoUID(),
     uid: existente?.uid || generarMovimientoUID(),
     fsCreadoEn: existente?.fsCreadoEn || new Date().toISOString(),
     fsActualizadoEn: new Date().toISOString(),
@@ -1136,7 +1181,7 @@ function guardar(id){
   if(m.monto === 0){ mensajeFormulario(tr("zeroAmount")); return; }
   if(m.monto < 0){ mensajeFormulario(tr("negativeAmount")); return; }
 
-  let i=movs.findIndex(x=>String(x.id)===String(id));
+  let i = id ? fsIndiceMovimientoPorClave(id) : -1;
   if(i>=0){
     const anterior = movs[i];
     if(anterior.tipo !== m.tipo){
@@ -1165,7 +1210,7 @@ function guardar(id){
 function borrar(id){
   try{
     if(!puedeOperar()){ accionBloqueada(tr("startTrialToAdd")); return; }
-    const idx = movs.findIndex(x=>String(x.id)===String(id));
+    const idx = fsIndiceMovimientoPorClave(id);
     if(idx < 0){ alert(tr("movementNotFound")); return; }
     const m = movs[idx] || {};
     const detalleBorrado =
@@ -1517,7 +1562,7 @@ function guardarCopia(){
 
   const paquete={
     app:"FinanzasSimple",
-    version:"V16_sync_segura",
+    version:"V16_1_sync_segura_dev",
     creado:new Date().toISOString(),
     tipo:"movimientos",
     modo:"acumulativo_sin_repetir",
@@ -1743,7 +1788,7 @@ function guardarBackupCompleto(){
   else{ datos[currentUser]=datosDeUsuario(currentUser); }
   const backup={
     app:"FinanzasSimple",
-    version:"V16_sync_segura",
+    version:"V16_1_sync_segura_dev",
     creado:new Date().toISOString(),
     tipo:admin ? "backup_completo" : "backup_usuario",
     usuarioActual:currentUser,
@@ -2255,11 +2300,12 @@ function openAnalisis(){
 }
 
 
-function openNuevoPorId(id){
-  const m = movs.find(x => String(x.id) === String(id));
+function openNuevoPorClave(clave){
+  const m = fsBuscarMovimientoPorClave(clave);
   if(!m) return alert(tr("movementNotFound"));
   openNuevo(m);
 }
+function openNuevoPorId(id){ openNuevoPorClave(id); }
 
 
 function textoNormalizado(v){
@@ -2363,8 +2409,8 @@ function render(){
         <td>${escapeHTML(m.detalle||"")}</td>
         <td class="monto ${claseMonto}">${signo}${fmt(Math.abs(Number(m.monto)||0))}</td>
         <td class="accion">
-          <button onclick="openNuevoPorId(${m.id})" title="${tr("editTitle")}">✏️</button>
-          <button onclick='borrar(${m.id})' title="${tr("deleteTitle")}">❌</button>
+          <button onclick='openNuevoPorClave(${JSON.stringify(fsClaveMovimientoVisible(m))})' title="${tr("editTitle")}">✏️</button>
+          <button onclick='borrar(${JSON.stringify(fsClaveMovimientoVisible(m))})' title="${tr("deleteTitle")}">❌</button>
         </td>
       </tr>`;
     }
@@ -2502,7 +2548,7 @@ fsPaqueteDatos = function(){
   prepararMovimientosParaProteccion();
   return {
     app:"FinanzaSimple",
-    version:"V16_sync_segura",
+    version:"V16_1_sync_segura_dev",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
     moneda: moneda || "$",
@@ -2633,9 +2679,10 @@ login = function(){
 
 const fsBorrarOriginalV16 = borrar;
 borrar = function(id){
-  const m = movs.find(x=>String(x.id)===String(id));
+  const m = fsBuscarMovimientoPorClave(id);
+  const clave = m ? fsClaveMovimientoVisible(m) : String(id);
   fsBorrarOriginalV16(id);
-  if(m && !movs.some(x=>String(x.id)===String(id))){
+  if(m && !fsBuscarMovimientoPorClave(clave)){
     fsRegistrarBorradoV16(m);
     guardarStorage();
     render();
@@ -2658,6 +2705,7 @@ fsSyncPanelHTML = function(){
 
 window.guardar = guardar;
 window.guardarMovimientoSeguro = guardarMovimientoSeguro;
+window.openNuevoPorClave = openNuevoPorClave;
 window.deshacerUltimoBorrado = deshacerUltimoBorrado;
 window.guardarExcel = guardarExcel;
 window.guardarCSV = guardarCSV;
