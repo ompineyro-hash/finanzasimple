@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzaSimple V16.1 – Control de gastos</title>
+<title>FinanzaSimple V16.2 – Control de gastos</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -229,7 +229,7 @@ td.accion button{
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V16.1 DEV</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
+<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V16.2 DEV</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
 
 <div class="container">
 
@@ -562,7 +562,7 @@ function fsPaqueteDatos(){
   prepararMovimientosParaProteccion();
   return {
     app:"FinanzaSimple",
-    version:"V16_1_sync_segura_dev",
+    version:"V16_2_sync_manual_limpia",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
     moneda: moneda || "$",
@@ -790,7 +790,7 @@ function renderTrial(){
     b.style.display="block";
     b.style.background="#eaf4ff";
     b.style.color="#1f4f8b";
-    b.innerHTML="🔧 Modo desarrollo V16.1: prueba/licencia desactivada para testear sincronización.";
+    b.innerHTML="🔧 Modo desarrollo V16.2: sincronización manual limpia para testear PC/celular.";
     return;
   }
 
@@ -933,7 +933,7 @@ function guardarCopiaInternaAutomatica(){
     if(!currentUser) return;
     const paquete={
       app:"FinanzasSimple",
-      version:"V16_1_sync_segura_dev",
+      version:"V16_2_sync_manual_limpia",
       creado:new Date().toISOString(),
       tipo:"copia_interna",
       usuarioOrigen: currentUser,
@@ -1562,7 +1562,7 @@ function guardarCopia(){
 
   const paquete={
     app:"FinanzasSimple",
-    version:"V16_1_sync_segura_dev",
+    version:"V16_2_sync_manual_limpia",
     creado:new Date().toISOString(),
     tipo:"movimientos",
     modo:"acumulativo_sin_repetir",
@@ -1788,7 +1788,7 @@ function guardarBackupCompleto(){
   else{ datos[currentUser]=datosDeUsuario(currentUser); }
   const backup={
     app:"FinanzasSimple",
-    version:"V16_1_sync_segura_dev",
+    version:"V16_2_sync_manual_limpia",
     creado:new Date().toISOString(),
     tipo:admin ? "backup_completo" : "backup_usuario",
     usuarioActual:currentUser,
@@ -2478,16 +2478,16 @@ function closeModal(){
 
 
 
-/* V16 - Sincronización segura
-   Mejora sobre V15:
-   - cola de sincronización para que no se pisen cargas simultáneas
-   - sincroniza al entrar, guardar, modificar, borrar y deshacer borrado
-   - guarda "borrados" para que un movimiento eliminado no vuelva desde otro dispositivo
-   - botón Actualizar ahora visible en la pantalla principal
+
+/* V16.2 - Sincronización manual limpia
+   Objetivo: evitar intentos invisibles y separar roles:
+   - Copia local automática: solo protege este dispositivo.
+   - Sincronización entre dispositivos: solo con botón Actualizar ahora.
+   - POST a Apps Script con no-cors para evitar bloqueo de respuesta del navegador.
+   - Luego verifica con GET si la copia remota quedó escrita.
 */
-let fsSyncInProgressV16 = false;
-let fsSyncPendingV16 = false;
-let fsSyncReasonV16 = "";
+let fsSyncInProgressV162 = false;
+let fsLastManualSyncV162 = 0;
 
 function fsDeletedKeyV16(){ return claveUsuario("sync_deleted_v16"); }
 function fsLeerBorradosV16(){
@@ -2548,7 +2548,7 @@ fsPaqueteDatos = function(){
   prepararMovimientosParaProteccion();
   return {
     app:"FinanzaSimple",
-    version:"V16_1_sync_segura_dev",
+    version:"V16_2_sync_manual_limpia",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
     moneda: moneda || "$",
@@ -2558,6 +2558,15 @@ fsPaqueteDatos = function(){
     borrados: fsLeerBorradosV16()
   };
 };
+
+function fsPaqueteResumenV162(pkg){
+  return {
+    movs: Array.isArray(pkg && pkg.movs) ? pkg.movs.length : 0,
+    cuentas: Array.isArray(pkg && pkg.cuentas) ? pkg.cuentas.length : 0,
+    categorias: Array.isArray(pkg && pkg.categorias) ? pkg.categorias.length : 0,
+    actualizado: pkg && pkg.actualizado ? String(pkg.actualizado) : ""
+  };
+}
 
 fsFusionarMovimientos = function(locales, remotos, borradosCombinados=[]){
   const mapaBorrados = fsMapaBorradosV16(borradosCombinados);
@@ -2595,21 +2604,50 @@ fsAplicarPaqueteRemoto = function(pkg){
   return antes !== despues;
 };
 
+async function fsSyncLeerRemotoV162(){
+  const r = await fetch(fsSyncUrl() + "?user=" + encodeURIComponent(currentUser) + "&t=" + Date.now(), {cache:"no-store"});
+  const data = await r.json();
+  if(!data || !data.ok) throw new Error("Respuesta GET no válida");
+  return data.paquete || null;
+}
+
+async function fsSyncEnviarRemotoV162(){
+  const payload = JSON.stringify({user: currentUser, paquete: fsPaqueteDatos()});
+  await fetch(fsSyncUrl(), {
+    method:"POST",
+    mode:"no-cors",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body: payload
+  });
+  return true;
+}
+
+function fsSleepV162(ms){ return new Promise(resolve=>setTimeout(resolve, ms)); }
+
+function fsMovimientoClaveSimpleV162(m){
+  if(!m) return "";
+  return String(m.uid || m.id || (typeof codigoMovimiento === "function" ? codigoMovimiento(m) : JSON.stringify(m)) || "");
+}
+function fsRemotoContieneLocalesV162(pkg){
+  if(!pkg || !Array.isArray(pkg.movs)) return false;
+  const remotas = new Set(pkg.movs.map(fsMovimientoClaveSimpleV162).filter(Boolean));
+  const locales = (Array.isArray(movs)?movs:[]).map(fsMovimientoClaveSimpleV162).filter(Boolean);
+  return locales.every(k=>remotas.has(k));
+}
+
 fsSyncDescargar = async function(){
   if(!fsSyncEnabled()) return false;
   try{
-    const url = fsSyncUrl();
-    const r = await fetch(url + "?user=" + encodeURIComponent(currentUser) + "&t=" + Date.now());
-    const data = await r.json();
-    if(data && data.ok && data.paquete){
-      const cambio = fsAplicarPaqueteRemoto(data.paquete);
+    const pkg = await fsSyncLeerRemotoV162();
+    if(pkg){
+      const cambio = fsAplicarPaqueteRemoto(pkg);
       if(cambio) render();
     }
-    fsSetSyncStatus("Tus datos están protegidos. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
+    fsSetSyncStatus("Bajada OK. Datos locales: " + (Array.isArray(movs)?movs.length:0) + " movimientos.", "ok");
     return true;
   }catch(e){
-    console.warn("No se pudo descargar sincronización", e);
-    fsSetSyncStatus("Sin conexión con la copia protegida. Tus datos siguen guardados en este dispositivo.", "warn");
+    console.warn("V16.2: no se pudo bajar", e);
+    fsSetSyncStatus("No pude bajar la copia protegida. Revisá la URL o conexión.", "warn");
     return false;
   }
 };
@@ -2617,71 +2655,69 @@ fsSyncDescargar = async function(){
 fsSyncSubir = async function(){
   if(!fsSyncEnabled()) return false;
   try{
-    const r = await fetch(fsSyncUrl(), {
-      method:"POST",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({user: currentUser, paquete: fsPaqueteDatos()})
-    });
-    const data = await r.json();
-    if(data && data.ok){
-      fsSetSyncStatus("Tus datos están protegidos. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
+    await fsSyncEnviarRemotoV162();
+    await fsSleepV162(1600);
+    const pkgVerificado = await fsSyncLeerRemotoV162();
+    if(pkgVerificado && fsRemotoContieneLocalesV162(pkgVerificado)){
+      fsSetSyncStatus("Subida OK. Copia protegida confirmada: " + fsPaqueteResumenV162(pkgVerificado).movs + " movimientos.", "ok");
       return true;
     }
-    throw new Error("Respuesta no válida");
+    fsSetSyncStatus("Subí datos, pero no pude confirmar que la copia protegida los vea todavía.", "warn");
+    return false;
   }catch(e){
-    console.warn("No se pudo subir sincronización", e);
-    fsSetSyncStatus("Guardado localmente. Se actualizará la copia protegida cuando haya conexión.", "warn");
+    console.warn("V16.2: no se pudo subir", e);
+    fsSetSyncStatus("No pude subir a la copia protegida. Quedó guardado solo en este dispositivo.", "warn");
     return false;
   }
 };
 
-async function fsSyncCompletaV16(reason="manual"){
+async function fsSyncCompletaV162(reason="manual"){
   if(!fsSyncEnabled()) return false;
-  fsSyncReasonV16 = reason;
-  if(fsSyncInProgressV16){ fsSyncPendingV16 = true; return false; }
-  fsSyncInProgressV16 = true;
+  if(fsSyncInProgressV162){
+    fsSetSyncStatus("Ya hay una sincronización en curso. Esperá unos segundos.", "warn");
+    return false;
+  }
+  fsSyncInProgressV162 = true;
+  fsLastManualSyncV162 = Date.now();
   try{
-    fsSetSyncStatus(reason === "manual" ? "Actualizando datos protegidos..." : "Guardando cambios protegidos...", "");
+    fsSetSyncStatus("Sincronizando manualmente...", "");
+    // 1) Bajar remoto y fusionar con local.
     await fsSyncDescargar();
-    await fsSyncSubir();
+    // 2) Subir el paquete fusionado.
+    const subidaOk = await fsSyncSubir();
+    // 3) Bajar de nuevo para dejar ambos lados con la misma foto si el servidor respondió.
+    await fsSyncDescargar();
     render();
     mostrarEstadoAutoBackup();
-    return true;
-  }finally{
-    fsSyncInProgressV16 = false;
-    if(fsSyncPendingV16){
-      fsSyncPendingV16 = false;
-      setTimeout(()=>fsSyncCompletaV16(fsSyncReasonV16 || "pendiente"), 500);
+    if(subidaOk){
+      fsSetSyncStatus("Sincronizado manualmente. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
     }
+    return subidaOk;
+  }finally{
+    fsSyncInProgressV162 = false;
   }
 }
 
+// V16.2: no hay sincronización automática silenciosa.
 fsProgramarSubida = function(){
-  if(!fsSyncEnabled()) return;
-  clearTimeout(fsSyncTimer);
-  fsSyncTimer = setTimeout(()=>fsSyncCompletaV16("cambio"), 900);
+  // Guardar sigue actualizando la copia local. La copia entre dispositivos se hace con el botón Actualizar ahora.
+  return false;
 };
 
 fsSincronizarAhora = async function(){
   if(!currentUser){ alert("Primero entrá con tu usuario."); return; }
   if(!fsSyncEnabled()){
-    alert("La protección entre dispositivos todavía no está activada para este usuario.");
+    alert("La sincronización entre dispositivos todavía no está activada para este usuario.");
     return;
   }
-  await fsSyncCompletaV16("manual");
+  await fsSyncCompletaV162("manual");
 };
 
-const fsLoginOriginalV16 = login;
-login = function(){
-  fsLoginOriginalV16();
-  if(currentUser && fsSyncEnabled()) setTimeout(()=>fsSyncCompletaV16("entrada"), 700);
-};
-
-const fsBorrarOriginalV16 = borrar;
+const fsBorrarOriginalV162 = borrar;
 borrar = function(id){
   const m = fsBuscarMovimientoPorClave(id);
   const clave = m ? fsClaveMovimientoVisible(m) : String(id);
-  fsBorrarOriginalV16(id);
+  fsBorrarOriginalV162(id);
   if(m && !fsBuscarMovimientoPorClave(clave)){
     fsRegistrarBorradoV16(m);
     guardarStorage();
@@ -2689,20 +2725,54 @@ borrar = function(id){
   }
 };
 
-const fsDeshacerOriginalV16 = deshacerUltimoBorrado;
+const fsDeshacerOriginalV162 = deshacerUltimoBorrado;
 deshacerUltimoBorrado = function(){
   const m = ultimoBorrado && ultimoBorrado.movimiento ? {...ultimoBorrado.movimiento} : null;
   if(m) fsQuitarBorradoV16(m);
-  fsDeshacerOriginalV16();
-  if(m) fsProgramarSubida();
+  fsDeshacerOriginalV162();
 };
 
-const fsSyncPanelHTMLOriginalV16 = fsSyncPanelHTML;
 fsSyncPanelHTML = function(){
-  const html = fsSyncPanelHTMLOriginalV16();
-  return html.replace("Sincroniza al abrir, al guardar y cuando tocás actualizar. No trabaja todo el tiempo.", "V16: sincroniza al entrar, guardar, modificar, borrar, deshacer y tocar Actualizar ahora. Evita duplicados y respeta borrados.");
+  const st = fsGetSyncStatus();
+  const activo = fsSyncEnabled();
+  const msg = activo
+    ? (st.txt || "Sincronización lista. Tocá Actualizar ahora para cruzar datos con otros dispositivos.")
+    : "Opcional: activá una URL de Apps Script para sincronizar celular, computadora y tablet.";
+  const color = activo ? "#f4fff7" : "#f7fbff";
+  const border = activo ? "#cdebd6" : "#d8e9f8";
+  return `
+    <div class="adminBox" style="border-color:${border};background:${color};">
+      <b>Sincronización entre dispositivos</b><br>
+      <div class="muted">${msg}</div>
+      <div class="helper">V16.2: sincronización manual. No hay intentos ocultos de fondo. Primero baja, fusiona y después sube.</div>
+      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Cambiar URL' : 'Activar sincronización'}</button>
+      <button onclick="fsSincronizarAhora()" style="background:#0f766e">Actualizar ahora</button>
+    </div>
+    <hr>`;
 };
 
+proteccionEstadoHTML = function(){
+  const fechaAuto = localStorage.getItem(claveUsuario("auto_backup_fecha"));
+  let linea = "Copia local automática activa en este dispositivo.";
+  if(fechaAuto){
+    const d = new Date(fechaAuto);
+    if(!isNaN(d.getTime())) linea = "Copia local actualizada: " + d.toLocaleString("es-AR");
+  }
+  return `
+    <div class="adminBox" style="border-color:#cdebd6;background:#f4fff7;">
+      <b>Copia local automática</b><br>
+      <div class="muted">${linea}</div>
+      <div class="helper">Protege solo este dispositivo. Para cruzar PC/celular usá Sincronización entre dispositivos.</div>
+    </div>
+    <hr>`;
+};
+
+window.guardar = guardar;
+window.guardarMovimientoSeguro = guardarMovimientoSeguro;
+window.openNuevoPorClave = openNuevoPorClave;
+window.deshacerUltimoBorrado = deshacerUltimoBorrado;
+window.guardarExcel = guardarExcel;
+window.guardarCSV = guardarCSV;
 window.guardar = guardar;
 window.guardarMovimientoSeguro = guardarMovimientoSeguro;
 window.openNuevoPorClave = openNuevoPorClave;
