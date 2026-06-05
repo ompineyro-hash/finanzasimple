@@ -232,7 +232,7 @@ td.accion button{
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V16.5 TEST AUTO-VOLVER</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
+<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V17.1 TEST MARCADOR</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
 
 <div class="container">
 
@@ -568,6 +568,7 @@ function fsPaqueteDatos(){
     version:"V16_3_id_movimientos",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
+    syncMarker: (typeof fsLeerMarkerLocalV171 === "function" ? (fsLeerMarkerLocalV171() || fsCrearMarkerLocalV171("foto")) : null),
     moneda: moneda || "$",
     movs: Array.isArray(movs) ? movs : [],
     cuentas: Array.isArray(cuentas) ? cuentas : [],
@@ -2570,6 +2571,7 @@ fsPaqueteDatos = function(){
     version:"V16_3_id_movimientos",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
+    syncMarker: (typeof fsLeerMarkerLocalV171 === "function" ? (fsLeerMarkerLocalV171() || fsCrearMarkerLocalV171("foto")) : null),
     moneda: moneda || "$",
     movs: Array.isArray(movs) ? movs : [],
     cuentas: Array.isArray(cuentas) ? cuentas : [],
@@ -2944,6 +2946,246 @@ document.addEventListener("visibilitychange", ()=>{
 window.addEventListener("focus", ()=>{
   fsAutoActualizarAlVolverV165("focus");
 });
+
+
+/* V17 TEST - Núcleo Sync equilibrado
+   Objetivo:
+   - La app visible no piensa PC/CELU/TABLET.
+   - Todo cambio local marca "pendiente".
+   - El núcleo intenta: bajar remoto -> fusionar -> subir foto nivelada -> bajar confirmación.
+   - Si no hay conexión, queda pendiente y reintenta luego.
+   - Actualizar ahora queda como rescate manual.
+*/
+let fsNucleoSyncBusyV17 = false;
+let fsNucleoSyncTimerV17 = null;
+let fsNucleoAutoTimerV17 = null;
+let fsNucleoIntervaloV171 = null;
+
+/* V17.1 - Marcador visible del núcleo
+   Cada cambio local genera una marca (rev) con origen y hora.
+   Esa marca viaja dentro del paquete al núcleo y permite ver si otros dispositivos recibieron la última foto.
+*/
+function fsMarkerKeyV171(){ return claveUsuario("sync_marker_v171"); }
+function fsLeerMarkerLocalV171(){
+  try{return JSON.parse(localStorage.getItem(fsMarkerKeyV171()) || "null") || null;}catch(e){return null;}
+}
+function fsGuardarMarkerLocalV171(marker){
+  if(!currentUser || !marker) return;
+  try{ localStorage.setItem(fsMarkerKeyV171(), JSON.stringify(marker)); }catch(e){}
+}
+function fsCrearMarkerLocalV171(motivo){
+  const origen = (typeof fsDeviceLabelV163 === "function" ? fsDeviceLabelV163() : "DISP");
+  const marker = {
+    rev: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8),
+    origen: origen,
+    motivo: motivo || "cambio",
+    fecha: new Date().toISOString()
+  };
+  fsGuardarMarkerLocalV171(marker);
+  return marker;
+}
+function fsMarkerTextoV171(marker){
+  if(!marker) return "sin marca";
+  let f = "";
+  try{ f = new Date(marker.fecha).toLocaleTimeString("es-AR"); }catch(e){ f = marker.fecha || ""; }
+  return (marker.origen || "DISP") + " · " + (marker.motivo || "sync") + " · " + f;
+}
+function fsAplicarMarkerRemotoV171(pkg){
+  if(pkg && pkg.syncMarker){ fsGuardarMarkerLocalV171(pkg.syncMarker); return pkg.syncMarker; }
+  return null;
+}
+
+function fsPendienteKeyV17(){ return claveUsuario("sync_pending_v17"); }
+function fsLeerPendienteV17(){
+  try{return JSON.parse(localStorage.getItem(fsPendienteKeyV17()) || "null") || null;}catch(e){return null;}
+}
+function fsMarcarPendienteV17(motivo){
+  if(!currentUser) return;
+  if(typeof fsCrearMarkerLocalV171 === "function") fsCrearMarkerLocalV171(motivo || "cambio");
+  const p = fsLeerPendienteV17() || {desde:new Date().toISOString(), intentos:0, motivos:[]};
+  p.ultima = new Date().toISOString();
+  p.motivos = Array.from(new Set([...(p.motivos||[]), motivo||"cambio"])).slice(-10);
+  localStorage.setItem(fsPendienteKeyV17(), JSON.stringify(p));
+}
+function fsLimpiarPendienteV17(){
+  if(currentUser) localStorage.removeItem(fsPendienteKeyV17());
+}
+function fsTienePendienteV17(){ return !!fsLeerPendienteV17(); }
+function fsEstadoSimpleV17(txt, tipo){
+  fsSetSyncStatus(txt, tipo || "");
+  try{ mostrarEstadoAutoBackup(); }catch(e){}
+}
+function fsProgramarReintentoV17(ms){
+  clearTimeout(fsNucleoSyncTimerV17);
+  fsNucleoSyncTimerV17 = setTimeout(()=>fsNucleoNivelarV17("reintento"), ms || 30000);
+}
+
+async function fsBajarNovedadesV17(motivo){
+  if(!currentUser || !fsSyncEnabled || !fsSyncEnabled()) return false;
+  try{
+    const pkg = await fsSyncLeerRemotoV162();
+    const markerAntes = (typeof fsLeerMarkerLocalV171 === "function" ? fsLeerMarkerLocalV171() : null);
+    let cambio = false;
+    if(pkg) cambio = fsAplicarPaqueteRemoto(pkg);
+    const markerRemoto = (typeof fsAplicarMarkerRemotoV171 === "function" ? fsAplicarMarkerRemotoV171(pkg) : null);
+    const markerCambio = markerRemoto && (!markerAntes || markerAntes.rev !== markerRemoto.rev);
+    if(cambio || markerCambio){
+      render();
+      fsEstadoSimpleV17("📩 Novedades bajadas del núcleo. Marca: " + fsMarkerTextoV171(markerRemoto) + ". Última revisión: " + new Date().toLocaleString("es-AR"), "ok");
+    }else{
+      fsEstadoSimpleV17("✅ Sin novedades. Última revisión: " + new Date().toLocaleTimeString("es-AR") + ". Marca local: " + fsMarkerTextoV171(markerAntes), "ok");
+    }
+    return cambio;
+  }catch(e){
+    console.warn("V17: no se pudo bajar novedades", motivo, e);
+    fsEstadoSimpleV17("🟡 Sin conexión con el núcleo. La app sigue guardando en este dispositivo.", "warn");
+    return false;
+  }
+}
+
+async function fsNucleoNivelarV17(motivo="auto"){
+  if(!currentUser || !fsSyncEnabled || !fsSyncEnabled()) return false;
+  if(fsNucleoSyncBusyV17){
+    fsMarcarPendienteV17(motivo || "ocupado");
+    fsProgramarReintentoV17(5000);
+    return false;
+  }
+  fsNucleoSyncBusyV17 = true;
+  try{
+    const pendienteAntes = fsTienePendienteV17();
+    fsEstadoSimpleV17((pendienteAntes ? "🔄 Nivelando cambios pendientes..." : "🔎 Revisando núcleo...") , "");
+
+    // 1) Primero baja remoto y fusiona. Esto evita pisar cambios de otro dispositivo.
+    let cambioBajada1 = false;
+    try{
+      const pkg1 = await fsSyncLeerRemotoV162();
+      if(pkg1) cambioBajada1 = fsAplicarPaqueteRemoto(pkg1);
+    }catch(e){
+      throw new Error("No pude bajar antes de subir: " + (e && e.message ? e.message : e));
+    }
+
+    // 2) Si hay cambios locales o pendientes, sube la foto fusionada al núcleo.
+    let subidaOk = true;
+    if(pendienteAntes || motivo === "manual" || motivo === "guardar" || motivo === "borrar" || motivo === "editar"){
+      subidaOk = await fsSyncSubir();
+      if(!subidaOk) throw new Error("No se pudo confirmar la subida");
+      fsLimpiarPendienteV17();
+    }
+
+    // 3) Baja de nuevo para dejar la foto local igual que el núcleo.
+    let cambioBajada2 = false;
+    try{
+      const pkg2 = await fsSyncLeerRemotoV162();
+      if(pkg2){
+        cambioBajada2 = fsAplicarPaqueteRemoto(pkg2);
+        if(typeof fsAplicarMarkerRemotoV171 === "function") fsAplicarMarkerRemotoV171(pkg2);
+      }
+    }catch(e){
+      // Si ya subió, no lo tratamos como pérdida; solo avisamos.
+      console.warn("V17: no pude confirmar bajada final", e);
+    }
+
+    if(cambioBajada1 || cambioBajada2) render();
+    fsEstadoSimpleV17("✅ Núcleo sincronizado. Local: " + (Array.isArray(movs)?movs.length:0) + " movimientos. Marca: " + (typeof fsMarkerTextoV171 === "function" ? fsMarkerTextoV171(fsLeerMarkerLocalV171()) : "") + ". " + new Date().toLocaleString("es-AR"), "ok");
+    return true;
+  }catch(e){
+    console.warn("V17: quedó pendiente", motivo, e);
+    fsMarcarPendienteV17(motivo || "fallo");
+    const p = fsLeerPendienteV17();
+    if(p){ p.intentos = Number(p.intentos||0) + 1; localStorage.setItem(fsPendienteKeyV17(), JSON.stringify(p)); }
+    fsEstadoSimpleV17("🟡 Cambios guardados localmente. Pendiente de sincronizar cuando vuelva la conexión.", "warn");
+    fsProgramarReintentoV17(30000);
+    return false;
+  }finally{
+    fsNucleoSyncBusyV17 = false;
+  }
+}
+
+// V17: reactivamos el disparo al guardar. guardarStorage() ya llama a fsProgramarSubida().
+fsProgramarSubida = function(){
+  if(!currentUser) return false;
+  fsMarcarPendienteV17("guardar");
+  clearTimeout(fsNucleoSyncTimerV17);
+  fsNucleoSyncTimerV17 = setTimeout(()=>fsNucleoNivelarV17("guardar"), 1500);
+  fsEstadoSimpleV17("💾 Guardado local. Preparando sincronización con el núcleo...", "");
+  return true;
+};
+
+// Botón manual: ahora usa el mismo núcleo, pero forzado.
+fsSincronizarAhora = async function(){
+  if(!currentUser){ alert("Primero entrá con tu usuario."); return; }
+  if(!fsSyncEnabled()){
+    alert("La sincronización entre dispositivos todavía no está activada para este usuario.");
+    return;
+  }
+  fsMarcarPendienteV17("manual");
+  await fsNucleoNivelarV17("manual");
+};
+
+// Al volver a la app: primero intenta resolver pendientes; si no hay pendientes, solo baja novedades.
+fsAutoActualizarAlVolverV165 = async function(motivo){
+  try{
+    if(!currentUser || !fsSyncEnabled || !fsSyncEnabled()) return;
+    if(document.hidden) return;
+    const ahora = Date.now();
+    if(ahora - fsAutoVolverUltimaV165 < 8000) return;
+    fsAutoVolverUltimaV165 = ahora;
+    if(fsTienePendienteV17()) await fsNucleoNivelarV17("volver-" + (motivo||"app"));
+    else await fsBajarNovedadesV17("volver-" + (motivo||"app"));
+  }catch(e){ console.warn("V17 volver falló", motivo, e); }
+};
+
+// Al abrir después de login: hacemos una revisión suave del núcleo.
+function fsArrancarNucleoV17(){
+  if(!currentUser || !fsSyncEnabled || !fsSyncEnabled()) return;
+  clearTimeout(fsNucleoAutoTimerV17);
+  fsNucleoAutoTimerV17 = setTimeout(()=>{
+    if(fsTienePendienteV17()) fsNucleoNivelarV17("abrir-pendiente");
+    else fsBajarNovedadesV17("abrir");
+  }, 2500);
+  clearInterval(fsNucleoIntervaloV171);
+  fsNucleoIntervaloV171 = setInterval(()=>{
+    try{
+      if(!currentUser || !fsSyncEnabled || !fsSyncEnabled()) return;
+      if(document.hidden) return;
+      if(fsTienePendienteV17()) fsNucleoNivelarV17("auto-30s-pendiente");
+      else fsBajarNovedadesV17("auto-30s");
+    }catch(e){ console.warn("V17.1 auto 30s falló", e); }
+  }, 30000);
+}
+
+// Enganche seguro al login: si la función login existe, la envolvemos sin tocar su lógica.
+try{
+  const fsLoginOriginalV17 = login;
+  login = function(){
+    const r = fsLoginOriginalV17.apply(this, arguments);
+    setTimeout(fsArrancarNucleoV17, 1200);
+    return r;
+  };
+}catch(e){}
+
+// Panel de configuración actualizado para explicar el núcleo sin mostrar complejidad.
+fsSyncPanelHTML = function(){
+  const st = fsGetSyncStatus();
+  const activo = fsSyncEnabled();
+  const pendiente = fsTienePendienteV17();
+  const msg = activo
+    ? (st.txt || (pendiente ? "Hay cambios pendientes de sincronizar." : "Núcleo listo para equilibrar dispositivos."))
+    : "Opcional: activá una URL de Apps Script para sincronizar celular, computadora y tablet.";
+  const color = activo ? (pendiente ? "#fff9e8" : "#f4fff7") : "#f7fbff";
+  const border = activo ? (pendiente ? "#f1d28a" : "#cdebd6") : "#d8e9f8";
+  return `
+    <div class="adminBox" style="border-color:${border};background:${color};">
+      <b>Sincronización núcleo V17</b><br>
+      <div class="muted">${msg}</div>
+      <div class="helper">Todo cambio se guarda localmente y el núcleo intenta equilibrar PC, celular, tablet u otros dispositivos. La marca visible indica de dónde vino la última novedad. Si no hay conexión, queda pendiente.</div>
+      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Cambiar URL' : 'Activar sincronización'}</button>
+      <button onclick="fsSincronizarAhora()" style="background:#0f766e">Actualizar ahora</button>
+    </div>
+    <hr>`;
+};
+
+try{ window.fsNucleoNivelarV17 = fsNucleoNivelarV17; window.fsBajarNovedadesV17 = fsBajarNovedadesV17; }catch(e){}
 
 initApp();
 </script>
