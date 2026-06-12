@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzaSimple V16.5 – Control de gastos</title>
+<title>FinanzaSimple V17.1 – Control de gastos</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -565,7 +565,7 @@ function fsPaqueteDatos(){
   prepararMovimientosParaProteccion();
   return {
     app:"FinanzaSimple",
-    version:"V16_3_id_movimientos",
+    version:"V17_1_estabilidad",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
     syncMarker: (typeof fsLeerMarkerLocalV171 === "function" ? (fsLeerMarkerLocalV171() || fsCrearMarkerLocalV171("foto")) : null),
@@ -794,7 +794,7 @@ function renderTrial(){
     b.style.display="block";
     b.style.background="#eaf4ff";
     b.style.color="#1f4f8b";
-    b.innerHTML="🔧 Modo desarrollo V16.3: ID único por movimiento y origen PC/CELU/TABLET para seguir la sincronización.";
+    b.innerHTML="🔧 FinanzaSimple V17.1 ESTABILIDAD: ID único por movimiento y origen PC/CELU/TABLET para seguir la sincronización.";
     return;
   }
 
@@ -937,7 +937,7 @@ function guardarCopiaInternaAutomatica(){
     if(!currentUser) return;
     const paquete={
       app:"FinanzasSimple",
-      version:"V16_3_id_movimientos",
+      version:"V17_1_estabilidad",
       creado:new Date().toISOString(),
       tipo:"copia_interna",
       usuarioOrigen: currentUser,
@@ -1575,7 +1575,7 @@ function guardarCopia(){
 
   const paquete={
     app:"FinanzasSimple",
-    version:"V16_3_id_movimientos",
+    version:"V17_1_estabilidad",
     creado:new Date().toISOString(),
     tipo:"movimientos",
     modo:"acumulativo_sin_repetir",
@@ -1801,7 +1801,7 @@ function guardarBackupCompleto(){
   else{ datos[currentUser]=datosDeUsuario(currentUser); }
   const backup={
     app:"FinanzasSimple",
-    version:"V16_3_id_movimientos",
+    version:"V17_1_estabilidad",
     creado:new Date().toISOString(),
     tipo:admin ? "backup_completo" : "backup_usuario",
     usuarioActual:currentUser,
@@ -2568,7 +2568,7 @@ fsPaqueteDatos = function(){
   prepararMovimientosParaProteccion();
   return {
     app:"FinanzaSimple",
-    version:"V16_3_id_movimientos",
+    version:"V17_1_estabilidad",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
     syncMarker: (typeof fsLeerMarkerLocalV171 === "function" ? (fsLeerMarkerLocalV171() || fsCrearMarkerLocalV171("foto")) : null),
@@ -2765,7 +2765,7 @@ fsSyncPanelHTML = function(){
     <div class="adminBox" style="border-color:${border};background:${color};">
       <b>Sincronización entre dispositivos</b><br>
       <div class="muted">${msg}</div>
-      <div class="helper">V16.3: sincronización manual + ID de movimiento. No hay intentos ocultos de fondo.</div>
+      <div class="helper">V17.1 ESTABILIDAD: sincronización manual + ID de movimiento. No hay intentos ocultos de fondo.</div>
       <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Cambiar URL' : 'Activar sincronización'}</button>
       <button onclick="fsSincronizarAhora()" style="background:#0f766e">Actualizar ahora</button>
     </div>
@@ -2871,7 +2871,7 @@ const fsPaqueteDatosBaseV163 = fsPaqueteDatos;
 fsPaqueteDatos = function(){
   (Array.isArray(movs)?movs:[]).forEach(fsAsegurarIdentidadMovimientoV163);
   const pkg = fsPaqueteDatosBaseV163();
-  pkg.version = "V16_3_id_movimientos";
+  pkg.version = "V17_1_estabilidad";
   pkg.dispositivoOrigen = fsDeviceLabelV163();
   return pkg;
 };
@@ -2883,14 +2883,14 @@ proteccionEstadoHTML = function(){
     <div class="adminBox" style="border-color:#cfe4ff;background:#f7fbff;">
       <b>Identificación de este dispositivo</b><br>
       <div class="muted">Los movimientos nuevos creados acá salen con origen: <span class="deviceBadge">${disp}</span></div>
-      <div class="helper">V16.3: cada movimiento tiene un ID corto visible, por ejemplo PC-0001 o CELU-0003. Editar detalle, fecha o monto no cambia ese ID.</div>
+      <div class="helper">V17.1 ESTABILIDAD: cada movimiento tiene un ID corto visible, por ejemplo PC-0001 o CELU-0003. Editar detalle, fecha o monto no cambia ese ID.</div>
       <button onclick="fsCambiarDeviceLabelV163()" style="background:#34495e">Cambiar PC/CELU/TABLET</button>
     </div>
     <hr>`;
 };
 const fsSyncPanelHTMLBaseV163 = fsSyncPanelHTML;
 fsSyncPanelHTML = function(){
-  return fsSyncPanelHTMLBaseV163().replace("V16.3: sincronización manual + ID de movimiento. No hay intentos ocultos de fondo.", "V16.3: sincronización manual + ID visible por movimiento. No hay intentos ocultos de fondo.");
+  return fsSyncPanelHTMLBaseV163().replace("V17.1 ESTABILIDAD: sincronización manual + ID de movimiento. No hay intentos ocultos de fondo.", "V17.1 ESTABILIDAD: sincronización manual + ID visible por movimiento. No hay intentos ocultos de fondo.");
 };
 try{ (Array.isArray(movs)?movs:[]).forEach(fsAsegurarIdentidadMovimientoV163); }catch(e){}
 
@@ -2908,7 +2908,7 @@ window.guardarExcel = guardarExcel;
 window.guardarCSV = guardarCSV;
 
 
-/* V16.5 TEST - Actualización automática al volver a la app
+/* V17.1 ESTABILIDAD - Actualización automática al volver a la app
    Objetivo de prueba:
    - NO sincroniza cada X segundos.
    - NO toca Apps Script.
