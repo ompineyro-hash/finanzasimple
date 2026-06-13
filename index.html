@@ -8,16 +8,16 @@
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
-.container{padding:10px;}
-.top{display:flex;gap:10px;margin:10px 0;}
-.card{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}
-.value{font-weight:bold;font-size:1.15em}
+.container{padding:6px;}
+.top{display:flex;gap:6px;margin:6px 0;}
+.card{flex:1;background:white;padding:6px;border-radius:10px;text-align:center;}
+.value{font-weight:bold;font-size:1.05em}
 .value.balance-pos{color:#1f8b4c}
 .value.balance-neg{color:#c0392b}
 .value.balance-zero{color:#666}
 .value.ingresos{color:#1f8b4c}
 .value.gastos{color:#c0392b}
-button{padding:7px 10px;border-radius:8px;border:none;background:#3498db;color:white;margin:4px;cursor:pointer}
+button{padding:5px 8px;border-radius:8px;border:none;background:#3498db;color:white;margin:3px;cursor:pointer}
 .listItem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #eee}
 .listItemName{flex:1;min-width:0;word-break:break-word}
 .smallBtn{padding:2px 6px;font-size:11px;margin:0 0 0 2px;min-height:24px;}
@@ -98,7 +98,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 .userBadge{font-size:13px;background:rgba(255,255,255,.16);padding:6px 10px;border-radius:999px;}
 .logoutBtn{background:#e67e22;margin:0;padding:6px 10px;}
 
-.searchBox{background:white;border-radius:10px;padding:10px;margin:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.searchBox{background:white;border-radius:10px;padding:6px;margin:6px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .searchBox label{font-size:13px;color:#555;font-weight:bold;}
 .searchBox select{width:auto;min-width:130px;margin:0;}
 .searchBox input{width:220px;max-width:100%;margin:0;}
@@ -249,7 +249,7 @@ td.accion button{
 <div class="card"><span data-i18n="expensePlural">Gastos</span><div id="gas" class="value"></div></div>
 </div>
 
-<div style="text-align:center">
+<div style="text-align:center;margin:4px 0;">
 <button onclick="cambiarMes(-1)">◀</button>
 <span id="mes"></span>
 <button onclick="cambiarMes(1)">▶</button>
