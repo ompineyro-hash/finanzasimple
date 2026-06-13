@@ -25,16 +25,16 @@ button{padding:5px 8px;border-radius:8px;border:none;background:#3498db;color:wh
 .muted{font-size:12px;color:#666}
 .tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 table{min-width:660px;width:100%;background:white;border-collapse:collapse;table-layout:fixed;}
-th,td{padding:2px 4px;border-bottom:1px solid #eee;text-align:left;font-size:14px;line-height:1.05;vertical-align:middle;}
-tbody td{height:18px;}
+th,td{padding:1px 4px;border-bottom:1px solid #eee;text-align:left;font-size:14px;line-height:1.15;vertical-align:middle;}
+tbody td{height:auto;}
 
-th:nth-child(1), td:nth-child(1){width:74px;white-space:nowrap;}   /* Fecha */
-th:nth-child(2), td:nth-child(2){width:58px;white-space:nowrap;}   /* Tipo */
+th:nth-child(1), td:nth-child(1){width:68px;white-space:nowrap;}   /* Fecha */
+th:nth-child(2), td:nth-child(2){width:52px;white-space:nowrap;}   /* Tipo */
 th:nth-child(6), td:nth-child(6){width:132px;white-space:nowrap;}  /* Monto: puede crecer */
-th:nth-child(7), td:nth-child(7){width:70px;white-space:nowrap;}   /* Acción */
+th:nth-child(7), td:nth-child(7){width:58px;white-space:nowrap;}   /* Acción */
 
-th:nth-child(3), td:nth-child(3){width:104px;}  /* Cuenta */
-th:nth-child(4), td:nth-child(4){width:104px;}  /* Categoría */
+th:nth-child(3), td:nth-child(3){width:96px;}  /* Cuenta */
+th:nth-child(4), td:nth-child(4){width:96px;}  /* Categoría */
 th:nth-child(5), td:nth-child(5){width:auto;word-break:break-word;}   /* Detalle */
 
 th.monto,td.monto{text-align:right}
@@ -169,7 +169,7 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
 .typeWarning b{display:block;margin-bottom:3px}
 
 tbody tr{
-  height:20px;
+  height:auto;
 }
 td.accion button{
   padding:2px 6px !important;
@@ -211,7 +211,7 @@ td.accion button{
   }
 }
 
-.movIdBadge{display:inline-block;font-size:10px;color:#34495e;background:#eef6ff;border:1px solid #d8e9f8;border-radius:999px;padding:1px 5px;margin:0 4px 2px 0;white-space:nowrap;}
+.movIdBadge{display:none!important;}
 .deviceBadge{display:inline-block;font-size:12px;color:#1f4f8b;background:#eaf4ff;border:1px solid #cfe4ff;border-radius:999px;padding:3px 7px;margin-top:4px;}
 
 </style>
