@@ -791,10 +791,8 @@ function renderTrial(){
   const t = trialInfo();
 
   if(t.desarrollo){
-    b.style.display="block";
-    b.style.background="#eaf4ff";
-    b.style.color="#1f4f8b";
-    b.innerHTML="🔧 FinanzaSimple V17.1 ESTABILIDAD: ID único por movimiento y origen PC/CELU/TABLET para seguir la sincronización.";
+    b.style.display="none";
+    b.innerHTML="";
     return;
   }
 
@@ -959,11 +957,7 @@ function mostrarEstadoAutoBackup(){
   if(!box || !currentUser) return;
   const fechaAuto=localStorage.getItem(claveUsuario("auto_backup_fecha"));
   if(!fechaAuto){ box.style.display="none"; return; }
-  const d=new Date(fechaAuto);
-  const hora=isNaN(d.getTime()) ? "" : " " + d.toLocaleString(tr("monthLocale"));
-  const syncSt = (typeof fsGetSyncStatus === "function") ? fsGetSyncStatus() : {};
-  const syncTxt = syncSt && syncSt.txt ? "<br><span style='font-weight:normal'>🔄 " + escapeHTML(syncSt.txt) + "</span>" : "";
-  box.innerHTML=(tr("autoBackupSaved") || "✔ Copia interna actualizada automáticamente.") + hora + "<br><span style='font-weight:normal'>" + (tr("autoBackupLine") || "Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas.") + "</span>" + syncTxt;
+  box.innerHTML="<span style='font-weight:normal'>" + (tr("autoBackupLine") || "Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas.") + "</span>";
   box.style.display="block";
 }
 
@@ -3107,7 +3101,7 @@ fsProgramarSubida = function(){
   fsMarcarPendienteV17("guardar");
   clearTimeout(fsNucleoSyncTimerV17);
   fsNucleoSyncTimerV17 = setTimeout(()=>fsNucleoNivelarV17("guardar"), 1500);
-  fsEstadoSimpleV17("💾 Guardado local. Preparando sincronización con el núcleo...", "");
+  // Mensaje técnico oculto en pantalla principal durante limpieza.
   return true;
 };
 
