@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzaSimple V17.1 – Control de gastos</title>
+<title>FinanzaSimple V17.2 FINAL – Seguridad y Caja Negra</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -33,8 +33,8 @@ th:nth-child(2), td:nth-child(2){width:52px;white-space:nowrap;}   /* Tipo */
 th:nth-child(6), td:nth-child(6){width:132px;white-space:nowrap;}  /* Monto: puede crecer */
 th:nth-child(7), td:nth-child(7){width:58px;white-space:nowrap;}   /* Acción */
 
-th:nth-child(3), td:nth-child(3){width:96px;}  /* Cuenta */
-th:nth-child(4), td:nth-child(4){width:96px;}  /* Categoría */
+th:nth-child(3), td:nth-child(3){width:112px;}  /* Cuenta */
+th:nth-child(4), td:nth-child(4){width:112px;}  /* Categoría */
 th:nth-child(5), td:nth-child(5){width:auto;word-break:break-word;}   /* Detalle */
 
 th.monto,td.monto{text-align:right}
@@ -159,8 +159,8 @@ input,select{width:100%;padding:8px;margin:5px 0;box-sizing:border-box;}
   tbody td{height:21px;}
   th:nth-child(1), td:nth-child(1){width:70px;}
   th:nth-child(2), td:nth-child(2){width:54px;}
-  th:nth-child(3), td:nth-child(3){width:96px;}
-  th:nth-child(4), td:nth-child(4){width:96px;}
+  th:nth-child(3), td:nth-child(3){width:108px;}
+  th:nth-child(4), td:nth-child(4){width:108px;}
   th:nth-child(6), td:nth-child(6){width:118px;}
   th:nth-child(7), td:nth-child(7){width:64px;}
 }
@@ -253,14 +253,14 @@ td.accion button{
     <input id="login_user" data-i18n-placeholder="user" placeholder="Usuario" autocomplete="username">
     <input id="login_pass" type="password" data-i18n-placeholder="password" placeholder="Clave" autocomplete="current-password">
     <button onclick="login()" style="width:100%;margin:8px 0 0 0;" data-i18n="enter">Entrar</button>
-    <button onclick="crearUsuarioDesdeLogin()" style="width:100%;margin:8px 0 0 0;background:#27ae60;" data-i18n="createUser">Crear usuario</button>
+    <!-- V17.2: creación de usuarios bloqueada desde la pantalla inicial. Solo admin crea usuarios desde Config. -->
     <div id="loginError" class="errorBox"></div>
-    <div class="helper" data-i18n-html="loginHelp">Si es tu primera vez, tocá <b>Crear usuario</b> y empezá tu prueba.</div>
+    <div class="helper" data-i18n-html="loginHelp">Pedí tu usuario al administrador de la app.</div>
   </div>
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V17.1 TEST MARCADOR</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
+<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V17.2 FINAL</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
 
 <div class="container">
 
@@ -293,7 +293,7 @@ td.accion button{
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarExcel()" style="background:#16a085">📊 <span data-i18n="exportExcel">Excel</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCSV()" style="background:#2c7be5">📄 <span data-i18n="exportCSV">CSV</span></button>
 <button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToImport'));return;} cargarCopia()" style="background:#7f8c8d">📂 <span data-i18n="import">Importar</span></button>
-<button onclick="fsSincronizarAhora()" style="background:#0f766e">🔄 Actualizar ahora</button>
+<button onclick="fsSincronizarAhora()" style="background:#0f766e">📦 Verificar datos</button>
 <button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none!important;background:#f39c12">🧪 <span data-i18n="example">Ejemplo</span></button>
 
 <div class="searchBox">
@@ -337,9 +337,9 @@ td.accion button{
 <script>
 
 const I18N = {
-  es:{appTitle:"FinanzaSimple – Control de gastos",loginSubtitle:"Ingreso por usuario",user:"Usuario",password:"Clave",enter:"Entrar",createUser:"Crear usuario",loginHelp:"Si es tu primera vez, tocá <b>Crear usuario</b> y empezá tu prueba.",help:"Ayuda",activate:"Activar",logout:"Salir",balance:"Balance",incomePlural:"Ingresos",expensePlural:"Gastos",newBtn:"Nuevo",configShort:"Config",analysis:"Análisis",export:"Guardar copia",import:"Recuperar datos",example:"Ejemplo",search:"Buscar",all:"Todo",date:"Fecha",type:"Tipo",account:"Cuenta",category:"Categoría",detail:"Detalle",amount:"Monto",action:"Acción",clear:"Limpiar",searchPlaceholder:"Escribir búsqueda...",searchNote:"La búsqueda solo filtra la lista visible, no borra datos.",close:"Cerrar",window:"Ventana",newMovement:"Nuevo movimiento",configuration:"Configuración",quickHelp:"Ayuda rápida",monthLocale:"es-AR",income:"Ingreso",expense:"Gasto",selectAccount:"-- Cuenta --",selectCategory:"-- Categoría --",save:"Guardar",configHelp:"Cuenta y categoría se cargan desde Config.",startTrialToAdd:"Iniciá la prueba para cargar movimientos",startTrialToConfig:"Iniciá la prueba para usar configuración",startTrialToAnalysis:"Iniciá la prueba para ver análisis",startTrialToExport:"Iniciá la prueba para exportar",startTrialToImport:"Iniciá la prueba para importar",noResults:"No hay resultados para esa búsqueda. Probá limpiar o cambiar el filtro.",noMovements:"No hay movimientos cargados en este mes. Usá <b>+ Nuevo</b> para cargar el primero.",movements:"movimientos",visible:"visibles",of:"de"},
-  pt:{appTitle:"FinanzaSimple – Controle de gastos",loginSubtitle:"Entrada por usuário",user:"Usuário",password:"Senha",enter:"Entrar",createUser:"Criar usuário",loginHelp:"Se for sua primeira vez, toque em <b>Criar usuário</b> e comece seu teste.",help:"Ajuda",activate:"Ativar",logout:"Sair",balance:"Saldo",incomePlural:"Receitas",expensePlural:"Despesas",newBtn:"Novo",configShort:"Config",analysis:"Análise",export:"Salvar cópia",import:"Recuperar dados",example:"Exemplo",search:"Buscar",all:"Tudo",date:"Data",type:"Tipo",account:"Conta",category:"Categoria",detail:"Detalhe",amount:"Valor",action:"Ação",clear:"Limpar",searchPlaceholder:"Digite a busca...",searchNote:"A busca só filtra a lista visível, não apaga dados.",close:"Fechar",window:"Janela",newMovement:"Novo movimento",configuration:"Configuração",quickHelp:"Ajuda rápida",monthLocale:"pt-BR",income:"Receita",expense:"Despesa",selectAccount:"-- Conta --",selectCategory:"-- Categoria --",save:"Salvar",configHelp:"Conta e categoria são carregadas em Config.",startTrialToAdd:"Inicie o teste para lançar movimentos",startTrialToConfig:"Inicie o teste para usar configuração",startTrialToAnalysis:"Inicie o teste para ver análise",startTrialToExport:"Inicie o teste para exportar",startTrialToImport:"Inicie o teste para importar",noResults:"Não há resultados para essa busca. Tente limpar ou trocar o filtro.",noMovements:"Não há movimentos lançados neste mês. Use <b>+ Novo</b> para lançar o primeiro.",movements:"movimentos",visible:"visíveis",of:"de"},
-  en:{appTitle:"FinanzaSimple – Expense control",loginSubtitle:"User login",user:"User",password:"Password",enter:"Log in",createUser:"Create user",loginHelp:"If this is your first time, tap <b>Create user</b> and start your trial.",help:"Help",activate:"Activate",logout:"Log out",balance:"Balance",incomePlural:"Income",expensePlural:"Expenses",newBtn:"New",configShort:"Settings",analysis:"Analysis",export:"Save copy",import:"Recover data",example:"Example",search:"Search",all:"All",date:"Date",type:"Type",account:"Account",category:"Category",detail:"Detail",amount:"Amount",action:"Action",clear:"Clear",searchPlaceholder:"Type to search...",searchNote:"Search only filters the visible list; it does not delete data.",close:"Close",window:"Window",newMovement:"New movement",configuration:"Settings",quickHelp:"Quick help",monthLocale:"en-US",income:"Income",expense:"Expense",selectAccount:"-- Account --",selectCategory:"-- Category --",save:"Save",configHelp:"Account and category are loaded from Settings.",startTrialToAdd:"Start the trial to add movements",startTrialToConfig:"Start the trial to use settings",startTrialToAnalysis:"Start the trial to view analysis",startTrialToExport:"Start the trial to export",startTrialToImport:"Start the trial to import",noResults:"No results for that search. Try clearing it or changing the filter.",noMovements:"No movements loaded for this month. Use <b>+ New</b> to add the first one.",movements:"movements",visible:"visible",of:"of"}
+  es:{appTitle:"FinanzaSimple – Control de gastos",loginSubtitle:"Ingreso por usuario",user:"Usuario",password:"Clave",enter:"Entrar",createUser:"Crear usuario",loginHelp:"Pedí tu usuario al administrador de la app.",help:"Ayuda",activate:"Activar",logout:"Salir",balance:"Balance",incomePlural:"Ingresos",expensePlural:"Gastos",newBtn:"Nuevo",configShort:"Config",analysis:"Análisis",export:"Guardar copia",import:"Recuperar datos",example:"Ejemplo",search:"Buscar",all:"Todo",date:"Fecha",type:"Tipo",account:"Cuenta",category:"Categoría",detail:"Detalle",amount:"Monto",action:"Acción",clear:"Limpiar",searchPlaceholder:"Escribir búsqueda...",searchNote:"La búsqueda solo filtra la lista visible, no borra datos.",close:"Cerrar",window:"Ventana",newMovement:"Nuevo movimiento",configuration:"Configuración",quickHelp:"Ayuda rápida",monthLocale:"es-AR",income:"Ingreso",expense:"Gasto",selectAccount:"-- Cuenta --",selectCategory:"-- Categoría --",save:"Guardar",configHelp:"Cuenta y categoría se cargan desde Config.",startTrialToAdd:"Iniciá la prueba para cargar movimientos",startTrialToConfig:"Iniciá la prueba para usar configuración",startTrialToAnalysis:"Iniciá la prueba para ver análisis",startTrialToExport:"Iniciá la prueba para exportar",startTrialToImport:"Iniciá la prueba para importar",noResults:"No hay resultados para esa búsqueda. Probá limpiar o cambiar el filtro.",noMovements:"No hay movimientos cargados en este mes. Usá <b>+ Nuevo</b> para cargar el primero.",movements:"movimientos",visible:"visibles",of:"de"},
+  pt:{appTitle:"FinanzaSimple – Controle de gastos",loginSubtitle:"Entrada por usuário",user:"Usuário",password:"Senha",enter:"Entrar",createUser:"Criar usuário",loginHelp:"Peça seu usuário ao administrador da app.",help:"Ajuda",activate:"Ativar",logout:"Sair",balance:"Saldo",incomePlural:"Receitas",expensePlural:"Despesas",newBtn:"Novo",configShort:"Config",analysis:"Análise",export:"Salvar cópia",import:"Recuperar dados",example:"Exemplo",search:"Buscar",all:"Tudo",date:"Data",type:"Tipo",account:"Conta",category:"Categoria",detail:"Detalhe",amount:"Valor",action:"Ação",clear:"Limpar",searchPlaceholder:"Digite a busca...",searchNote:"A busca só filtra a lista visível, não apaga dados.",close:"Fechar",window:"Janela",newMovement:"Novo movimento",configuration:"Configuração",quickHelp:"Ajuda rápida",monthLocale:"pt-BR",income:"Receita",expense:"Despesa",selectAccount:"-- Conta --",selectCategory:"-- Categoria --",save:"Salvar",configHelp:"Conta e categoria são carregadas em Config.",startTrialToAdd:"Inicie o teste para lançar movimentos",startTrialToConfig:"Inicie o teste para usar configuração",startTrialToAnalysis:"Inicie o teste para ver análise",startTrialToExport:"Inicie o teste para exportar",startTrialToImport:"Inicie o teste para importar",noResults:"Não há resultados para essa busca. Tente limpar ou trocar o filtro.",noMovements:"Não há movimentos lançados neste mês. Use <b>+ Novo</b> para lançar o primeiro.",movements:"movimentos",visible:"visíveis",of:"de"},
+  en:{appTitle:"FinanzaSimple – Expense control",loginSubtitle:"User login",user:"User",password:"Password",enter:"Log in",createUser:"Create user",loginHelp:"Ask the app administrator for your user.",help:"Help",activate:"Activate",logout:"Log out",balance:"Balance",incomePlural:"Income",expensePlural:"Expenses",newBtn:"New",configShort:"Settings",analysis:"Analysis",export:"Save copy",import:"Recover data",example:"Example",search:"Search",all:"All",date:"Date",type:"Type",account:"Account",category:"Category",detail:"Detail",amount:"Amount",action:"Action",clear:"Clear",searchPlaceholder:"Type to search...",searchNote:"Search only filters the visible list; it does not delete data.",close:"Close",window:"Window",newMovement:"New movement",configuration:"Settings",quickHelp:"Quick help",monthLocale:"en-US",income:"Income",expense:"Expense",selectAccount:"-- Account --",selectCategory:"-- Category --",save:"Save",configHelp:"Account and category are loaded from Settings.",startTrialToAdd:"Start the trial to add movements",startTrialToConfig:"Start the trial to use settings",startTrialToAnalysis:"Start the trial to view analysis",startTrialToExport:"Start the trial to export",startTrialToImport:"Start the trial to import",noResults:"No results for that search. Try clearing it or changing the filter.",noMovements:"No movements loaded for this month. Use <b>+ New</b> to add the first one.",movements:"movements",visible:"visible",of:"of"}
 };
 
 Object.assign(I18N.es,{
@@ -424,19 +424,19 @@ Object.assign(I18N.es,{
   exportExcel:"Excel", exportExcelDone:"✔ Archivo Excel generado en Descargas: <b>{name}</b>.", exportCSV:"CSV", exportCSVDone:"✔ Archivo CSV generado en Descargas: <b>{name}</b>.",
   undoDelete:"↩ Deshacer borrado", undoDone:"✔ Borrado deshecho. El movimiento volvió a la lista.", undoNothing:"No hay un borrado reciente para deshacer.", deletedCanUndo:"✔ Movimiento borrado. Podés deshacerlo si fue un error.",
   helpCopyTitle:"Guardar copia y recuperar datos", helpCopy1:"Guardar copia crea un archivo con tus movimientos actuales. Es una foto del momento: no reemplaza copias anteriores.", helpCopy2:"Recuperar datos compara la copia con lo que ya tenés y muestra solo los movimientos que faltan.", helpCopy3:"No duplica movimientos y no pisa datos existentes.", helpCopy4:"Si borrás un movimiento, solo podés recuperarlo desde una copia anterior donde todavía existía.", helpCopy5:"Si guardás una copia después de borrar, ese movimiento ya no estará en esa copia nueva.",
-  helpUndoTitle:"Deshacer último borrado", helpUndo1:"Si borrás un movimiento por error, aparece la opción Deshacer borrado.", helpUndo2:"Deshacer recupera solo el último movimiento borrado, sin buscar archivos.", helpExcelTitle:"Exportar a Excel", helpExcel1:"Exportar Excel genera una planilla simple con Fecha, Tipo, Cuenta, Categoría, Detalle y Monto.", helpExcel2:"Es para revisar o enviar datos. No incluye usuarios, claves ni datos técnicos.", helpCSVTitle:"Exportar CSV", helpCSV1:"Exportar CSV genera un archivo simple, liviano y compatible con Google Sheets, Excel viejo y otros sistemas.", helpCSV2:"Es la opción recomendada cuando no hay Excel instalado o cuando querés compartir datos sin problemas.", autoBackupSaved:"✔ Copia interna actualizada automáticamente.", autoBackupLine:"Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas."
+  helpUndoTitle:"Deshacer último borrado", helpUndo1:"Si borrás un movimiento por error, aparece la opción Deshacer borrado.", helpUndo2:"Deshacer recupera solo el último movimiento borrado, sin buscar archivos.", helpExcelTitle:"Exportar a Excel", helpExcel1:"Exportar Excel genera una planilla simple con Fecha, Tipo, Cuenta, Categoría, Detalle y Monto.", helpExcel2:"Es para revisar o enviar datos. No incluye usuarios, claves ni datos técnicos.", helpCSVTitle:"Exportar CSV", helpCSV1:"Exportar CSV genera un archivo simple, liviano y compatible con Google Sheets, Excel viejo y otros sistemas.", helpCSV2:"Es la opción recomendada cuando no hay Excel instalado o cuando querés compartir datos sin problemas.", autoBackupSaved:"✔ Copia interna actualizada automáticamente.", autoBackupLine:"📦 Tus datos están protegidos automáticamente en este dispositivo."
 });
 Object.assign(I18N.pt,{
   exportExcel:"Excel", exportExcelDone:"✔ Arquivo Excel gerado em Downloads: <b>{name}</b>.", exportCSV:"CSV", exportCSVDone:"✔ Arquivo CSV gerado em Downloads: <b>{name}</b>.",
   undoDelete:"↩ Desfazer exclusão", undoDone:"✔ Exclusão desfeita. O movimento voltou para a lista.", undoNothing:"Não há uma exclusão recente para desfazer.", deletedCanUndo:"✔ Movimento excluído. Você pode desfazer se foi um erro.",
   helpCopyTitle:"Salvar cópia e recuperar dados", helpCopy1:"Salvar cópia cria um arquivo com seus movimentos atuais. É uma foto do momento: não substitui cópias anteriores.", helpCopy2:"Recuperar dados compara a cópia com o que você já tem e mostra somente os movimentos que faltam.", helpCopy3:"Não duplica movimentos e não sobrescreve dados existentes.", helpCopy4:"Se você excluir um movimento, só poderá recuperá-lo a partir de uma cópia anterior onde ele ainda existia.", helpCopy5:"Se você salvar uma cópia depois de excluir, esse movimento já não estará nessa nova cópia.",
-  helpUndoTitle:"Desfazer última exclusão", helpUndo1:"Se você excluir um movimento por engano, aparece a opção Desfazer exclusão.", helpUndo2:"Desfazer recupera somente o último movimento excluído, sem procurar arquivos.", helpExcelTitle:"Exportar para Excel", helpExcel1:"Exportar Excel gera uma planilha simples com Data, Tipo, Conta, Categoria, Detalhe e Valor.", helpExcel2:"Serve para revisar ou enviar dados. Não inclui usuários, senhas nem dados técnicos.", helpCSVTitle:"Exportar CSV", helpCSV1:"Exportar CSV gera um arquivo simples, leve e compatível com Google Sheets, Excel antigo e outros sistemas.", helpCSV2:"É a opção recomendada quando não há Excel instalado ou quando você quer compartilhar dados sem problemas.", autoBackupSaved:"✔ Cópia interna atualizada automaticamente.", autoBackupLine:"Seus dados são salvos automaticamente neste dispositivo. As cópias manuais são baixadas em Downloads."
+  helpUndoTitle:"Desfazer última exclusão", helpUndo1:"Se você excluir um movimento por engano, aparece a opção Desfazer exclusão.", helpUndo2:"Desfazer recupera somente o último movimento excluído, sem procurar arquivos.", helpExcelTitle:"Exportar para Excel", helpExcel1:"Exportar Excel gera uma planilha simples com Data, Tipo, Conta, Categoria, Detalhe e Valor.", helpExcel2:"Serve para revisar ou enviar dados. Não inclui usuários, senhas nem dados técnicos.", helpCSVTitle:"Exportar CSV", helpCSV1:"Exportar CSV gera um arquivo simples, leve e compatível com Google Sheets, Excel antigo e outros sistemas.", helpCSV2:"É a opção recomendada quando não há Excel instalado ou quando você quer compartilhar dados sem problemas.", autoBackupSaved:"✔ Cópia interna atualizada automaticamente.", autoBackupLine:"📦 Seus dados estão protegidos automaticamente neste dispositivo."
 });
 Object.assign(I18N.en,{
   exportExcel:"Excel", exportExcelDone:"✔ Excel file created in Downloads: <b>{name}</b>.", exportCSV:"CSV", exportCSVDone:"✔ CSV file created in Downloads: <b>{name}</b>.",
   undoDelete:"↩ Undo delete", undoDone:"✔ Delete undone. The movement returned to the list.", undoNothing:"There is no recent delete to undo.", deletedCanUndo:"✔ Movement deleted. You can undo it if it was a mistake.",
   helpCopyTitle:"Save copy and recover data", helpCopy1:"Save copy creates a file with your current movements. It is a snapshot of the moment: it does not replace previous copies.", helpCopy2:"Recover data compares the copy with what you already have and shows only missing movements.", helpCopy3:"It does not duplicate movements and does not overwrite existing data.", helpCopy4:"If you delete a movement, you can only recover it from an earlier copy where it still existed.", helpCopy5:"If you save a copy after deleting, that movement will no longer be in the new copy.",
-  helpUndoTitle:"Undo last delete", helpUndo1:"If you delete a movement by mistake, the Undo delete option appears.", helpUndo2:"Undo restores only the last deleted movement, without looking for files.", helpExcelTitle:"Export to Excel", helpExcel1:"Export Excel creates a simple spreadsheet with Date, Type, Account, Category, Detail and Amount.", helpExcel2:"It is for reviewing or sending data. It does not include users, passwords or technical data.", helpCSVTitle:"Export CSV", helpCSV1:"Export CSV creates a simple, light file compatible with Google Sheets, old Excel and other systems.", helpCSV2:"It is recommended when Excel is not installed or when you want to share data without issues.", autoBackupSaved:"✔ Internal copy updated automatically.", autoBackupLine:"Your data is saved automatically on this device. Manual copies are downloaded to Downloads."
+  helpUndoTitle:"Undo last delete", helpUndo1:"If you delete a movement by mistake, the Undo delete option appears.", helpUndo2:"Undo restores only the last deleted movement, without looking for files.", helpExcelTitle:"Export to Excel", helpExcel1:"Export Excel creates a simple spreadsheet with Date, Type, Account, Category, Detail and Amount.", helpExcel2:"It is for reviewing or sending data. It does not include users, passwords or technical data.", helpCSVTitle:"Export CSV", helpCSV1:"Export CSV creates a simple, light file compatible with Google Sheets, old Excel and other systems.", helpCSV2:"It is recommended when Excel is not installed or when you want to share data without issues.", autoBackupSaved:"✔ Internal copy updated automatically.", autoBackupLine:"📦 Your data is automatically protected on this device."
 });
 
 Object.assign(I18N.es,{
@@ -593,7 +593,7 @@ function fsPaqueteDatos(){
   prepararMovimientosParaProteccion();
   return {
     app:"FinanzaSimple",
-    version:"V17_1_estabilidad",
+    version:"V17_2_seguridad_caja_negra",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
     syncMarker: (typeof fsLeerMarkerLocalV171 === "function" ? (fsLeerMarkerLocalV171() || fsCrearMarkerLocalV171("foto")) : null),
@@ -656,11 +656,11 @@ async function fsSyncDescargar(){
       const cambio = fsAplicarPaqueteRemoto(data.paquete);
       if(cambio) render();
     }
-    fsSetSyncStatus("Tus datos están protegidos. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
+    fsSetSyncStatus("🟢 Tus datos están protegidos. Última verificación: " + new Date().toLocaleString("es-AR"), "ok");
     return true;
   }catch(e){
     console.warn("No se pudo descargar sincronización", e);
-    fsSetSyncStatus("Sin conexión con la copia protegida. Tus datos siguen guardados en este dispositivo.", "warn");
+    fsSetSyncStatus("🟠 No se pudo verificar la copia protegida. Tus datos siguen guardados en este dispositivo.", "warn");
     return false;
   }finally{
     fsSyncBusy = false;
@@ -677,13 +677,13 @@ async function fsSyncSubir(){
     });
     const data = await r.json();
     if(data && data.ok){
-      fsSetSyncStatus("Tus datos están protegidos. Última actualización: " + new Date().toLocaleString("es-AR"), "ok");
+      fsSetSyncStatus("🟢 Tus datos están protegidos. Última verificación: " + new Date().toLocaleString("es-AR"), "ok");
       return true;
     }
     throw new Error("Respuesta no válida");
   }catch(e){
     console.warn("No se pudo subir sincronización", e);
-    fsSetSyncStatus("Guardado localmente. Se actualizará la copia protegida cuando haya conexión.", "warn");
+    fsSetSyncStatus("🟡 Tus cambios quedaron guardados en este dispositivo. Se protegerán entre dispositivos cuando haya conexión.", "warn");
     return false;
   }finally{
     fsSyncBusy = false;
@@ -700,7 +700,7 @@ async function fsSincronizarAhora(){
     alert("La protección entre dispositivos todavía no está activada para este usuario.");
     return;
   }
-  fsSetSyncStatus("Actualizando datos protegidos...", "");
+  fsSetSyncStatus("📦 Verificando y protegiendo tus datos...", "");
   await fsSyncDescargar();
   await fsSyncSubir();
   render();
@@ -714,12 +714,12 @@ function fsActivarSync(){
   const limpio = String(url||"").trim();
   if(!limpio){
     localStorage.removeItem(fsSyncUrlKey());
-    fsSetSyncStatus("Protección entre dispositivos desactivada.", "warn");
+    fsSetSyncStatus("🟠 Protección entre dispositivos desactivada.", "warn");
     mostrarEstadoAutoBackup();
     return;
   }
   localStorage.setItem(fsSyncUrlKey(), limpio);
-  fsSetSyncStatus("Protección entre dispositivos activada.", "ok");
+  fsSetSyncStatus("🟢 Protección entre dispositivos activada.", "ok");
   fsSincronizarAhora();
 }
 function fsSyncPanelHTML(){
@@ -727,16 +727,16 @@ function fsSyncPanelHTML(){
   const activo = fsSyncEnabled();
   const msg = activo
     ? (st.txt || "Tus datos están protegidos entre dispositivos.")
-    : "Opcional: activá protección entre celular, computadora y tablet.";
+    : "Opcional: conectá tus dispositivos para mantener la misma información protegida.";
   const color = activo ? "#f4fff7" : "#f7fbff";
   const border = activo ? "#cdebd6" : "#d8e9f8";
   return `
     <div class="adminBox" style="border-color:${border};background:${color};">
-      <b>Protección entre dispositivos</b><br>
+      <b>📦 Protección de datos</b><br>
       <div class="muted">${msg}</div>
-      <div class="helper">Sincroniza al abrir, al guardar y cuando tocás actualizar. No trabaja todo el tiempo.</div>
-      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Cambiar protección' : 'Activar protección'}</button>
-      <button onclick="fsSincronizarAhora()" style="background:#3498db">Actualizar ahora</button>
+      <div class="helper">Tus cambios se protegen automáticamente. También podés verificar tus datos cuando lo necesites.</div>
+      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Modificar conexión' : 'Conectar dispositivos'}</button>
+      <button onclick="fsSincronizarAhora()" style="background:#3498db">Verificar datos</button>
     </div>
     <hr>`;
 }
@@ -752,9 +752,9 @@ function proteccionEstadoHTML(){
   }
   return `
     <div class="adminBox" style="border-color:#cdebd6;background:#f4fff7;">
-      <b>Protección automática</b><br>
+      <b>📦 Estado de tus datos</b><br>
       <div class="muted">${linea}</div>
-      <div class="helper">La app prepara tus datos para evitar repeticiones y pérdidas. No tenés que hacer nada.</div>
+      <div class="helper">FinanzaSimple guarda y prepara tu información para evitar repeticiones y pérdidas. No tenés que buscar archivos.</div>
     </div>
     <hr>`;
 }
@@ -782,7 +782,7 @@ function claveUsuario(parte){
   return claveUsuarioPorNombre(currentUser, parte);
 }
 
-const FS_DEV_MODE_V161 = true;
+const FS_DEV_MODE_V161 = false;
 const TRIAL_DAYS = 15;
 const ACTIVATION_CODE = "FS-ENTREGA-2026-7439";
 
@@ -918,12 +918,27 @@ function activarLicencia(){
   }
 }
 
+function generarUsuarioUID(){
+  const rnd = (crypto && crypto.getRandomValues)
+    ? Array.from(crypto.getRandomValues(new Uint32Array(2))).map(n=>n.toString(36)).join("")
+    : Math.random().toString(36).slice(2,12);
+  return "USR-" + Date.now().toString(36) + "-" + rnd;
+}
+
 function initUsuarios(){
   let usuarios = leerJSONSeguro("fs_v8_usuarios", null);
   if(!Array.isArray(usuarios) || !usuarios.length){
-    usuarios=[{usuario:"propietario", clave:"FS-7439-2026", admin:true}];
+    usuarios=[{usuario:"propietario", clave:"FS-7439-2026", admin:true, uid:generarUsuarioUID(), creadoEn:new Date().toISOString()}];
     localStorage.setItem("fs_v8_usuarios", JSON.stringify(usuarios));
+    return usuarios;
   }
+  let cambio=false;
+  usuarios.forEach(u=>{
+    if(!u.uid){ u.uid=generarUsuarioUID(); cambio=true; }
+    if(!u.creadoEn){ u.creadoEn=new Date().toISOString(); cambio=true; }
+    if(typeof u.admin !== "boolean"){ u.admin=!!u.admin; cambio=true; }
+  });
+  if(cambio) localStorage.setItem("fs_v8_usuarios", JSON.stringify(usuarios));
   return usuarios;
 }
 
@@ -963,7 +978,7 @@ function guardarCopiaInternaAutomatica(){
     if(!currentUser) return;
     const paquete={
       app:"FinanzasSimple",
-      version:"V17_1_estabilidad",
+      version:"V17_2_seguridad_caja_negra",
       creado:new Date().toISOString(),
       tipo:"copia_interna",
       usuarioOrigen: currentUser,
@@ -985,7 +1000,10 @@ function mostrarEstadoAutoBackup(){
   if(!box || !currentUser) return;
   const fechaAuto=localStorage.getItem(claveUsuario("auto_backup_fecha"));
   if(!fechaAuto){ box.style.display="none"; return; }
-  box.innerHTML="<span style='font-weight:normal'>" + (tr("autoBackupLine") || "Tus datos se guardan automáticamente en este dispositivo. Las copias manuales se descargan en Descargas.") + "</span>";
+  let fechaTxt="";
+  const d=new Date(fechaAuto);
+  if(!isNaN(d.getTime())) fechaTxt=" Última actualización: " + d.toLocaleString("es-AR") + ".";
+  box.innerHTML="<div style='background:#f4fff7;border:1px solid #cdebd6;color:#064a34;border-radius:10px;padding:8px;font-size:13px;'><b>📦 Tus datos están protegidos.</b><br><span style='font-weight:normal'>FinanzaSimple guarda tu información automáticamente." + fechaTxt + "</span></div>";
   box.style.display="block";
 }
 
@@ -1597,7 +1615,7 @@ function guardarCopia(){
 
   const paquete={
     app:"FinanzasSimple",
-    version:"V17_1_estabilidad",
+    version:"V17_2_seguridad_caja_negra",
     creado:new Date().toISOString(),
     tipo:"movimientos",
     modo:"acumulativo_sin_repetir",
@@ -1823,7 +1841,7 @@ function guardarBackupCompleto(){
   else{ datos[currentUser]=datosDeUsuario(currentUser); }
   const backup={
     app:"FinanzasSimple",
-    version:"V17_1_estabilidad",
+    version:"V17_2_seguridad_caja_negra",
     creado:new Date().toISOString(),
     tipo:admin ? "backup_completo" : "backup_usuario",
     usuarioActual:currentUser,
@@ -1909,8 +1927,12 @@ function limpiarDatosLocalesDeUsuario(usuario){
 }
 
 function inicializarUsuarioLimpio(usuario){
+  if(!usuario) return;
   limpiarDatosLocalesDeUsuario(usuario);
-  inicializarUsuarioLimpio(usuario);
+  localStorage.setItem(claveUsuarioPorNombre(usuario, "movs"), JSON.stringify([]));
+  localStorage.setItem(claveUsuarioPorNombre(usuario, "cuentas"), JSON.stringify([]));
+  localStorage.setItem(claveUsuarioPorNombre(usuario, "categorias"), JSON.stringify([]));
+  localStorage.setItem(claveUsuarioPorNombre(usuario, "moneda"), "$" );
 }
 
 function renderUsuariosConfig(){
@@ -1947,7 +1969,7 @@ function addUsuario(){
   if(usuario.toLowerCase()==="admin") return alert(tr("adminExists"));
   const usuarios=initUsuarios();
   if(usuarios.some(u=>u.usuario.toLowerCase()===usuario.toLowerCase())) return alert(tr("userExists"));
-  usuarios.push({usuario, clave, admin:false});
+  usuarios.push({usuario, clave, admin:false, uid:generarUsuarioUID(), creadoEn:new Date().toISOString()});
   guardarUsuarios(usuarios);
   inicializarUsuarioLimpio(usuario);
   alert(tr("userCreated"));
@@ -1988,61 +2010,8 @@ function borrarUsuario(i){
 
 
 function crearUsuarioDesdeLogin(){
-  const usuario=(login_user.value||"").trim();
-  const clave=(login_pass.value||"").trim();
-
-  if(!usuario || !clave){
-    loginError.style.display="block";
-    loginError.innerText="Para crear usuario, completá usuario y clave";
-    return;
-  }
-  if(usuario.length < 3){
-    loginError.style.display="block";
-    loginError.innerText="El usuario debe tener al menos 3 caracteres";
-    return;
-  }
-  if(clave.length < 4){
-    loginError.style.display="block";
-    loginError.innerText="La clave debe tener al menos 4 caracteres";
-    return;
-  }
-  if(usuario.includes(" ")){
-    loginError.style.display="block";
-    loginError.innerText="El usuario no puede tener espacios";
-    return;
-  }
-  if(usuario.toLowerCase()==="admin"){
-    loginError.style.display="block";
-    loginError.innerText="El usuario admin ya existe";
-    return;
-  }
-
-  const usuarios=initUsuarios();
-  if(usuarios.some(u=>u.usuario.toLowerCase()===usuario.toLowerCase())){
-    loginError.style.display="block";
-    loginError.innerText="Ese usuario ya existe. Usá Entrar.";
-    return;
-  }
-
-  usuarios.push({usuario, clave, admin:false});
-  guardarUsuarios(usuarios);
-  inicializarUsuarioLimpio(usuario);
-
-  currentUser=usuario;
-  cargarDatosUsuario();
-  loginScreen.style.display="none";
-  appScreen.style.display="block";
-  applyLang();
-  userBadge.innerText=tr("user") + ": " + currentUser + " (" + tr("roleUser") + ")";
-  login_pass.value="";
-  loginError.style.display="none";
-  closeModal();
-  render();
-  renderTrial();
-  bloquearSiTrialVencido();
-  if(fsSyncEnabled && fsSyncEnabled()){
-    setTimeout(()=>fsSyncDescargar(), 600);
-  }
+  loginError.style.display="block";
+  loginError.innerText="Por seguridad, los usuarios nuevos los crea el administrador desde Configuración.";
 }
 
 function login(){
@@ -2524,7 +2493,7 @@ function closeModal(){
 /* V16.3 - Sincronización manual limpia + ID por movimiento
    Objetivo: evitar intentos invisibles y separar roles:
    - Copia local automática: solo protege este dispositivo.
-   - Sincronización entre dispositivos: solo con botón Actualizar ahora.
+   - Sincronización entre dispositivos: solo con botón Verificar datos.
    - POST a Apps Script con no-cors para evitar bloqueo de respuesta del navegador.
    - Luego verifica con GET si la copia remota quedó escrita.
 */
@@ -2590,7 +2559,7 @@ fsPaqueteDatos = function(){
   prepararMovimientosParaProteccion();
   return {
     app:"FinanzaSimple",
-    version:"V17_1_estabilidad",
+    version:"V17_2_seguridad_caja_negra",
     usuario: currentUser,
     actualizado:new Date().toISOString(),
     syncMarker: (typeof fsLeerMarkerLocalV171 === "function" ? (fsLeerMarkerLocalV171() || fsCrearMarkerLocalV171("foto")) : null),
@@ -2743,14 +2712,14 @@ async function fsSyncCompletaV162(reason="manual"){
 
 // V16.2: no hay sincronización automática silenciosa.
 fsProgramarSubida = function(){
-  // Guardar sigue actualizando la copia local. La copia entre dispositivos se hace con el botón Actualizar ahora.
+  // Guardar sigue actualizando la copia local. La copia entre dispositivos se hace con el botón Verificar datos.
   return false;
 };
 
 fsSincronizarAhora = async function(){
   if(!currentUser){ alert("Primero entrá con tu usuario."); return; }
   if(!fsSyncEnabled()){
-    alert("La sincronización entre dispositivos todavía no está activada para este usuario.");
+    alert("La protección entre dispositivos todavía no está activada para este usuario.");
     return;
   }
   await fsSyncCompletaV162("manual");
@@ -2779,27 +2748,27 @@ fsSyncPanelHTML = function(){
   const st = fsGetSyncStatus();
   const activo = fsSyncEnabled();
   const msg = activo
-    ? (st.txt || "Sincronización lista. Tocá Actualizar ahora para cruzar datos con otros dispositivos.")
-    : "Opcional: activá una URL de Apps Script para sincronizar celular, computadora y tablet.";
+    ? (st.txt || "Sincronización lista. Tocá Verificar datos para cruzar datos con otros dispositivos.")
+    : "Opcional: conectá tus dispositivos para ver la misma información en celular, computadora o tablet.";
   const color = activo ? "#f4fff7" : "#f7fbff";
   const border = activo ? "#cdebd6" : "#d8e9f8";
   return `
     <div class="adminBox" style="border-color:${border};background:${color};">
-      <b>Sincronización entre dispositivos</b><br>
+      <b>📦 Protección de datos</b><br>
       <div class="muted">${msg}</div>
-      <div class="helper">V17.1 ESTABILIDAD: sincronización manual + ID de movimiento. No hay intentos ocultos de fondo.</div>
-      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Cambiar URL' : 'Activar sincronización'}</button>
-      <button onclick="fsSincronizarAhora()" style="background:#0f766e">Actualizar ahora</button>
+      <div class="helper">Tus datos se guardan primero en este dispositivo y luego se equilibran con tus otros equipos cuando verificás la protección.</div>
+      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Modificar conexión' : 'Conectar dispositivos'}</button>
+      <button onclick="fsSincronizarAhora()" style="background:#0f766e">Verificar datos</button>
     </div>
     <hr>`;
 };
 
 proteccionEstadoHTML = function(){
   const fechaAuto = localStorage.getItem(claveUsuario("auto_backup_fecha"));
-  let linea = "Copia local automática activa en este dispositivo.";
+  let linea = "📦 Tus datos están protegidos en este dispositivo.";
   if(fechaAuto){
     const d = new Date(fechaAuto);
-    if(!isNaN(d.getTime())) linea = "Copia local actualizada: " + d.toLocaleString("es-AR");
+    if(!isNaN(d.getTime())) linea = "📦 Tus datos están protegidos. Última actualización: " + d.toLocaleString("es-AR");
   }
   return `
     <div class="adminBox" style="border-color:#cdebd6;background:#f4fff7;">
@@ -2912,7 +2881,7 @@ proteccionEstadoHTML = function(){
 };
 const fsSyncPanelHTMLBaseV163 = fsSyncPanelHTML;
 fsSyncPanelHTML = function(){
-  return fsSyncPanelHTMLBaseV163().replace("V17.1 ESTABILIDAD: sincronización manual + ID de movimiento. No hay intentos ocultos de fondo.", "V17.1 ESTABILIDAD: sincronización manual + ID visible por movimiento. No hay intentos ocultos de fondo.");
+  return fsSyncPanelHTMLBaseV163().replace("Tus datos se guardan primero en este dispositivo y luego se equilibran con tus otros equipos cuando verificás la protección.", "V17.1 ESTABILIDAD: sincronización manual + ID visible por movimiento. No hay intentos ocultos de fondo.");
 };
 try{ (Array.isArray(movs)?movs:[]).forEach(fsAsegurarIdentidadMovimientoV163); }catch(e){}
 
@@ -2976,7 +2945,7 @@ window.addEventListener("focus", ()=>{
    - Todo cambio local marca "pendiente".
    - El núcleo intenta: bajar remoto -> fusionar -> subir foto nivelada -> bajar confirmación.
    - Si no hay conexión, queda pendiente y reintenta luego.
-   - Actualizar ahora queda como rescate manual.
+   - Verificar datos queda como rescate manual.
 */
 let fsNucleoSyncBusyV17 = false;
 let fsNucleoSyncTimerV17 = null;
@@ -3137,7 +3106,7 @@ fsProgramarSubida = function(){
 fsSincronizarAhora = async function(){
   if(!currentUser){ alert("Primero entrá con tu usuario."); return; }
   if(!fsSyncEnabled()){
-    alert("La sincronización entre dispositivos todavía no está activada para este usuario.");
+    alert("La protección entre dispositivos todavía no está activada para este usuario.");
     return;
   }
   fsMarcarPendienteV17("manual");
@@ -3192,17 +3161,17 @@ fsSyncPanelHTML = function(){
   const activo = fsSyncEnabled();
   const pendiente = fsTienePendienteV17();
   const msg = activo
-    ? (st.txt || (pendiente ? "Hay cambios pendientes de sincronizar." : "Núcleo listo para equilibrar dispositivos."))
-    : "Opcional: activá una URL de Apps Script para sincronizar celular, computadora y tablet.";
+    ? (st.txt || (pendiente ? "🟡 Hay cambios pendientes de proteger entre dispositivos." : "🟢 Tus datos están protegidos."))
+    : "Opcional: conectá tus dispositivos para mantener la misma información protegida.";
   const color = activo ? (pendiente ? "#fff9e8" : "#f4fff7") : "#f7fbff";
   const border = activo ? (pendiente ? "#f1d28a" : "#cdebd6") : "#d8e9f8";
   return `
     <div class="adminBox" style="border-color:${border};background:${color};">
-      <b>Sincronización núcleo V17</b><br>
+      <b>📦 Protección de datos</b><br>
       <div class="muted">${msg}</div>
-      <div class="helper">Todo cambio se guarda localmente y el núcleo intenta equilibrar PC, celular, tablet u otros dispositivos. La marca visible indica de dónde vino la última novedad. Si no hay conexión, queda pendiente.</div>
-      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Cambiar URL' : 'Activar sincronización'}</button>
-      <button onclick="fsSincronizarAhora()" style="background:#0f766e">Actualizar ahora</button>
+      <div class="helper">FinanzaSimple guarda primero en este dispositivo. Al verificar, equilibra la información con tus otros equipos. Si no hay conexión, queda pendiente sin perderse.</div>
+      <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Modificar conexión' : 'Conectar dispositivos'}</button>
+      <button onclick="fsSincronizarAhora()" style="background:#0f766e">📦 Verificar datos</button>
     </div>
     <hr>`;
 };
