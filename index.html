@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
-<title>FinanzaSimple V17.3 – Navegación OMP Suite</title>
+<title>FinanzaSimple V18.4 PRUEBA3 Caja Negra Vinculación</title>
 <style>
 body{font-family:Arial;margin:0;background:#eef2f5;}
 header{background:#34495e;color:white;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
@@ -253,14 +253,14 @@ td.accion button{
     <input id="login_user" data-i18n-placeholder="user" placeholder="Usuario" autocomplete="username">
     <input id="login_pass" type="password" data-i18n-placeholder="password" placeholder="Clave" autocomplete="current-password">
     <button onclick="login()" style="width:100%;margin:8px 0 0 0;" data-i18n="enter">Entrar</button>
-    <!-- V17.2: creación de usuarios bloqueada desde la pantalla inicial. Solo admin crea usuarios desde Config. -->
+    <button onclick="mostrarLoginAdmin()" style="width:100%;margin:6px 0 0 0;background:#8e44ad">🔐 Administración</button>
     <div id="loginError" class="errorBox"></div>
-    <div class="helper" data-i18n-html="loginHelp">Pedí tu usuario al administrador de la app.</div>
+    <div class="helper">Si ya tenés usuario, entrá arriba. Si no, podés crear uno nuevo.</div>
   </div>
 </div>
 
 <div id="appScreen" style="display:none;">
-<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V17.3</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="window.location.href='https://ompineyro-hash.github.io/omp-suite/'" style="background:#2c3e50">← OMP Suite</button><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
+<header><span data-i18n="appTitle">FinanzaSimple – Control de gastos</span><span class="userBadge" style="background:rgba(255,255,255,.10)">V18.4 PRUEBA3 · Caja negra + Vinculación</span><select id="langSelect" onchange="setLang(this.value)" style="width:auto;min-width:120px;margin:0;padding:6px;border-radius:8px;border:none;"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span id="userBadge" class="userBadge"></span><button onclick="openAyuda()">❓ <span data-i18n="help">Ayuda</span></button><button onclick="activarLicencia()" style="background:#e67e22">🔓 <span data-i18n="activate">Activar</span></button> <button class="logoutBtn" onclick="logout()" data-i18n="logout">Salir</button></header>
 
 <div class="container">
 
@@ -286,14 +286,14 @@ td.accion button{
 <div id="notice" style="display:none;background:#eaf7ee;color:#1f6b3a;padding:9px;border-radius:8px;margin:8px 0;font-size:13px;font-weight:bold;"></div>
 <div id="autoBackupInfo"></div>
 
-<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToAdd'));return;} openNuevo()">+ <span data-i18n="newBtn">Nuevo</span></button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToConfig'));return;} openConfig()">⚙ <span data-i18n="configShort">Config</span></button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToAnalysis'));return;} openAnalisis()">📊 <span data-i18n="analysis">Análisis</span></button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCopia()" style="background:#27ae60">💾 <span data-i18n="export">Exportar</span></button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarExcel()" style="background:#16a085">📊 <span data-i18n="exportExcel">Excel</span></button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCSV()" style="background:#2c7be5">📄 <span data-i18n="exportCSV">CSV</span></button>
-<button onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToImport'));return;} cargarCopia()" style="background:#7f8c8d">📂 <span data-i18n="import">Importar</span></button>
-<button onclick="fsSincronizarAhora()" style="background:#0f766e">📦 Verificar datos</button>
+<button title="Cargar un ingreso o gasto." onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToAdd'));return;} openNuevo()">+ <span data-i18n="newBtn">Nuevo</span></button>
+<button title="Editar cuentas, categorías y opciones del usuario." onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToConfig'));return;} openConfig()">⚙ <span data-i18n="configShort">Config</span></button>
+<button title="Ver resúmenes, acumulados y gráficos." onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToAnalysis'));return;} openAnalisis()">📊 <span data-i18n="analysis">Análisis</span></button>
+<button title="Guardar una copia de tus movimientos para recuperar o pasar a otro dispositivo." onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCopia()" style="background:#27ae60">💾 <span data-i18n="export">Exportar</span></button>
+<button title="Crear una planilla Excel con los movimientos visibles." onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarExcel()" style="background:#16a085">📊 <span data-i18n="exportExcel">Excel</span></button>
+<button title="Crear un archivo CSV compatible con Excel, Sheets y otros sistemas." onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToExport'));return;} guardarCSV()" style="background:#2c7be5">📄 <span data-i18n="exportCSV">CSV</span></button>
+<button title="Busca automáticamente una copia protegida dentro de FinanzaSimple y recupera solo lo que falta. No abre Descargas." onclick="if(trialInfo().pendiente){accionBloqueada(tr('startTrialToImport'));return;} cargarCopia()" style="background:#7f8c8d">📂 <span data-i18n="import">Importar</span></button>
+<button title="Sincroniza este dispositivo con la copia protegida para mantener tus datos actualizados entre dispositivos." onclick="fsSincronizarAhora()" style="background:#0f766e">🔄 Sincronizar datos</button>
 <button id="btnEjemplo" onclick="cargarEjemplo()" style="display:none!important;background:#f39c12">🧪 <span data-i18n="example">Ejemplo</span></button>
 
 <div class="searchBox">
@@ -374,7 +374,7 @@ Object.assign(I18N.es,{
   missingDate:"Falta completar fecha", missingType:"Seleccioná tipo", missingAccount:"Seleccioná cuenta", missingCategory:"Seleccioná categoría", missingAmount:"Completá monto", zeroAmount:"El monto no puede ser 0", negativeAmount:"El monto debe cargarse positivo. El Tipo define si suma o resta.",
   deleteMovementConfirm:"Vas a borrar este movimiento.{detail}\n\nEsta acción no se puede deshacer. ¿Continuar?",
   startTrialConfirm:"¿Querés iniciar la prueba de {days} días para este usuario?", trialStarted:"Prueba iniciada. Ya podés usar FinanzaSimple.",
-  buyMessage:"Para comprar, contactame por WhatsApp o email. En la próxima versión podemos dejar este botón conectado a tu medio de cobro.", activationPrompt:"Ingresá el código de activación:", activationOk:"Licencia activada correctamente.", activationBad:"Código incorrecto.",
+  buyMessage:"Para comprar la licencia, contactá al proveedor y enviá el código de solicitud que aparece en Activar.", activationPrompt:"Ingresá el código de activación:", activationOk:"Licencia activada correctamente.", activationBad:"Código incorrecto.",
   newAccountPrompt:"Nuevo nombre de cuenta:", newCategoryPrompt:"Nuevo nombre de categoría:", nameRequired:"El nombre no puede quedar vacío", accountExists:"Esa cuenta ya existe", categoryExists:"Esa categoría ya existe", accountInUse:"No se puede borrar porque tiene movimientos asociados", categoryInUse:"No se puede borrar porque tiene movimientos asociados", deleteAccountConfirm:"¿Seguro que querés borrar la cuenta '{name}'?", deleteCategoryConfirm:"¿Seguro que querés borrar la categoría '{name}'?",
   mustLogin:"Primero tenés que entrar con un usuario", invalidBackup:"Ese archivo no parece ser una copia válida de FinanzaSimple", adminOnlyFullBackup:"Solo admin puede cargar una copia completa", invalidUsersBackup:"La copia completa no tiene usuarios válidos", replaceAllBackupConfirm:"Esto reemplaza usuarios y datos actuales por la copia. ¿Continuar?", backupLoadedRelogin:"La copia fue cargada. Tenés que volver a entrar.", replaceUserBackupConfirm:"Esto reemplaza los datos del usuario actual por la copia. ¿Continuar?", backupReadError:"No se pudo leer la copia. Revisá que sea el archivo correcto.",
   adminOnlyAdd:"Solo admin puede agregar usuarios", completeUserPass:"Completar usuario, clave y repetir clave", passwordsDontMatch:"Las claves no coinciden", userMin:"El usuario debe tener al menos 3 caracteres", passMin:"La clave debe tener al menos 4 caracteres", userNoSpaces:"El usuario no puede tener espacios", adminExists:"El usuario admin ya existe y no se puede duplicar", userExists:"Ese usuario ya existe", userCreated:"Usuario creado correctamente", adminOnlyPass:"Solo admin puede cambiar claves", userNotFound:"Usuario no encontrado", newPasswordPrompt:"Nueva clave para {user}:", repeatPasswordPrompt:"Repetir nueva clave para {user}:", passwordEmpty:"La clave no puede quedar vacía", passwordUpdated:"Clave actualizada", adminOnlyDelete:"Solo admin puede borrar usuarios", adminCannotDelete:"Admin no se puede borrar", deleteUserConfirm:"¿Seguro que querés borrar el usuario '{user}' y todos sus datos?",
@@ -423,7 +423,7 @@ Object.assign(I18N.en,{
 Object.assign(I18N.es,{
   exportExcel:"Excel", exportExcelDone:"✔ Archivo Excel generado en Descargas: <b>{name}</b>.", exportCSV:"CSV", exportCSVDone:"✔ Archivo CSV generado en Descargas: <b>{name}</b>.",
   undoDelete:"↩ Deshacer borrado", undoDone:"✔ Borrado deshecho. El movimiento volvió a la lista.", undoNothing:"No hay un borrado reciente para deshacer.", deletedCanUndo:"✔ Movimiento borrado. Podés deshacerlo si fue un error.",
-  helpCopyTitle:"Guardar copia y recuperar datos", helpCopy1:"Guardar copia crea un archivo con tus movimientos actuales. Es una foto del momento: no reemplaza copias anteriores.", helpCopy2:"Recuperar datos compara la copia con lo que ya tenés y muestra solo los movimientos que faltan.", helpCopy3:"No duplica movimientos y no pisa datos existentes.", helpCopy4:"Si borrás un movimiento, solo podés recuperarlo desde una copia anterior donde todavía existía.", helpCopy5:"Si guardás una copia después de borrar, ese movimiento ya no estará en esa copia nueva.",
+  helpCopyTitle:"Guardar copia y recuperar datos", helpCopy1:"Guardar copia crea un archivo con tus movimientos actuales. Es una foto del momento: no reemplaza copias anteriores.", helpCopy2:"Recuperar datos revisa automáticamente las copias protegidas internas y muestra solo los movimientos que faltan.", helpCopy3:"No abre Descargas, no duplica movimientos y no pisa datos existentes.", helpCopy4:"Si borrás un movimiento, solo podés recuperarlo desde una copia anterior donde todavía existía.", helpCopy5:"Si guardás una copia después de borrar, ese movimiento ya no estará en esa copia nueva.",
   helpUndoTitle:"Deshacer último borrado", helpUndo1:"Si borrás un movimiento por error, aparece la opción Deshacer borrado.", helpUndo2:"Deshacer recupera solo el último movimiento borrado, sin buscar archivos.", helpExcelTitle:"Exportar a Excel", helpExcel1:"Exportar Excel genera una planilla simple con Fecha, Tipo, Cuenta, Categoría, Detalle y Monto.", helpExcel2:"Es para revisar o enviar datos. No incluye usuarios, claves ni datos técnicos.", helpCSVTitle:"Exportar CSV", helpCSV1:"Exportar CSV genera un archivo simple, liviano y compatible con Google Sheets, Excel viejo y otros sistemas.", helpCSV2:"Es la opción recomendada cuando no hay Excel instalado o cuando querés compartir datos sin problemas.", autoBackupSaved:"✔ Copia interna actualizada automáticamente.", autoBackupLine:"📦 Tus datos están protegidos automáticamente en este dispositivo."
 });
 Object.assign(I18N.pt,{
@@ -567,6 +567,45 @@ function prepararMovimientosParaProteccion(){
 let fsSyncTimer = null;
 let fsSyncBusy = false;
 
+/* V18.1 MULTI-DISPOSITIVO
+   - El usuario sigue teniendo copia local para trabajar sin señal.
+   - Otro dispositivo puede vincularse al mismo usuario usando la misma
+     conexión protegida y la misma clave.
+   - La clave NO se sube: viaja solo un verificador SHA-256.
+*/
+let fsClaveSesion = "";
+
+async function fsHashClaveUsuario(usuario, clave){
+  const entrada = String(usuario||"").trim() + "|FinanzaSimple|" + String(clave||"");
+  const bytes = new TextEncoder().encode(entrada);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function fsAuthHashKey(usuario){
+  return "fs_auth_hash_" + String(usuario||"").trim();
+}
+async function fsGuardarVerificadorLocal(usuario, clave){
+  if(!usuario || !clave || !crypto?.subtle) return "";
+  const h = await fsHashClaveUsuario(usuario, clave);
+  localStorage.setItem(fsAuthHashKey(usuario), h);
+  return h;
+}
+function fsLeerVerificadorLocal(usuario){
+  return localStorage.getItem(fsAuthHashKey(usuario)) || "";
+}
+const FS_SYNC_URL_CAJA_NEGRA = "https://script.google.com/macros/s/AKfycbzzU3bU-mRTtCMug_oVe0j4s0VpJ_nXVXKSX7XcZ_nUp1LRhNW2mW9vGvocWEma7p--/exec";
+
+function fsSyncUrlGlobalKey(){ return "fs_sync_url_global_v181"; }
+function fsRecordarSyncGlobal(url){
+  const limpio=String(url||"").trim();
+  if(limpio) localStorage.setItem(fsSyncUrlGlobalKey(), limpio);
+}
+function fsSyncUrlGlobal(){
+  try{ localStorage.setItem(fsSyncUrlGlobalKey(), FS_SYNC_URL_CAJA_NEGRA); }catch(e){}
+  return FS_SYNC_URL_CAJA_NEGRA;
+}
+
+
 function fsSyncUrlKey(){
   return claveUsuario("sync_url");
 }
@@ -574,7 +613,7 @@ function fsSyncEnabled(){
   return !!(currentUser && localStorage.getItem(fsSyncUrlKey()));
 }
 function fsSyncUrl(){
-  return localStorage.getItem(fsSyncUrlKey()) || "";
+  return localStorage.getItem(fsSyncUrlKey()) || fsSyncUrlGlobal() || "";
 }
 function fsSyncStatusKey(){
   return claveUsuario("sync_status");
@@ -595,6 +634,7 @@ function fsPaqueteDatos(){
     app:"FinanzaSimple",
     version:"V17_2_seguridad_caja_negra",
     usuario: currentUser,
+    authHash: fsLeerVerificadorLocal(currentUser) || "",
     actualizado:new Date().toISOString(),
     syncMarker: (typeof fsLeerMarkerLocalV171 === "function" ? (fsLeerMarkerLocalV171() || fsCrearMarkerLocalV171("foto")) : null),
     moneda: moneda || "$",
@@ -670,17 +710,42 @@ async function fsSyncSubir(){
   if(!fsSyncEnabled() || fsSyncBusy) return false;
   fsSyncBusy = true;
   try{
-    const r = await fetch(fsSyncUrl(), {
+    const url = fsSyncUrl();
+    const paquete = fsPaqueteDatos();
+    const authEsperado = String(paquete.authHash || "");
+
+    // V18.4 PRUEBA2: envío compatible con Apps Script (caja negra).
+    // No dependemos de leer la respuesta del POST; confirmamos por GET después.
+    await fetch(url, {
       method:"POST",
+      mode:"no-cors",
       headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({user: currentUser, paquete: fsPaqueteDatos()})
+      body:JSON.stringify({user: currentUser, paquete})
     });
-    const data = await r.json();
-    if(data && data.ok){
-      fsSetSyncStatus("🟢 Tus datos están protegidos. Última verificación: " + new Date().toLocaleString("es-AR"), "ok");
+
+    let confirmado = false;
+    for(let intento=0; intento<4 && !confirmado; intento++){
+      await new Promise(resolve=>setTimeout(resolve, 900 + intento*500));
+      try{
+        const r = await fetch(url + "?user=" + encodeURIComponent(currentUser) + "&t=" + Date.now(), {cache:"no-store"});
+        const data = await r.json();
+        const remoto = data && data.ok ? data.paquete : null;
+        if(remoto){
+          const authRemoto = String(remoto.authHash || "");
+          confirmado = authEsperado ? (authRemoto === authEsperado) : true;
+        }
+      }catch(e){
+        console.warn("V18.4 PRUEBA2: todavía no pude confirmar la copia remota", e);
+      }
+    }
+
+    if(confirmado){
+      fsSetSyncStatus("🟢 Copia protegida confirmada para este usuario. Última verificación: " + new Date().toLocaleString("es-AR"), "ok");
       return true;
     }
-    throw new Error("Respuesta no válida");
+
+    fsSetSyncStatus("🟡 Los datos quedaron guardados en este dispositivo, pero todavía no pude confirmar la copia remota.", "warn");
+    return false;
   }catch(e){
     console.warn("No se pudo subir sincronización", e);
     fsSetSyncStatus("🟡 Tus cambios quedaron guardados en este dispositivo. Se protegerán entre dispositivos cuando haya conexión.", "warn");
@@ -689,6 +754,7 @@ async function fsSyncSubir(){
     fsSyncBusy = false;
   }
 }
+
 function fsProgramarSubida(){
   if(!fsSyncEnabled()) return;
   clearTimeout(fsSyncTimer);
@@ -719,6 +785,7 @@ function fsActivarSync(){
     return;
   }
   localStorage.setItem(fsSyncUrlKey(), limpio);
+  fsRecordarSyncGlobal(limpio);
   fsSetSyncStatus("🟢 Protección entre dispositivos activada.", "ok");
   fsSincronizarAhora();
 }
@@ -734,7 +801,7 @@ function fsSyncPanelHTML(){
     <div class="adminBox" style="border-color:${border};background:${color};">
       <b>📦 Protección de datos</b><br>
       <div class="muted">${msg}</div>
-      <div class="helper">Tus cambios se protegen automáticamente. También podés verificar tus datos cuando lo necesites.</div>
+      <div class="helper">Tus cambios quedan guardados en este equipo aun sin señal. Cuando hay conexión, Sincronizar datos los cruza con tus otros dispositivos.</div>
       <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Modificar conexión' : 'Conectar dispositivos'}</button>
       <button onclick="fsSincronizarAhora()" style="background:#3498db">Verificar datos</button>
     </div>
@@ -784,7 +851,38 @@ function claveUsuario(parte){
 
 const FS_DEV_MODE_V161 = false;
 const TRIAL_DAYS = 15;
-const ACTIVATION_CODE = "FS-ENTREGA-2026-7439";
+const FS_LICENSE_PUBLIC_JWK = {"kty":"EC","crv":"P-256","x":"jAu8qpzjPsrd8Trvn4M8KFUUm2H2UxEoED9_8h9LPns","y":"8AcmLbQhcQuV2C6HGn5yxrU0CzZofcG_vYgTV37f3x0","ext":true,"key_ops":["verify"]};
+
+function fsB64UrlEncodeBytes(bytes){
+  let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");
+}
+function fsB64UrlDecodeBytes(txt){
+  const s=String(txt||"").replace(/-/g,"+").replace(/_/g,"/");
+  const pad=s+"=".repeat((4-s.length%4)%4);
+  const bin=atob(pad); return Uint8Array.from(bin,c=>c.charCodeAt(0));
+}
+function fsInstallId(){
+  let id=localStorage.getItem("fs_install_id");
+  if(!id){ id="FSI-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,8).toUpperCase(); localStorage.setItem("fs_install_id",id); }
+  return id;
+}
+function fsCodigoSolicitud(){
+  return fsInstallId()+"-"+String(currentUser||"SINUSUARIO").toUpperCase();
+}
+async function fsVerificarLicenciaToken(token){
+  try{
+    const partes=String(token||"").trim().split(".");
+    if(partes.length!==2) return false;
+    const payloadBytes=fsB64UrlDecodeBytes(partes[0]);
+    const firma=fsB64UrlDecodeBytes(partes[1]);
+    const key=await crypto.subtle.importKey("jwk",FS_LICENSE_PUBLIC_JWK,{name:"ECDSA",namedCurve:"P-256"},false,["verify"]);
+    const ok=await crypto.subtle.verify({name:"ECDSA",hash:"SHA-256"},key,firma,payloadBytes);
+    if(!ok) return false;
+    const payload=JSON.parse(new TextDecoder().decode(payloadBytes));
+    return payload && payload.app==="FinanzaSimple" && payload.installId===fsInstallId() && payload.usuario===currentUser && (!payload.expira || new Date(payload.expira).getTime()>Date.now());
+  }catch(e){ console.warn("Licencia inválida",e); return false; }
+}
 
 function trialKey(parte){
   const usuario = currentUser ? nombreSeguroStorage(currentUser) : "sin_usuario";
@@ -905,11 +1003,15 @@ function comprarLicencia(){
   alert(tr("buyMessage"));
 }
 
-function activarLicencia(){
-  const codigo = prompt(tr("activationPrompt"));
+async function activarLicencia(){
+  if(!currentUser){ alert("Primero ingresá con tu usuario."); return; }
+  const solicitud=fsCodigoSolicitud();
+  const codigo = prompt("Código de solicitud: " + solicitud + "\n\nPegá el código de activación recibido:");
   if(codigo === null) return;
-  if(codigo.trim() === ACTIVATION_CODE){
+  const ok=await fsVerificarLicenciaToken(codigo.trim());
+  if(ok){
     localStorage.setItem(trialKey("activado"), "SI");
+    localStorage.setItem(trialKey("token"), codigo.trim());
     renderTrial();
     closeModal();
     alert(tr("activationOk"));
@@ -926,24 +1028,26 @@ function generarUsuarioUID(){
 }
 
 function initUsuarios(){
-  let usuarios = leerJSONSeguro("fs_v8_usuarios", null);
-  if(!Array.isArray(usuarios) || !usuarios.length){
-    usuarios=[{usuario:"propietario", clave:"FS-7439-2026", admin:true, uid:generarUsuarioUID(), creadoEn:new Date().toISOString()}];
-    localStorage.setItem("fs_v8_usuarios", JSON.stringify(usuarios));
-    return usuarios;
-  }
+  let usuarios = leerJSONSeguro("fs_v8_usuarios", []);
+  if(!Array.isArray(usuarios)) usuarios=[];
   let cambio=false;
   usuarios.forEach(u=>{
     if(!u.uid){ u.uid=generarUsuarioUID(); cambio=true; }
     if(!u.creadoEn){ u.creadoEn=new Date().toISOString(); cambio=true; }
     if(typeof u.admin !== "boolean"){ u.admin=!!u.admin; cambio=true; }
   });
+  const adminActual=usuarios.find(u=>u.admin===true);
+  if(adminActual && !localStorage.getItem("fs_propietario_usuario")){
+    localStorage.setItem("fs_propietario_usuario", adminActual.usuario);
+  }
   if(cambio) localStorage.setItem("fs_v8_usuarios", JSON.stringify(usuarios));
   return usuarios;
 }
 
 function guardarUsuarios(usuarios){
   localStorage.setItem("fs_v8_usuarios", JSON.stringify(usuarios));
+  const admin=(Array.isArray(usuarios)?usuarios:[]).find(u=>u && u.admin===true);
+  if(admin) localStorage.setItem("fs_propietario_usuario", admin.usuario);
 }
 
 function cargarDatosUsuario(){
@@ -976,9 +1080,39 @@ function guardarStorage(){
 function guardarCopiaInternaAutomatica(){
   try{
     if(!currentUser) return;
+
+    // Caja negra: antes de reemplazar la copia actual, conservamos snapshots
+    // anteriores para poder recuperar un movimiento borrado sin abrir Descargas.
+    const actualGuardada = localStorage.getItem(claveUsuario("auto_backup"));
+    if(actualGuardada){
+      try{
+        const previa = JSON.parse(actualGuardada);
+        let historial = JSON.parse(localStorage.getItem(claveUsuario("auto_backup_historial")) || "[]");
+        if(!Array.isArray(historial)) historial=[];
+        const firmaPrevia = JSON.stringify({
+          movs:previa?.movs||[],
+          cuentas:previa?.cuentas||[],
+          categorias:previa?.categorias||[],
+          moneda:previa?.moneda||"$"
+        });
+        const ultima = historial[0];
+        const firmaUltima = ultima ? JSON.stringify({
+          movs:ultima?.movs||[],
+          cuentas:ultima?.cuentas||[],
+          categorias:ultima?.categorias||[],
+          moneda:ultima?.moneda||"$"
+        }) : "";
+        if(firmaPrevia !== firmaUltima){
+          historial.unshift(previa);
+          historial = historial.slice(0,12);
+          localStorage.setItem(claveUsuario("auto_backup_historial"), JSON.stringify(historial));
+        }
+      }catch(e){}
+    }
+
     const paquete={
       app:"FinanzasSimple",
-      version:"V17_2_seguridad_caja_negra",
+      version:"V18_1_caja_negra_recuperacion",
       creado:new Date().toISOString(),
       tipo:"copia_interna",
       usuarioOrigen: currentUser,
@@ -1021,6 +1155,11 @@ function mesTexto(d){
 }
 
 function setModal(tipo, titulo, key){
+  // Siempre abrir la ventana en su posición original.
+  modal.style.left = "";
+  modal.style.right = "";
+  modal.style.top = "";
+  modal.style.transform = "";
   modal.className = "modal " + tipo;
   modal.dataset.modalKey = key || tipo;
   document.getElementById("modalTitle").innerText = titulo;
@@ -1386,7 +1525,7 @@ function openConfig(){
     <button onclick="guardarMoneda()">${tr("saveCurrency")}</button>
     <hr>
     ${proteccionEstadoHTML()}
-    ${fsSyncPanelHTML()}
+    ${usuarioActualEsAdmin() ? fsSyncPanelComercialHTML() : fsSyncPanelHTML()}
     <b>${tr("accounts")}</b><br>
     <div class="muted">${tr("canEditDelete")}</div>
     <div style="margin-top:8px">
@@ -1417,6 +1556,19 @@ function openConfig(){
     <input id="ncat" placeholder="${tr("newCategory")}">
     <button onclick="addCategoria()">${tr("add")}</button>
     <hr>
+    ${usuarioActualEsAdmin() ? `
+    <div class="adminBox" style="border-color:#d8c7ee;background:#fbf8ff;">
+      <b>🔐 Recuperación del administrador</b>
+      <div class="muted" style="margin:4px 0 8px 0;">
+        Protege el cambio de clave del propietario con un código secreto adicional.
+      </div>
+      <button onclick="configurarCodigoRecuperacionAdmin()" style="background:#6c3483">
+        ${localStorage.getItem("fs_admin_recovery_hash") ? "Cambiar código de recuperación" : "Configurar código de recuperación"}
+      </button>
+      <div class="muted" style="margin-top:6px;">
+        ${localStorage.getItem("fs_admin_recovery_hash") ? "✅ Recuperación protegida configurada." : "⚠️ Todavía no configurada."}
+      </div>
+    </div>` : ""}
     <div class="adminBox" style="border-color:#f1c6c1;background:#fff8f7;">
       <b>${tr("resetData")}</b><br>
       <div class="muted">${tr("resetDataHelp")}</div>
@@ -1781,50 +1933,66 @@ function mostrarMovimientosRecuperables(candidatos, invalidos, nombreArchivo){
 }
 
 function cargarCopia(){
-  // RECUPERAR DATOS = muestra solo movimientos faltantes para elegir. No pisa ni duplica.
+  // CAJA NEGRA: Recuperar datos usa copias internas protegidas.
+  // No abre Descargas ni pide elegir archivos.
   if(!puedeOperar()){ accionBloqueada(tr("startTrialToImport")); return; }
   if(bloquearSiTrialVencido()) return;
   if(!currentUser) return alert(tr("mustLogin"));
-  showNotice(textosRecuperacion("selectFile"));
 
-  const input=document.createElement("input");
-  input.type="file";
-  input.accept="application/json,.json";
-  input.onchange=()=>{
-    const file=input.files && input.files[0];
-    if(!file) return;
-    const reader=new FileReader();
-    reader.onload=()=>{
-      try{
-        const paquete=JSON.parse(reader.result);
-        const appOk = !paquete?.app || paquete.app === "FinanzasSimple" || paquete.app === "FinanzaSimple";
-        const lista = Array.isArray(paquete?.movimientos) ? paquete.movimientos : (Array.isArray(paquete) ? paquete : null);
-        if(!appOk || !lista){
-          return alert(textosRecuperacion("invalid"));
+  try{
+    const fuentes=[];
+
+    const actual = localStorage.getItem(claveUsuario("auto_backup"));
+    if(actual){
+      try{ fuentes.push(JSON.parse(actual)); }catch(e){}
+    }
+
+    let historial=[];
+    try{
+      historial=JSON.parse(localStorage.getItem(claveUsuario("auto_backup_historial")) || "[]");
+      if(!Array.isArray(historial)) historial=[];
+    }catch(e){ historial=[]; }
+    fuentes.push(...historial);
+
+    if(!fuentes.length){
+      showNotice("No encontré todavía una copia protegida para recuperar.");
+      return;
+    }
+
+    const clavesExistentes = new Set(movs.map(claveMovimiento));
+    const clavesCandidatas = new Set();
+    const candidatos=[];
+    let fuenteElegida="Copia protegida interna";
+
+    // Recorremos de la más nueva a las anteriores y juntamos solo faltantes.
+    fuentes.forEach((pkg, idx)=>{
+      const lista = Array.isArray(pkg?.movs) ? pkg.movs :
+                    (Array.isArray(pkg?.movimientos) ? pkg.movimientos : []);
+      lista.forEach(x=>{
+        const m=normalizarMovimientoImportado(x);
+        if(!m) return;
+        const clave=claveMovimiento(m);
+        if(clavesExistentes.has(clave) || clavesCandidatas.has(clave)) return;
+        clavesCandidatas.add(clave);
+        candidatos.push(m);
+        if(idx>0 && pkg?.creado){
+          try{
+            fuenteElegida="Copia protegida del " + new Date(pkg.creado).toLocaleString("es-AR");
+          }catch(e){}
         }
+      });
+    });
 
-        const clavesExistentes = new Set(movs.map(claveMovimiento));
-        const clavesCandidatas = new Set();
-        const candidatos=[];
-        let invalidos=0;
+    if(!candidatos.length){
+      showNotice("✔ Tus datos ya están completos. No encontré movimientos faltantes para recuperar.");
+      return;
+    }
 
-        lista.forEach(x=>{
-          const m=normalizarMovimientoImportado(x);
-          if(!m){ invalidos++; return; }
-          const clave=claveMovimiento(m);
-          if(clavesExistentes.has(clave) || clavesCandidatas.has(clave)) return;
-          clavesCandidatas.add(clave);
-          candidatos.push(m);
-        });
-
-        mostrarMovimientosRecuperables(candidatos, invalidos, file.name);
-      }catch(e){
-        alert(textosRecuperacion("readError"));
-      }
-    };
-    reader.readAsText(file);
-  };
-  input.click();
+    mostrarMovimientosRecuperables(candidatos, 0, fuenteElegida);
+  }catch(e){
+    console.warn("Error al recuperar desde copia interna", e);
+    alert("No se pudo revisar la copia protegida interna.");
+  }
 }
 
 function guardarBackupCompleto(){
@@ -1921,7 +2089,7 @@ function claveUsuarioPorNombre(usuario, parte){
 
 function limpiarDatosLocalesDeUsuario(usuario){
   if(!usuario) return;
-  ["movs","cuentas","categorias","moneda","auto_backup","auto_backup_fecha"].forEach(parte=>{
+  ["movs","cuentas","categorias","moneda","auto_backup","auto_backup_fecha","auto_backup_historial"].forEach(parte=>{
     localStorage.removeItem(claveUsuarioPorNombre(usuario, parte));
   });
 }
@@ -1948,10 +2116,10 @@ function renderUsuariosConfig(){
   const usuarios=initUsuarios();
   box.innerHTML=usuarios.map((u,i)=>`
     <div class="listItem">
-      <span class="listItemName">${escapeHTML(u.usuario)}${u.admin?" (admin)":""}<div class="userRole">${u.admin?"Administrador":"Usuario común"}</div></span>
+      <span class="listItemName">${escapeHTML(u.usuario)}${u.admin?" (propietario)":""}<div class="userRole">${u.admin?"Propietario / Administrador":"Usuario común"}</div></span>
       <div>
         <button class="smallBtn" onclick="cambiarClaveUsuario(${i})">Clave</button>
-        ${u.usuario==="admin"?"":`<button class="smallBtn dangerBtn" onclick="borrarUsuario(${i})">Borrar</button>`}
+        ${u.admin?"":`<button class="smallBtn dangerBtn" onclick="borrarUsuario(${i})">Borrar</button>`}
       </div>
     </div>`).join("");
 }
@@ -1964,7 +2132,7 @@ function addUsuario(){
   if(!usuario||!clave||!confirma) return alert(tr("completeUserPass"));
   if(clave!==confirma) return alert(tr("passwordsDontMatch"));
   if(usuario.length < 3) return alert(tr("userMin"));
-  if(clave.length < 4) return alert(tr("passMin"));
+  if(clave.length < 8) return alert("La clave debe tener al menos 8 caracteres");
   if(usuario.includes(" ")) return alert(tr("userNoSpaces"));
   if(usuario.toLowerCase()==="admin") return alert(tr("adminExists"));
   const usuarios=initUsuarios();
@@ -1985,7 +2153,7 @@ function cambiarClaveUsuario(i){
   if(nueva===null) return;
   const limpia=nueva.trim();
   if(!limpia) return alert(tr("passwordEmpty"));
-  if(limpia.length < 4) return alert(tr("passMin"));
+  if(limpia.length < 8) return alert("La clave debe tener al menos 8 caracteres");
   const repetir=prompt(msg("repeatPasswordPrompt", {user:u.usuario}));
   if(repetir===null) return;
   if(limpia !== repetir.trim()) return alert(tr("passwordsDontMatch"));
@@ -1999,7 +2167,7 @@ function borrarUsuario(i){
   const usuarios=initUsuarios();
   const u=usuarios[i];
   if(!u) return alert(tr("userNotFound"));
-  if(u.usuario==="admin") return alert(tr("adminCannotDelete"));
+  if(u.admin) return alert("El propietario no se puede borrar");
   if(!confirm(msg("deleteUserConfirm", {user:u.usuario}))) return;
   const usuario=u.usuario;
   usuarios.splice(i,1);
@@ -2014,34 +2182,339 @@ function crearUsuarioDesdeLogin(){
   loginError.innerText="Por seguridad, los usuarios nuevos los crea el administrador desde Configuración.";
 }
 
-function login(){
-  const usuario=(login_user.value||"").trim();
-  const clave=(login_pass.value||"").trim();
-  const usuarios=initUsuarios();
-  const encontrado=usuarios.find(u=>u.usuario===usuario && u.clave===clave);
-  if(!encontrado){
-    loginError.style.display="block";
-    loginError.innerText="Usuario o clave incorrectos";
-    return;
-  }
+function entrarConUsuario(encontrado){
   currentUser=encontrado.usuario;
+  if(fsClaveSesion){
+    fsGuardarVerificadorLocal(currentUser, fsClaveSesion).catch(()=>{});
+  }
   cargarDatosUsuario();
   loginScreen.style.display="none";
   appScreen.style.display="block";
   applyLang();
-  userBadge.innerText=tr("user") + ": " + currentUser + (encontrado.admin ? " (" + tr("roleAdmin") + ")" : " (" + tr("roleUser") + ")");
-  login_pass.value="";
+  userBadge.innerText=tr("user") + ": " + currentUser + (encontrado.admin ? " (propietario)" : " (" + tr("roleUser") + ")");
+  const lp=document.getElementById("login_pass");
+  if(lp) lp.value="";
   closeModal();
   render();
   renderTrial();
   bloquearSiTrialVencido();
-  // V16.4: al entrar con un usuario existente, si ya tiene URL de sincronización,
-  // intenta bajar la copia protegida. Antes solo ocurría al crear usuario nuevo.
   if(typeof fsSyncEnabled === "function" && fsSyncEnabled()){
-    setTimeout(()=>{
-      try{ fsSyncDescargar(); }catch(e){ console.warn("No se pudo iniciar sincronización al entrar", e); }
-    }, 700);
+    setTimeout(()=>{ try{ fsSyncDescargar(); }catch(e){ console.warn("No se pudo iniciar sincronización al entrar", e); } },700);
   }
+}
+
+function fsLoginBloqueado(){
+  const hasta=Number(localStorage.getItem("fs_login_bloqueado_hasta")||0);
+  return Date.now()<hasta ? Math.ceil((hasta-Date.now())/1000) : 0;
+}
+function fsRegistrarFalloLogin(){
+  const n=Number(localStorage.getItem("fs_login_fallos")||0)+1;
+  if(n>=5){ localStorage.setItem("fs_login_fallos","0"); localStorage.setItem("fs_login_bloqueado_hasta",String(Date.now()+60000)); }
+  else localStorage.setItem("fs_login_fallos",String(n));
+}
+async function login(){
+  const espera=fsLoginBloqueado();
+  const loginError=document.getElementById("loginError");
+  const loginUser=document.getElementById("login_user");
+  const loginPass=document.getElementById("login_pass");
+  if(!loginError || !loginUser || !loginPass) return;
+  if(espera){ loginError.style.display="block"; loginError.innerText="Demasiados intentos. Esperá "+espera+" segundos."; return; }
+  const usuario=(loginUser.value||"").trim();
+  const clave=(loginPass.value||"").trim();
+  const usuarios=initUsuarios();
+  const encontrado=usuarios.find(u=>u.usuario===usuario && u.clave===clave);
+  if(!encontrado){
+    fsRegistrarFalloLogin();
+    loginError.style.display="block";
+    loginError.innerText="Usuario o clave incorrectos";
+    return;
+  }
+  localStorage.setItem("fs_login_fallos","0");
+  localStorage.removeItem("fs_login_bloqueado_hasta");
+  fsClaveSesion = clave;
+  try{ await fsGuardarVerificadorLocal(encontrado.usuario, clave); }catch(e){ console.warn("No se pudo preparar verificador", e); }
+  entrarConUsuario(encontrado);
+}
+
+
+async function vincularUsuarioOtroDispositivo(){
+  const loginError=document.getElementById("loginError");
+  const loginUser=document.getElementById("login_user");
+  const loginPass=document.getElementById("login_pass");
+  const usuario=(loginUser?.value||"").trim();
+  const clave=(loginPass?.value||"").trim();
+
+  if(!usuario || !clave){
+    if(loginError){ loginError.style.display="block"; loginError.innerText="Completá usuario y clave, y después tocá “Usar mi usuario de otro dispositivo”."; }
+    return;
+  }
+
+  let url=fsSyncUrlGlobal();
+  if(!url){
+    url=prompt("Pegá la dirección de protección entre dispositivos. Se guarda una sola vez en este equipo:");
+    if(url===null) return;
+    url=String(url||"").trim();
+    if(!url){
+      if(loginError){ loginError.style.display="block"; loginError.innerText="Falta la dirección de protección entre dispositivos."; }
+      return;
+    }
+    fsRecordarSyncGlobal(url);
+  }
+
+  if(loginError){ loginError.style.display="block"; loginError.innerText="Buscando tu usuario protegido..."; }
+
+  try{
+    const r=await fetch(url + "?user=" + encodeURIComponent(usuario) + "&t=" + Date.now());
+    const data=await r.json();
+    const pkg=data && data.ok ? data.paquete : null;
+
+    if(!pkg){
+      if(loginError) loginError.innerText="No encontré una copia protegida para ese usuario. Primero sincronizalo desde el dispositivo donde ya funciona.";
+      return;
+    }
+
+    const remoto=String(pkg.authHash||"");
+    if(!remoto){
+      if(loginError) loginError.innerText="La copia existe, pero todavía no tiene habilitado el acceso multi-dispositivo. En el equipo donde ya funciona: entrá y tocá Sincronizar datos una vez.";
+      return;
+    }
+
+    const calculado=await fsHashClaveUsuario(usuario, clave);
+    if(calculado !== remoto){
+      fsRegistrarFalloLogin();
+      if(loginError) loginError.innerText="Usuario o clave incorrectos";
+      return;
+    }
+
+    let usuarios=initUsuarios();
+    let encontrado=usuarios.find(u=>u.usuario===usuario);
+    if(!encontrado){
+      encontrado={usuario, clave, admin:false, uid:generarUsuarioUID(), creadoEn:new Date().toISOString()};
+      usuarios.push(encontrado);
+      guardarUsuarios(usuarios);
+      inicializarUsuarioLimpio(usuario);
+    }else{
+      encontrado.clave=clave;
+      guardarUsuarios(usuarios);
+    }
+
+    currentUser=usuario;
+    fsClaveSesion=clave;
+    await fsGuardarVerificadorLocal(usuario, clave);
+    localStorage.setItem(claveUsuario("sync_url"), url);
+    fsRecordarSyncGlobal(url);
+
+    cargarDatosUsuario();
+    fsAplicarPaqueteRemoto(pkg);
+    guardarStorage();
+
+    localStorage.setItem("fs_login_fallos","0");
+    localStorage.removeItem("fs_login_bloqueado_hasta");
+    entrarConUsuario(encontrado);
+    fsSetSyncStatus("🟢 Este dispositivo quedó vinculado con tu usuario.", "ok");
+  }catch(e){
+    console.warn("No se pudo vincular dispositivo", e);
+    if(loginError) loginError.innerText="No pude conectar con la copia protegida. Revisá internet o la conexión configurada.";
+  }
+}
+
+function mostrarLoginNormal(){
+  const card=document.querySelector(".loginCard");
+  card.innerHTML=`
+    <div class="loginTitle" data-i18n="appTitle">FinanzaSimple – Control de gastos</div>
+    <div class="loginSub" data-i18n="loginSubtitle">Ingreso por usuario</div>
+    <input id="login_user" data-i18n-placeholder="user" placeholder="Usuario" autocomplete="username">
+    <input id="login_pass" type="password" data-i18n-placeholder="password" placeholder="Clave" autocomplete="current-password">
+    <button onclick="login()" style="width:100%;margin:8px 0 0 0;" data-i18n="enter">Entrar</button>
+    <button onclick="vincularUsuarioOtroDispositivo()" style="width:100%;margin:6px 0 0 0;background:#0f766e">Usar mi usuario de otro dispositivo</button>
+    <button onclick="mostrarLoginAdmin()" style="width:100%;margin:6px 0 0 0;background:#8e44ad">🔐 Administración</button>
+    <div id="loginError" class="errorBox"></div>
+    <div class="helper">Si este usuario ya existe en tu PC/celular/tablet, usá “otro dispositivo” para traerlo sin crear una cuenta nueva.</div>`;
+  applyLang();
+  const u=document.getElementById("login_user");
+  const p=document.getElementById("login_pass");
+  if(u) u.addEventListener("keydown", e=>{if(e.key==="Enter") p?.focus();});
+  if(p) p.addEventListener("keydown", e=>{if(e.key==="Enter") login();});
+}
+
+function mostrarLoginAdmin(){
+  const card=document.querySelector(".loginCard");
+  const admins=initUsuarios().filter(u=>u && u.admin===true);
+  const hayAdmin=admins.length>0;
+  const recuperacionConfigurada=!!localStorage.getItem("fs_admin_recovery_hash");
+  card.innerHTML=`
+    <div class="loginTitle">Administración</div>
+    <div class="loginSub">${hayAdmin ? 'Ingreso del administrador' : 'No hay administrador activo en este dispositivo'}</div>
+    <input id="admin_user" placeholder="Usuario administrador (ej.: OMPAdmin)" autocomplete="username">
+    <input id="admin_pass" type="password" placeholder="Clave de administrador" autocomplete="current-password">
+    ${hayAdmin ? `<button onclick="loginAdmin()" style="width:100%;margin:8px 0 0 0;background:#8e44ad">Entrar como administrador</button>` : ''}
+    <hr style="border:0;border-top:1px solid #ddd;margin:12px 0">
+    <div class="loginSub"><b>Recuperación del administrador</b></div>
+    <input id="admin_recovery_code" type="password" placeholder="Código secreto de recuperación" autocomplete="off" ${recuperacionConfigurada?'':'disabled'}>
+    <input id="admin_new_pass" type="password" placeholder="Nueva clave de administrador" autocomplete="new-password" ${recuperacionConfigurada?'':'disabled'}>
+    <input id="admin_new_pass2" type="password" placeholder="Repetir nueva clave" autocomplete="new-password" ${recuperacionConfigurada?'':'disabled'}>
+    <button onclick="recuperarAdminSeguro()" style="width:100%;margin:8px 0 0 0;background:#6c3483" ${recuperacionConfigurada?'':'disabled'}>Recuperar administrador</button>
+    <div class="helper" style="margin-top:8px">${recuperacionConfigurada
+      ? 'Solo se puede cambiar la clave del administrador con el código secreto de recuperación configurado previamente.'
+      : 'La recuperación todavía no está configurada. Entrá como administrador y configurá el código secreto desde Configuración.'}</div>
+    <button onclick="mostrarLoginNormal()" style="width:100%;margin:6px 0 0 0;background:#7f8c8d">Volver</button>
+    <div id="admin_error" class="errorBox"></div>`;
+  setTimeout(()=>document.getElementById("admin_user")?.focus(),100);
+}
+
+async function loginAdmin(){
+  const usuario=(document.getElementById("admin_user")?.value||"").trim();
+  const clave=(document.getElementById("admin_pass")?.value||"").trim();
+  const e=document.getElementById("admin_error");
+  const fail=t=>{ if(e){e.style.display="block";e.innerText=t;} };
+  const encontrado=initUsuarios().find(u=>u.usuario===usuario && u.clave===clave && u.admin===true);
+  if(!encontrado) return fail("Usuario o clave de administrador incorrectos");
+  fsClaveSesion=clave;
+  try{ await fsGuardarVerificadorLocal(encontrado.usuario, clave); }catch(err){}
+  entrarConUsuario(encontrado);
+}
+
+async function fsHashTextoSeguro(valor){
+  const data=new TextEncoder().encode(String(valor||""));
+  const digest=await crypto.subtle.digest("SHA-256",data);
+  return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+async function recuperarAdminSeguro(){
+  const usuario=(document.getElementById("admin_user")?.value||"").trim();
+  const codigo=(document.getElementById("admin_recovery_code")?.value||"").trim();
+  const clave=(document.getElementById("admin_new_pass")?.value||"").trim();
+  const confirma=(document.getElementById("admin_new_pass2")?.value||"").trim();
+  const e=document.getElementById("admin_error");
+  const fail=t=>{ if(e){e.style.display="block";e.innerText=t;} };
+
+  const hashGuardado=localStorage.getItem("fs_admin_recovery_hash");
+  if(!hashGuardado) return fail("La recuperación no está configurada en este dispositivo.");
+  if(usuario.length<3) return fail("Escribí el usuario administrador.");
+  if(codigo.length<8) return fail("El código de recuperación no es válido.");
+  if(clave.length<8) return fail("La nueva clave debe tener al menos 8 caracteres.");
+  if(clave!==confirma) return fail("Las claves nuevas no coinciden.");
+
+  const hashIngresado=await fsHashTextoSeguro(codigo);
+  if(hashIngresado!==hashGuardado) return fail("Código de recuperación incorrecto.");
+
+  const usuarios=initUsuarios();
+  const u=usuarios.find(x=>x && x.admin===true && String(x.usuario||"").toLowerCase()===usuario.toLowerCase());
+  if(!u) return fail("Ese usuario no es el administrador de este dispositivo.");
+
+  u.clave=clave;
+  guardarUsuarios(usuarios);
+  localStorage.setItem("fs_propietario_usuario",u.usuario);
+  fsClaveSesion=clave;
+  try{ await fsGuardarVerificadorLocal(u.usuario, clave); }catch(err){}
+  alert("Clave del administrador actualizada correctamente.");
+  entrarConUsuario(u);
+}
+
+function pedirSecretoOculto(titulo, mensaje, placeholder){
+  return new Promise(resolve=>{
+    const fondo=document.createElement("div");
+    fondo.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;";
+    const caja=document.createElement("div");
+    caja.style.cssText="width:min(430px,95vw);background:#fff;border-radius:14px;box-shadow:0 12px 35px rgba(0,0,0,.3);padding:18px;";
+    caja.innerHTML=`
+      <div style="font-size:19px;font-weight:700;color:#2c3e50;margin-bottom:8px">${titulo}</div>
+      <div style="font-size:14px;color:#444;margin-bottom:10px;white-space:pre-line">${mensaje}</div>
+      <input id="fsSecretInput" type="password" autocomplete="off" placeholder="${placeholder||''}" style="width:100%;padding:10px;box-sizing:border-box;margin:4px 0 12px 0">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="fsSecretCancel" style="background:#7f8c8d">Cancelar</button>
+        <button id="fsSecretOk" style="background:#2d89ef">Aceptar</button>
+      </div>`;
+    fondo.appendChild(caja);
+    document.body.appendChild(fondo);
+    const input=caja.querySelector("#fsSecretInput");
+    const cerrar=v=>{ fondo.remove(); resolve(v); };
+    caja.querySelector("#fsSecretCancel").onclick=()=>cerrar(null);
+    caja.querySelector("#fsSecretOk").onclick=()=>cerrar(input.value);
+    input.addEventListener("keydown",e=>{
+      if(e.key==="Enter") cerrar(input.value);
+      if(e.key==="Escape") cerrar(null);
+    });
+    setTimeout(()=>input.focus(),50);
+  });
+}
+
+async function configurarCodigoRecuperacionAdmin(){
+  if(!usuarioActualEsAdmin()) return alert("Solo el administrador puede configurar la recuperación.");
+  const usuarios=initUsuarios();
+  const admin=usuarios.find(u=>u && u.admin===true && u.usuario===currentUser);
+  if(!admin) return alert("No se encontró el administrador actual.");
+
+  const claveActual=await pedirSecretoOculto(
+    "Verificación del administrador",
+    "Para continuar, escribí la clave actual del administrador.",
+    "Clave actual"
+  );
+  if(claveActual===null) return;
+  if(claveActual!==admin.clave) return alert("La clave actual no es correcta.");
+
+  const codigo=await pedirSecretoOculto(
+    "Código secreto de recuperación",
+    "Elegí un código distinto de la clave del administrador.\nMínimo 8 caracteres. Guardalo fuera de la app.",
+    "Código secreto"
+  );
+  if(codigo===null) return;
+  if(String(codigo).trim().length<8) return alert("El código debe tener al menos 8 caracteres.");
+  if(String(codigo).trim()===String(admin.clave).trim()) return alert("El código de recuperación debe ser distinto de la clave del administrador.");
+
+  const repetir=await pedirSecretoOculto(
+    "Confirmar código secreto",
+    "Repetí el código secreto de recuperación.",
+    "Repetir código secreto"
+  );
+  if(repetir===null) return;
+  if(String(codigo).trim()!==String(repetir).trim()) return alert("Los códigos no coinciden.");
+
+  const hash=await fsHashTextoSeguro(String(codigo).trim());
+  localStorage.setItem("fs_admin_recovery_hash",hash);
+  alert("Código de recuperación configurado correctamente.");
+  renderConfig();
+}
+
+function mostrarCrearUsuarioPublico(){
+  const card=document.querySelector(".loginCard");
+  card.innerHTML=`
+    <div class="loginTitle">Crear usuario nuevo</div>
+    <div class="loginSub">Este usuario tendrá sus propios movimientos, cuentas y categorías.</div>
+    <input id="public_user" placeholder="Nombre de usuario" autocomplete="username">
+    <input id="public_pass" type="password" placeholder="Clave (mínimo 8 caracteres)" autocomplete="new-password">
+    <input id="public_pass2" type="password" placeholder="Repetir clave" autocomplete="new-password">
+    <button onclick="crearUsuarioPublico()" style="width:100%;margin:8px 0 0 0;background:#27ae60">Crear usuario</button>
+    <button onclick="mostrarLoginNormal()" style="width:100%;margin:6px 0 0 0;background:#7f8c8d">Volver a ingresar</button>
+    <div id="public_error" class="errorBox"></div>
+    <div class="helper">La prueba de 15 días no empieza al crear el usuario. La iniciás cuando estés listo para usar la app.</div>`;
+  setTimeout(()=>document.getElementById("public_user")?.focus(),100);
+}
+
+function crearUsuarioPublico(){
+  const usuario=(document.getElementById("public_user")?.value||"").trim();
+  const clave=(document.getElementById("public_pass")?.value||"").trim();
+  const confirma=(document.getElementById("public_pass2")?.value||"").trim();
+  const e=document.getElementById("public_error");
+  const fail=t=>{ if(e){ e.style.display="block"; e.innerText=t; } };
+
+  if(usuario.length < 3) return fail("El usuario debe tener al menos 3 caracteres");
+  if(/\s/.test(usuario)) return fail("El usuario no puede tener espacios");
+  if(clave.length < 8) return fail("La clave debe tener al menos 8 caracteres");
+  if(clave!==confirma) return fail("Las claves no coinciden");
+
+  const usuarios=initUsuarios();
+  if(usuarios.some(u=>String(u.usuario||"").toLowerCase()===usuario.toLowerCase())){
+    return fail("Ese usuario ya existe");
+  }
+
+  const nuevo={usuario, clave, admin:false, uid:generarUsuarioUID(), creadoEn:new Date().toISOString()};
+  usuarios.push(nuevo);
+  guardarUsuarios(usuarios);
+  inicializarUsuarioLimpio(usuario);
+
+  // No inicia la prueba: entra como usuario nuevo y verá la opción de iniciarla.
+  entrarConUsuario(nuevo);
 }
 
 function logout(){
@@ -2049,22 +2522,54 @@ function logout(){
   currentUser=null;
   movs=[]; cuentas=[]; categorias=[];
   appScreen.style.display="none";
+  mostrarLoginNormal();
   loginScreen.style.display="flex";
-  login_user.value="";
-  login_pass.value="";
-  loginError.style.display="none";
   closeModal();
+  setTimeout(()=>document.getElementById("login_user")?.focus(),100);
+}
+
+
+function mostrarPrimerIngreso(){
+  const card=document.querySelector(".loginCard");
+  card.innerHTML=`
+    <div class="loginTitle">FinanzaSimple</div>
+    <div class="loginSub">Primer ingreso</div>
+    <button onclick="mostrarLoginNormal()" style="width:100%;margin:8px 0 10px 0;background:#0f766e">Ya tengo usuario en otro dispositivo</button>
+    <div class="helper" style="margin-bottom:10px">Si ya usás FinanzaSimple en otro equipo, entrá por esta opción.</div>
+    <hr style="border:0;border-top:1px solid #ddd;margin:10px 0">
+    <div class="loginSub"><b>Configurar administrador</b></div>
+    <input id="setup_user" placeholder="Usuario administrador (ej.: OMPAdmin)" autocomplete="username">
+    <input id="setup_pass" type="password" placeholder="Clave (mínimo 8 caracteres)" autocomplete="new-password">
+    <input id="setup_pass2" type="password" placeholder="Repetir clave" autocomplete="new-password">
+    <button onclick="crearPropietarioInicial()" style="width:100%;margin:8px 0 0 0;background:#8e44ad">Crear administrador</button>
+    <div id="setup_error" class="errorBox"></div>
+    <div class="helper">Después, desde Config → Usuarios, el administrador crea los usuarios comunes.</div>`;
+}
+function crearPropietarioInicial(){
+  const u=(document.getElementById("setup_user")?.value||"").trim();
+  const p=(document.getElementById("setup_pass")?.value||"").trim();
+  const p2=(document.getElementById("setup_pass2")?.value||"").trim();
+  const e=document.getElementById("setup_error");
+  const fail=t=>{e.style.display="block";e.innerText=t;};
+  if(u.length<3) return fail("El usuario debe tener al menos 3 caracteres");
+  if(/\s/.test(u)) return fail("El usuario no puede tener espacios");
+  if(p.length<8) return fail("La clave debe tener al menos 8 caracteres");
+  if(p!==p2) return fail("Las claves no coinciden");
+  const propietario={usuario:u,clave:p,admin:true,uid:generarUsuarioUID(),creadoEn:new Date().toISOString()};
+  guardarUsuarios([propietario]);
+  localStorage.setItem("fs_propietario_usuario", u);
+  inicializarUsuarioLimpio(u);
+  entrarConUsuario(propietario);
 }
 
 function initApp(){
-  initUsuarios();
+  const usuarios=initUsuarios();
   applyLang();
   loginScreen.style.display="flex";
   appScreen.style.display="none";
-  login_user.addEventListener("keydown", e=>{if(e.key==="Enter") login_pass.focus();});
-  login_pass.addEventListener("keydown", e=>{if(e.key==="Enter") login();});
-  applyLang();
-  setTimeout(()=>login_user.focus(),100);
+  if(!usuarios.length){ mostrarPrimerIngreso(); return; }
+  mostrarLoginNormal();
+  setTimeout(()=>document.getElementById("login_user")?.focus(),100);
 }
 
 
@@ -2383,16 +2888,27 @@ function actualizarBotonEjemplo(){
 }
 
 function render(){
-  tabla.innerHTML="";
+  const tablaEl=document.getElementById("tabla");
+  const mesEl=document.getElementById("mes");
+  const balEl=document.getElementById("bal");
+  const ingEl=document.getElementById("ing");
+  const gasEl=document.getElementById("gas");
+
+  if(!tablaEl || !mesEl || !balEl || !ingEl || !gasEl){
+    console.warn("FinanzaSimple: faltan elementos principales para renderizar");
+    return;
+  }
+
+  tablaEl.innerHTML="";
   let totalBal=0,totalIng=0,totalGas=0;
   let totalMes=0, visibles=0;
 
-  mes.innerText=mesTexto(fecha);
+  mesEl.innerText=mesTexto(fecha);
   renderTrial();
   actualizarBotonEjemplo();
   actualizarBannerEjemplo();
 
-  movs.forEach(m=>{
+  (Array.isArray(movs)?movs:[]).forEach(m=>{
     let f=parseLocalDate(m.fecha);
     if(!f) return;
     if(f.getMonth()!=fecha.getMonth()||f.getFullYear()!=fecha.getFullYear()) return;
@@ -2412,7 +2928,7 @@ function render(){
       const claseTipo = m.tipo=="Ingreso" ? "tipoIngreso" : "tipoGasto";
       const claseMonto = m.tipo=="Ingreso" ? "montoIngreso" : "montoGasto";
       const signo = m.tipo=="Ingreso" ? "+ " : "- ";
-      tabla.innerHTML += `<tr>
+      tablaEl.innerHTML += `<tr>
         <td>${escapeHTML(formatoFechaVista(m.fecha||""))}</td>
         <td class="${claseTipo}">${escapeHTML(m.tipo=="Ingreso"?tr("income"):tr("expense"))}</td>
         <td>${escapeHTML(m.cuenta||"")}</td>
@@ -2428,9 +2944,9 @@ function render(){
   });
 
   if(totalMes === 0){
-    tabla.innerHTML = `<tr class="emptyRow"><td colspan="7">${tr("noMovements")}</td></tr>`;
+    tablaEl.innerHTML = `<tr class="emptyRow"><td colspan="7">${tr("noMovements")}</td></tr>`;
   }else if(visibles === 0){
-    tabla.innerHTML = `<tr class="emptyRow"><td colspan="7">${tr("noResults")}</td></tr>`;
+    tablaEl.innerHTML = `<tr class="emptyRow"><td colspan="7">${tr("noResults")}</td></tr>`;
   }
 
   const contador=document.getElementById("resultadoBusqueda");
@@ -2438,13 +2954,13 @@ function render(){
     contador.innerText = totalMes === 0 ? "0 " + tr("movements") : visibles + " " + tr("of") + " " + totalMes + " " + tr("visible");
   }
 
-  bal.innerText=fmt(totalBal);
-  ing.innerText=fmt(totalIng);
-  gas.innerText=fmt(totalGas);
+  balEl.innerText=fmt(totalBal);
+  ingEl.innerText=fmt(totalIng);
+  gasEl.innerText=fmt(totalGas);
 
-  bal.className = "value " + (totalBal > 0 ? "balance-pos" : totalBal < 0 ? "balance-neg" : "balance-zero");
-  ing.className = "value ingresos";
-  gas.className = "value gastos";
+  balEl.className = "value " + (totalBal > 0 ? "balance-pos" : totalBal < 0 ? "balance-neg" : "balance-zero");
+  ingEl.className = "value ingresos";
+  gasEl.className = "value gastos";
 }
 
 let modal=document.getElementById("modal");
@@ -2457,6 +2973,8 @@ function esMovil(){
 
 drag.onmousedown=e=>{
   if(esMovil()) return;
+  // Los botones del encabezado (por ejemplo Cerrar) no deben iniciar arrastre.
+  if(e.target && e.target.closest && e.target.closest("button")) return;
   dragging=true;
   dx=e.clientX-modal.offsetLeft;
   dy=e.clientY-modal.offsetTop;
@@ -2561,6 +3079,7 @@ fsPaqueteDatos = function(){
     app:"FinanzaSimple",
     version:"V17_2_seguridad_caja_negra",
     usuario: currentUser,
+    authHash: fsLeerVerificadorLocal(currentUser) || "",
     actualizado:new Date().toISOString(),
     syncMarker: (typeof fsLeerMarkerLocalV171 === "function" ? (fsLeerMarkerLocalV171() || fsCrearMarkerLocalV171("foto")) : null),
     moneda: moneda || "$",
@@ -3171,12 +3690,41 @@ fsSyncPanelHTML = function(){
       <div class="muted">${msg}</div>
       <div class="helper">FinanzaSimple guarda primero en este dispositivo. Al verificar, equilibra la información con tus otros equipos. Si no hay conexión, queda pendiente sin perderse.</div>
       <button onclick="fsActivarSync()" style="background:${activo ? '#7f8c8d' : '#27ae60'}">${activo ? 'Modificar conexión' : 'Conectar dispositivos'}</button>
-      <button onclick="fsSincronizarAhora()" style="background:#0f766e">📦 Verificar datos</button>
+      <button title="Sincroniza este dispositivo con la copia protegida para mantener tus datos actualizados entre dispositivos." onclick="fsSincronizarAhora()" style="background:#0f766e">🔄 Sincronizar datos</button>
     </div>
     <hr>`;
 };
 
+function fsSyncPanelComercialHTML(){
+  const activo=fsSyncEnabled();
+  if(!activo) return `
+    <div class="adminBox" style="border-color:#d8e9f8;background:#f7fbff;">
+      <b>📦 Protección entre dispositivos</b><br>
+      <div class="muted">Esta función se habilita durante la instalación comercial.</div>
+    </div><hr>`;
+  return `
+    <div class="adminBox" style="border-color:#cdebd6;background:#f4fff7;">
+      <b>📦 Protección entre dispositivos</b><br>
+      <div class="muted">La conexión está activa.</div>
+      <button onclick="fsSincronizarAhora()" style="background:#0f766e">Verificar datos</button>
+    </div><hr>`;
+}
+
 try{ window.fsNucleoNivelarV17 = fsNucleoNivelarV17; window.fsBajarNovedadesV17 = fsBajarNovedadesV17; }catch(e){}
+
+/* V18.4 PRUEBA3 - seguridad final de vinculación */
+try{
+  const fsPaqueteDatosFinalBaseV184P3 = fsPaqueteDatos;
+  fsPaqueteDatos = function(){
+    const pkg = fsPaqueteDatosFinalBaseV184P3();
+    if(pkg && currentUser){
+      pkg.authHash = fsLeerVerificadorLocal(currentUser) || pkg.authHash || "";
+    }
+    return pkg;
+  };
+}catch(e){ console.warn("PRUEBA3: no pude envolver fsPaqueteDatos", e); }
+
+try{ localStorage.setItem(fsSyncUrlGlobalKey(), FS_SYNC_URL_CAJA_NEGRA); }catch(e){}
 
 initApp();
 </script>
