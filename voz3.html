@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FinanzaSimple - Prueba Voz 3</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f3f6f8;margin:0;color:#263746}.wrap{max-width:680px;margin:auto;padding:18px}.card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 4px 18px #0002}h1{font-size:26px;margin:0 0 6px}.sub{color:#667;margin-bottom:18px;line-height:1.4}.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}button{border:0;border-radius:12px;padding:14px 10px;font-size:16px;font-weight:bold;cursor:pointer}.start{background:#6847d8;color:#fff}.pause{background:#f39c12;color:#fff}.finish{background:#c0392b;color:#fff}.confirm{background:#239b56;color:#fff;width:100%;margin-top:14px;font-size:18px}button:disabled{opacity:.45}.status,.trans{margin-top:12px;padding:12px;border-radius:10px;background:#eef2f5}.trans{background:#faf7e8;min-height:54px}.grid{display:grid;grid-template-columns:110px 1fr;gap:8px;margin-top:18px;align-items:center}.label{font-weight:bold}input,select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccd3d9;border-radius:8px;font-size:16px;background:#fff}.ok{border-color:#72c58b;background:#f1fff5}.missing{border-color:#e59b8d;background:#fff7f5}.note{font-size:13px;color:#667;margin-top:14px;line-height:1.4}.small{font-size:12px;color:#667;margin-top:8px}
+</style>
+</head>
+<body><div class="wrap"><div class="card">
+<h1>🎤 FinanzaSimple — Prueba Voz 3</h1>
+<div class="sub">Prueba aislada. Podés hablar, pausar, continuar, corregir campos sobre la marcha y terminar cuando quieras.</div>
+<div class="btns"><button id="start" class="start">🎤 HABLAR</button><button id="pause" class="pause" disabled>⏸ PAUSAR</button><button id="finish" class="finish" disabled>⏹ TERMINAR</button></div>
+<div id="status" class="status">Listo para escuchar.</div><div id="trans" class="trans">Lo que escuche aparecerá acá.</div>
+<div class="grid">
+<div class="label">Fecha</div><input id="fecha" type="date">
+<div class="label">Tipo</div><select id="tipo"><option value="">—</option><option>Gasto</option><option>Ingreso</option></select>
+<div class="label">Cuenta</div><select id="cuenta"><option value="">—</option><option>Efectivo</option><option>Tarjeta</option><option>Banco</option><option>Mercado Pago</option></select>
+<div class="label">Categoría</div><select id="categoria"><option value="">—</option><option>Alimentos</option><option>Transporte</option><option>Servicios</option><option>Salud</option><option>Sueldo</option><option>Otros</option></select>
+<div class="label">Detalle</div><input id="detalle" placeholder="Detalle">
+<div class="label">Monto</div><input id="monto" inputmode="decimal" placeholder="Monto">
+</div>
+<button id="confirm" class="confirm" disabled>✅ CONFIRMAR PRUEBA</button>
+<div class="small">No guarda nada en FinanzaSimple. Solo confirma que la interpretación quedó como querías.</div>
+<div class="note"><b>Ejemplo:</b> “Gasté 20 mil pesos en nafta con efectivo”. Podés pausar, continuar y corregir cualquier campo antes de confirmar.</div>
+</div></div>
+<script>
+const $=id=>document.getElementById(id); const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let rec=null, escuchando=false, pausado=false, terminado=false, textoAcum="", autoTimer=null;
+function hoyISO(offset=0){const d=new Date();d.setDate(d.getDate()+offset);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+$('fecha').value=hoyISO(0);
+function norm(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function monto(q){q=q.replace(/\$/g,' ').replace(/pesos?/g,' ');let mil=q.match(/(\d+(?:[.,]\d+)?)\s*mil/);if(mil)return parseFloat(mil[1].replace(',','.'))*1000;let num=q.match(/\b(\d{1,3}(?:\.\d{3})+|\d{4,}|\d+(?:,\d+)?)\b/);if(num){let s=num[1];if(/\.\d{3}/.test(s))return parseInt(s.replace(/\./g,''));return parseFloat(s.replace(',','.'))}const map={'diez mil':10000,'quince mil':15000,'veinte mil':20000,'veinticinco mil':25000,'treinta mil':30000,'treinta y cinco mil':35000,'cuarenta mil':40000,'cincuenta mil':50000,'sesenta mil':60000,'setenta mil':70000,'ochenta mil':80000,'noventa mil':90000,'cien mil':100000};for(const k in map)if(q.includes(k))return map[k];return null}
+function interpretar(texto){const q=norm(texto);if(q.includes('anteayer'))$('fecha').value=hoyISO(-2);else if(q.includes('ayer'))$('fecha').value=hoyISO(-1);if(/cobre|cobro|ingreso|recibi|sueldo|me pagaron|me depositaron/.test(q))$('tipo').value='Ingreso';else if(/gaste|gasto|pague|pago|compre|compra/.test(q))$('tipo').value='Gasto';if(/efectivo|cash/.test(q))$('cuenta').value='Efectivo';else if(/mercado pago/.test(q))$('cuenta').value='Mercado Pago';else if(/tarjeta|credito|debito/.test(q))$('cuenta').value='Tarjeta';else if(/banco|transferencia|cuenta bancaria/.test(q))$('cuenta').value='Banco';let c='',d='';if(/supermercado/.test(q)){c='Alimentos';d='Supermercado'}else if(/verduleria/.test(q)){c='Alimentos';d='Verdulería'}else if(/almuerzo/.test(q)){c='Alimentos';d='Almuerzo'}else if(/cena/.test(q)){c='Alimentos';d='Cena'}else if(/nafta/.test(q)){c='Transporte';d='Nafta'}else if(/combustible/.test(q)){c='Transporte';d='Combustible'}else if(/taxi/.test(q)){c='Transporte';d='Taxi'}else if(/uber/.test(q)){c='Transporte';d='Uber'}else if(/electricidad|luz/.test(q)){c='Servicios';d='Electricidad'}else if(/\bgas\b/.test(q)){c='Servicios';d='Gas'}else if(/internet/.test(q)){c='Servicios';d='Internet'}else if(/farmacia/.test(q)){c='Salud';d='Farmacia'}else if(/medico/.test(q)){c='Salud';d='Médico'}else if(/sueldo/.test(q)){c='Sueldo';d='Sueldo'}if(c)$('categoria').value=c;if(d)$('detalle').value=d;const n=monto(q);if(n!==null&&!isNaN(n))$('monto').value=String(Math.round(n));pintar();autoCorte()}
+function completos(){return $('fecha').value&&$('tipo').value&&$('cuenta').value&&$('categoria').value&&$('detalle').value.trim()&&$('monto').value.trim()}
+function pintar(){['fecha','tipo','cuenta','categoria','detalle','monto'].forEach(id=>{const el=$(id),ok=String(el.value||'').trim();el.classList.toggle('ok',!!ok);el.classList.toggle('missing',!ok)});$('confirm').disabled=!completos()}
+function autoCorte(){clearTimeout(autoTimer);if(completos()&&escuchando&&!pausado){$('status').textContent='✅ Ya tengo todos los datos. Espero un instante por si querés seguir hablando...';autoTimer=setTimeout(()=>terminar('automatico'),1200)}}
+function arrancar(){if(!rec)return;terminado=false;pausado=false;try{rec.start()}catch(e){}}
+function pausar(){if(!rec||!escuchando)return;pausado=true;clearTimeout(autoTimer);try{rec.stop()}catch(e){};$('status').textContent='⏸ Pausado. Podés corregir campos y después continuar.'}
+function continuar(){if(!rec)return;pausado=false;terminado=false;try{rec.start()}catch(e){}}
+function terminar(modo='manual'){terminado=true;pausado=false;clearTimeout(autoTimer);try{rec.stop()}catch(e){};$('status').textContent=modo==='automatico'?'✅ Datos completos. Escucha terminada automáticamente.':'⏹ Escucha terminada por vos.'}
+['fecha','tipo','cuenta','categoria','detalle','monto'].forEach(id=>{$(id).addEventListener('input',()=>{pintar();autoCorte()});$(id).addEventListener('change',()=>{pintar();autoCorte()})});
+$('confirm').onclick=()=>alert('✔ Prueba confirmada.\n\nNo se guardó nada en FinanzaSimple.');
+if(!SR){$('status').textContent='Este navegador no ofrece reconocimiento de voz.';$('start').disabled=true}else{rec=new SR();rec.lang='es-AR';rec.continuous=false;rec.interimResults=true;rec.onstart=()=>{escuchando=true;$('start').disabled=true;$('pause').disabled=false;$('finish').disabled=false;$('pause').textContent='⏸ PAUSAR';$('status').textContent='🔴 Escuchando...'};rec.onresult=e=>{let parcial='',finalNuevo='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalNuevo+=t+' ';else parcial+=t}if(finalNuevo){textoAcum+=finalNuevo;interpretar(textoAcum)}else if(parcial){interpretar(textoAcum+' '+parcial)}$('trans').textContent=(textoAcum+' '+parcial).trim()||'Escuchando...'};rec.onerror=e=>{escuchando=false;$('status').textContent='Error de reconocimiento: '+e.error;$('start').disabled=false;$('pause').disabled=true;$('finish').disabled=true};rec.onend=()=>{escuchando=false;$('start').disabled=false;$('pause').disabled=true;$('finish').disabled=true;if(pausado){$('pause').disabled=false;$('pause').textContent='▶ CONTINUAR'}else if(!terminado&&!completos()){$('status').textContent='Escucha terminada. Podés tocar HABLAR otra vez para completar lo que falta.'}};$('start').onclick=arrancar;$('pause').onclick=()=>pausado?continuar():pausar();$('finish').onclick=()=>terminar('manual')}
+pintar();
+</script></body></html>
