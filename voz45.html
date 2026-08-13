@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FinanzaSimple - Voz 4.5 Guiada móvil</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f3f6f8;margin:0;color:#263746}.wrap{max-width:680px;margin:auto;padding:18px}
+.card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 4px 18px #0002}h1{font-size:26px;margin:0 0 6px}
+.sub{color:#667;margin-bottom:16px;line-height:1.4}button{border:0;border-radius:12px;padding:14px 10px;font-size:16px;font-weight:bold;cursor:pointer}
+.guide{background:#3f51b5;color:white;width:100%}.listen{background:#6847d8;color:white;width:100%;margin-top:10px}
+.stop{background:#c0392b;color:white;width:100%;margin-top:8px}button:disabled{opacity:.45}
+.status,.heard,.question{margin-top:12px;padding:12px;border-radius:10px}.status{background:#eef2f5}.question{background:#eef5ff;font-weight:bold;font-size:18px}
+.heard{background:#faf7e8;min-height:34px}.grid{display:grid;grid-template-columns:110px 1fr;gap:8px;margin-top:18px;align-items:center}
+.label{font-weight:bold}input,select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccd3d9;border-radius:8px;font-size:16px;background:#fff}
+.ok{border-color:#72c58b;background:#f1fff5}.missing{border-color:#e59b8d;background:#fff7f5}.active{outline:3px solid #8ab4f8}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.correct{background:#f39c12;color:white}.confirm{background:#239b56;color:white}
+.new{background:#607d8b;color:white;width:100%;margin-top:10px}.small{font-size:12px;color:#667;margin-top:10px;line-height:1.4}
+@media(max-width:520px){.grid{grid-template-columns:1fr 1.25fr}.card{padding:16px}.wrap{padding:10px}}
+
+.mobileDock{display:none}
+@media(max-width:700px){
+ body{padding-bottom:110px}
+ .mobileDock{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;position:fixed;left:0;right:0;bottom:0;z-index:9999;padding:9px 10px calc(9px + env(safe-area-inset-bottom));background:#fff;box-shadow:0 -4px 16px #0003}
+ .mobileDock button{padding:13px 5px;font-size:14px}
+ #listen,#correct,#next{display:none!important}
+}
+</style></head><body><div class="wrap"><div class="card">
+<h1>🎤 FinanzaSimple — Voz 4.5 Guiada móvil</h1>
+<div class="sub">Carga segura, un dato por vez. Escucha una respuesta, se detiene y espera tu aprobación antes de continuar.</div>
+<div style="margin-top:14px;padding:12px;border-radius:10px;background:#eef5ff">
+<b>Usuario de FinanzaSimple</b>
+<select id="fsUser" style="margin-top:7px"><option value="">— Elegir usuario —</option></select>
+<div id="listsInfo" class="small">Elegí el usuario para tomar sus cuentas y categorías reales.</div>
+</div>
+<button id="guided" class="guide">🗣️ INICIAR CARGA GUIADA</button>
+<div id="activeState" class="status">⚪ Carga guiada inactiva.</div>
+<div id="question" class="question">Tocá INICIAR CARGA GUIADA.</div>
+<button id="listen" class="listen" disabled>🎤 RESPONDER</button><button id="stop" class="stop" disabled>⏹ DETENER ESCUCHA</button>
+<div id="status" class="status">Listo.</div><div id="heard" class="heard">Lo que escuche aparecerá acá.</div>
+<div class="grid">
+<div class="label">Fecha</div><input id="fecha" type="date">
+<div class="label">Tipo</div><select id="tipo"><option value="">—</option><option value="Gasto">Gasto</option><option value="Ingreso">Ingreso</option></select>
+<div class="label">Monto</div><input id="monto" inputmode="decimal" placeholder="Monto">
+<div class="label">Cuenta</div><select id="cuenta"><option value="">—</option><option value="Efectivo">Efectivo</option><option value="Tarjeta">Tarjeta</option><option value="Banco">Banco</option><option value="Mercado Pago">Mercado Pago</option></select>
+<div class="label">Categoría</div><select id="categoria"><option value="">—</option><option value="Alimentos">Alimentos</option><option value="Transporte">Transporte</option><option value="Servicios">Servicios</option><option value="Salud">Salud</option><option value="Sueldo">Sueldo</option><option value="Otros">Otros</option></select>
+<div class="label">Detalle</div><input id="detalle" placeholder="Detalle">
+</div>
+<div class="actions"><button id="correct" class="correct" disabled>✏️ REPETIR</button><button id="next" class="confirm" disabled>✅ ACEPTAR Y SEGUIR</button></div>
+<button id="final" class="confirm" style="width:100%;margin-top:10px" disabled>✅ CONFIRMAR PRUEBA</button>
+<button id="new" class="new">🧹 NUEVA CARGA</button>
+<div class="small">Prueba aislada: no guarda nada en FinanzaSimple. Podés corregir cualquier campo manualmente.</div>
+<div style="margin-top:18px"><b>Movimientos de esta prueba</b>
+<div id="preview" class="small" style="margin-top:8px;padding:10px;background:#f6f8fa;border-radius:10px">Todavía no hay movimientos confirmados.</div>
+</div>
+</div></div><script>
+const $=id=>document.getElementById(id); const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function norm(t){return String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
+function parseMonto(q){
+  q=norm(q).replace(/\$/g," ").replace(/pesos?/g," ").replace(/(\d)\s*[.,]\s*(\d{3})\b/g,"$1$2");
+  // 20,000 / 20.000 => miles, no decimales
+  let m=q.match(/\b(\d{1,3})[.,](\d{3})\b/);
+  if(m) return parseInt(m[1]+m[2],10);
+
+  // 20 mil / 35 mil
+  m=q.match(/\b(\d+(?:[.,]\d+)?)\s*mil\b/);
+  if(m) return Math.round(parseFloat(m[1].replace(",", "."))*1000);
+
+  // 1 millon / 2 millones
+  m=q.match(/\b(\d+(?:[.,]\d+)?)\s*mill(?:on|ones)\b/);
+  if(m) return Math.round(parseFloat(m[1].replace(",", "."))*1000000);
+
+  // 20000 / 35000. Se evalúa ANTES de números escritos en palabras.
+  // En Voz 4.3 se llamaba a parseNumeroTexto(), que no existía y cortaba
+  // la carga justo después de escuchar montos como 20.000 / 20,000.
+  m=q.match(/\b(\d{4,})\b/);
+  if(m) return parseInt(m[1],10);
+
+  // números dichos con palabras: veinte mil, cuarenta mil, etc.
+  const txt=parseNumeroTexto(q);
+  if(txt!==null) return txt;
+
+  // fallback: números chicos
+  m=q.match(/\b(\d+)\b/);
+  return m ? parseInt(m[1],10) : null;
+}
+
+function parseNumeroTexto(q){
+  q=clean(q).replace(/\by\b/g," ").replace(/\s+/g," ").trim();
+  const unidades={cero:0,un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,
+    diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,
+    veinte:20,veintiuno:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29};
+  const decenas={treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90};
+  const centenas={cien:100,ciento:100,doscientos:200,trescientos:300,cuatrocientos:400,quinientos:500,seiscientos:600,setecientos:700,ochocientos:800,novecientos:900};
+  let total=0, actual=0, vio=false;
+  for(const w of q.split(" ")){
+    if(w in unidades){actual+=unidades[w];vio=true;continue}
+    if(w in decenas){actual+=decenas[w];vio=true;continue}
+    if(w in centenas){actual+=centenas[w];vio=true;continue}
+    if(w==="mil"){total+=(actual||1)*1000;actual=0;vio=true;continue}
+    if(w==="millon"||w==="millones"){total+=(actual||1)*1000000;actual=0;vio=true;continue}
+  }
+  return vio ? total+actual : null;
+}
+let rec=null,step=0,pending="",movimientosPrueba=[];
+function dinero(v){let n=Number(String(v||"").replace(/\D/g,""));return n?("$ "+n.toLocaleString("es-AR")):""} 
+function renderPreview(){
+ const box=$("preview");
+ if(!movimientosPrueba.length){box.textContent="Todavía no hay movimientos confirmados.";return}
+ box.innerHTML=movimientosPrueba.map((m,i)=>"<div style='padding:7px 0;border-bottom:1px solid #ddd'><b>"+(i+1)+". "+m.tipo+" · "+dinero(m.monto)+"</b><br>"+m.fecha+" · "+m.cuenta+" · "+m.categoria+" · "+m.detalle+"</div>").join("");
+}
+const steps=[{id:"tipo",q:"¿Es un gasto o un ingreso?"},{id:"monto",q:"¿Cuál es el monto?"},{id:"cuenta",q:"¿Con qué cuenta?"},{id:"categoria",q:"¿Qué categoría?"},{id:"detalle",q:"¿Cuál es el detalle?"}];
+function hoyISO(){const d=new Date(),o=d.getTimezoneOffset();return new Date(d.getTime()-o*60000).toISOString().slice(0,10)}
+
+function storageName(n){return String(n||"").trim().toLowerCase().replace(/[^a-z0-9_-]/g,"_")}
+function userKey(u,part){return "fs_v8_"+storageName(u)+"_"+part}
+function readArray(key){try{const x=JSON.parse(localStorage.getItem(key)||"[]");return Array.isArray(x)?x:[]}catch(e){return[]}}
+function fillSelect(id,items){
+ const sel=$(id); sel.innerHTML='<option value="">—</option>';
+ [...new Set(items.map(x=>String(x).trim()).filter(Boolean))].forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o)});
+}
+function loadUsers(){
+ let users=[]; try{users=JSON.parse(localStorage.getItem("fs_v8_usuarios")||"[]")||[]}catch(e){}
+ const sel=$("fsUser"); sel.innerHTML='<option value="">— Elegir usuario —</option>';
+ users.forEach(x=>{const u=typeof x==="string"?x:x.usuario;if(u){const o=document.createElement("option");o.value=u;o.textContent=u;sel.appendChild(o)}});
+ if(users.length===1){sel.selectedIndex=1;loadRealLists()}
+}
+function loadRealLists(){
+ const u=$("fsUser").value;
+ if(!u){fillSelect("cuenta",[]);fillSelect("categoria",[]);$("listsInfo").textContent="Elegí el usuario para tomar sus cuentas y categorías reales.";return}
+ const cs=readArray(userKey(u,"cuentas")), cats=readArray(userKey(u,"categorias"));
+ fillSelect("cuenta",cs); fillSelect("categoria",cats);
+ $("listsInfo").textContent="Cuentas reales: "+cs.length+" · Categorías reales: "+cats.length;
+ pintar();
+}
+
+function clean(t){return norm(t).trim()}
+function setSel(id,val){let s=$(id),v=clean(val);for(const o of s.options)if(clean(o.value)==v||clean(o.textContent)==v){s.value=o.value;return true}return false}
+function tipoDe(t){t=clean(t);if(/\b(gasto|gaste|pague|compre)\b/.test(t))return"Gasto";if(/\b(ingreso|cobre|recibi)\b/.test(t))return"Ingreso";return""}
+function cuentaDe(t){t=clean(t);for(const o of [...$("cuenta").options].filter(x=>x.value))if(t.includes(clean(o.textContent)))return o.value;return""}
+function categoriaDe(t){t=clean(t);for(const o of [...$("categoria").options].filter(x=>x.value))if(t.includes(clean(o.textContent)))return o.value;
+if(/nafta|combustible|taxi|uber|colectivo/.test(t))return"Transporte";if(/supermercado|comida|alimento/.test(t))return"Alimentos";return""}
+function interpretarPaso(id,t){if(id=="tipo")return tipoDe(t);if(id=="monto"){
+  let n=parseMonto(t);
+  if(n===null||isNaN(n)||n<=0)return "";
+  return String(Math.round(n))
+}if(id=="cuenta")return cuentaDe(t);
+if(id=="categoria")return categoriaDe(t);if(id=="detalle"){let x=t.trim().replace(/[.,;:]+$/,"");return x?x[0].toUpperCase()+x.slice(1):""}return""}
+function pintar(){["fecha","tipo","monto","cuenta","categoria","detalle"].forEach(id=>{$(id).classList.remove("ok","missing","active");$(id).classList.add($(id).value?"ok":"missing")});
+if(step<steps.length)$(steps[step].id).classList.add("active");$("final").disabled=!["fecha","tipo","monto","cuenta","categoria","detalle"].every(id=>$(id).value)}
+function preguntar(){if(step>=steps.length){$("question").textContent="✅ Datos completos. Revisalos antes de confirmar.";$("listen").disabled=true;$("correct").disabled=true;$("next").disabled=true;$("status").textContent="Carga guiada terminada.";pintar();return}
+$("question").textContent="Paso "+(step+1)+" de "+steps.length+" — "+steps[step].q;$("listen").disabled=false;$("correct").disabled=true;$("next").disabled=true;$("heard").textContent="Esperando respuesta…";$("status").textContent="Tocá RESPONDER.";pintar()}
+function iniciar(){
+ if(!$("fsUser").value){$("activeState").textContent="⚠️ Primero elegí el usuario.";return}
+ reiniciar();step=0;$("activeState").textContent="🟢 Carga guiada ACTIVA — paso 1 de "+steps.length;preguntar()
+}
+function escuchar(){if(!SR){$("status").textContent="Este navegador no ofrece reconocimiento de voz.";return}pending="";rec=new SR();rec.lang="es-AR";rec.continuous=false;rec.interimResults=false;rec.maxAlternatives=5;
+rec.onstart=()=>{$("listen").disabled=true;$("stop").disabled=false;$("status").textContent="🔴 Escuchando solamente este dato…"};
+rec.onresult=e=>{
+ let candidatos=[];
+ for(let i=0;i<e.results.length;i++){
+   for(let j=0;j<e.results[i].length;j++) candidatos.push(e.results[i][j].transcript.trim());
+ }
+ let elegido=candidatos[0]||"";
+ if(steps[step]&&steps[step].id==="monto"){
+   const conEscala=candidatos.find(x=>/\bmil\b|\bmill[oó]n(?:es)?\b/i.test(x));
+   if(conEscala)elegido=conEscala;
+ }
+ pending=elegido;
+ $("heard").textContent=pending||"Escuchando…"
+};
+rec.onerror=e=>{$("status").textContent="Error: "+e.error;$("listen").disabled=false;$("stop").disabled=true};
+rec.onend=()=>{$("stop").disabled=true;if(!pending){$("listen").disabled=false;$("status").textContent="No escuché nada. Intentá otra vez.";return}
+let s=steps[step],v=interpretarPaso(s.id,pending);
+if(s.id==="monto" && v && Number(v)<1000 && !/\bpesos?\b/i.test(pending)){
+  $("monto").value="";
+  $("status").textContent="⚠️ Escuché "+pending+". Si dijiste miles, tocá REPETIR y decí por ejemplo: VEINTICINCO MIL PESOS.";
+  v="";
+}
+if(v){if(["tipo","cuenta","categoria"].includes(s.id))setSel(s.id,v);else $(s.id).value=v;$("status").textContent="Revisá este dato. Si está bien, ACEPTAR Y SEGUIR."}
+else $("status").textContent="No pude interpretar este dato. Repetilo o escribilo.";
+$("listen").disabled=false;$("correct").disabled=false;$("next").disabled=!$(s.id).value;pintar()};try{rec.start()}catch(e){}}
+function repetir(){let id=steps[step].id;$(id).value="";pending="";$("heard").textContent="Dato borrado. Tocá RESPONDER otra vez.";$("next").disabled=true;$("correct").disabled=true;pintar()}
+function seguir(){
+ if(!$(steps[step].id).value)return;
+ step++;
+ if(step<steps.length)$("activeState").textContent="🟢 Carga guiada ACTIVA — paso "+(step+1)+" de "+steps.length;
+ else $("activeState").textContent="✅ Carga completa. Revisá y confirmá.";
+ preguntar()
+}
+function reiniciar(){try{if(rec)rec.stop()}catch(e){}$("fecha").value=hoyISO();$("tipo").value="";$("monto").value="";$("cuenta").value="";$("categoria").value="";$("detalle").value="";
+step=0;pending="";$("question").textContent="Tocá INICIAR CARGA GUIADA.";$("heard").textContent="Lo que escuche aparecerá acá.";$("status").textContent="Listo.";$("activeState").textContent="⚪ Carga guiada inactiva.";
+$("listen").disabled=true;$("stop").disabled=true;$("correct").disabled=true;$("next").disabled=true;$("final").disabled=true;pintar()}
+$("guided").onclick=iniciar;$("listen").onclick=escuchar;$("stop").onclick=()=>{try{rec.stop()}catch(e){}};$("correct").onclick=repetir;$("next").onclick=seguir;$("new").onclick=reiniciar;
+$("final").onclick=()=>{
+ movimientosPrueba.push({
+   fecha:$("fecha").value,tipo:$("tipo").value,monto:$("monto").value,
+   cuenta:$("cuenta").value,categoria:$("categoria").value,detalle:$("detalle").value
+ });
+ renderPreview();
+ const u=$("fsUser").value;
+ reiniciar(); $("fsUser").value=u; loadRealLists();
+ $("activeState").textContent="⚪ Carga confirmada. Lista para una NUEVA CARGA.";
+ $("status").textContent="Carga agregada a la lista de prueba.";
+};
+["fecha","tipo","monto","cuenta","categoria","detalle"].forEach(id=>{$(id).addEventListener("input",()=>{if(step<steps.length&&steps[step].id==id)$("next").disabled=!$(id).value;pintar()});
+$(id).addEventListener("change",()=>{if(step<steps.length&&steps[step].id==id)$("next").disabled=!$(id).value;pintar()})});$("fsUser").onchange=()=>{loadRealLists();reiniciarCampos();};
+function reiniciarCampos(){ $("fecha").value=hoyISO();$("tipo").value="";$("monto").value="";$("detalle").value="";step=0;pending="";loadRealLists();pintar(); }
+reiniciar(); loadUsers();
+
+function syncDock(){
+ if(!$("mListen"))return;
+ $("mListen").disabled=$("listen").disabled;
+ $("mCorrect").disabled=$("correct").disabled;
+ $("mNext").disabled=$("next").disabled;
+}
+const pintarOriginal=pintar;
+pintar=function(){pintarOriginal();syncDock();}
+window.addEventListener("DOMContentLoaded",()=>{
+  $("mListen").onclick=()=>{if(!$("mListen").disabled) escuchar();};
+  $("mCorrect").onclick=()=>{if(!$("mCorrect").disabled) repetir();};
+  $("mNext").onclick=()=>{if(!$("mNext").disabled) seguir();};
+  syncDock();
+});
+
+</script><div class="mobileDock">
+<button id="mListen" class="listen">🎤 RESPONDER</button>
+<button id="mCorrect" class="correct">✏️ REPETIR</button>
+<button id="mNext" class="confirm">✅ SEGUIR</button>
+</div></body></html>
